@@ -478,7 +478,7 @@ class EnergyDashboard(param.Parameterized):
     def load_price_data(self):
         """Load and process price data from parquet file"""
         try:
-            price_file = Path("/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-spot-dashboard/spot_hist.parquet")
+            price_file = config.spot_hist_file
             
             if not os.path.exists(price_file):
                 logger.error(f"Price data file not found at {price_file}")

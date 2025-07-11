@@ -385,21 +385,16 @@ class PriceAnalysisUI(param.Parameterized):
     def _create_column_controls(self):
         """Create checkbox controls for column selection"""
         try:
-            # Available display columns with shorter names
-            column_options = {
-                'generation_gwh': 'Gen (GWh)',
-                'revenue_millions': 'Rev ($M)',
-                'avg_price': 'Price ($/MWh)',
-                'capacity_utilization': 'Util (%)',
-                'capacity_mw': 'Cap (MW)',
-                'station_name': 'Station',
-                'owner': 'Owner'
-            }
+            # Available display columns with shorter names - use list format like other working checkboxes
+            column_display_names = [
+                'Gen (GWh)', 'Rev ($M)', 'Price ($/MWh)', 'Util (%)', 
+                'Cap (MW)', 'Station', 'Owner'
+            ]
             
             self.column_checkboxes = pn.widgets.CheckBoxGroup(
                 name="Columns:",
-                value=['generation_gwh', 'revenue_millions', 'avg_price', 'capacity_utilization', 'capacity_mw', 'station_name', 'owner'],  # All columns selected by default
-                options=list(column_options.items()),  # Use (value, label) tuples instead of separate lists
+                value=column_display_names,  # All columns selected by default - use same list for value and options
+                options=column_display_names,  # Use list directly like working region/fuel filters
                 inline=False,  # Vertical layout within the column
                 width=160,
                 margin=(5, 0)  # Tighter spacing
@@ -642,15 +637,15 @@ class PriceAnalysisUI(param.Parameterized):
                 else:
                     user_selected_columns = raw_columns
                     
-                # Map new column names back to original column names for aggregated data
+                # Map display names back to database column names for aggregated data
                 column_mapping = {
-                    'generation_gwh': 'generation_mwh',
-                    'revenue_millions': 'total_revenue_dollars', 
-                    'avg_price': 'average_price_per_mwh',
-                    'capacity_utilization': 'capacity_utilization_pct',
-                    'capacity_mw': 'capacity_mw',
-                    'station_name': 'station_name',
-                    'owner': 'owner'
+                    'Gen (GWh)': 'generation_mwh',
+                    'Rev ($M)': 'total_revenue_dollars', 
+                    'Price ($/MWh)': 'average_price_per_mwh',
+                    'Util (%)': 'capacity_utilization_pct',
+                    'Cap (MW)': 'capacity_mw',
+                    'Station': 'station_name',
+                    'Owner': 'owner'
                 }
                 selected_columns = [column_mapping.get(col, col) for col in user_selected_columns]
             else:
@@ -717,14 +712,15 @@ class PriceAnalysisUI(param.Parameterized):
                 # Build list of columns to display: hierarchy + duid + user-selected formatted columns
                 display_cols = hierarchy_columns + ['duid']
                 
-                # Add the formatted column names that correspond to user selections
+                # Add the formatted column names that correspond to user display selections
                 formatted_column_mapping = {
-                    'generation_gwh': 'generation_gwh',
-                    'revenue_millions': 'revenue_millions', 
-                    'avg_price': 'avg_price',
-                    'capacity_utilization': 'capacity_utilization',
-                    'station_name': 'station_name',
-                    'owner': 'owner'
+                    'Gen (GWh)': 'generation_gwh',
+                    'Rev ($M)': 'revenue_millions', 
+                    'Price ($/MWh)': 'avg_price',
+                    'Util (%)': 'capacity_utilization',
+                    'Cap (MW)': 'capacity_mw',
+                    'Station': 'station_name',
+                    'Owner': 'owner'
                 }
                 
                 for user_col in user_selected:
