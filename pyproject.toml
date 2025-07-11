@@ -55,6 +55,7 @@ aemo-gen-dashboard = "aemo_dashboard.generation.gen_dash:main"
 aemo-gen-update = "aemo_dashboard.generation.update_generation:main"
 aemo-transmission-update = "aemo_dashboard.transmission.update_transmission:main"
 aemo-transmission-backfill = "aemo_dashboard.transmission.backfill_transmission:main"
+aemo-combined-update = "aemo_dashboard.combined.update_all:main"
 aemo-manage-duids = "aemo_dashboard.scripts.manage_duid_exceptions:main"
 
 [project.urls]
