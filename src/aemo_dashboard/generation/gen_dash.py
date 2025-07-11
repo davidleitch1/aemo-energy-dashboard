@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 from ..shared.config import config
 from ..shared.logging_config import setup_logging, get_logger
 from ..shared.email_alerts import EmailAlertManager
+from ..analysis.price_analysis_ui import create_price_analysis_tab
 
 # Set up logging
 setup_logging()
@@ -1118,10 +1119,20 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
+            # Price analysis tab
+            try:
+                logger.info("Creating price analysis tab...")
+                price_analysis_tab = create_price_analysis_tab()
+                logger.info("Price analysis tab created successfully")
+            except Exception as e:
+                logger.error(f"Error creating price analysis tab: {e}")
+                price_analysis_tab = pn.pane.Markdown(f"**Error loading Price Analysis:** {e}")
+            
             # Create tabbed interface
             tabs = pn.Tabs(
                 ("Generation by Fuel", generation_tab),
                 ("Capacity Utilization", utilization_tab),
+                ("Average Price Analysis", price_analysis_tab),
                 dynamic=True,
                 closable=False,
                 sizing_mode='stretch_width'
@@ -1223,14 +1234,14 @@ def main():
     app_factory = create_app()
     
     print("Starting Interactive Energy Generation Dashboard...")
-    print("Navigate to: http://localhost:5009")
+    print("Navigate to: http://localhost:5010")
     print("Press Ctrl+C to stop the server")
     
     # Serve the app with dark theme and proper session handling
     pn.serve(
         app_factory, 
-        port=5009, 
-        allow_websocket_origin=["localhost:5009", "nemgen.itkservices2.com"],
+        port=5010, 
+        allow_websocket_origin=["localhost:5010", "nemgen.itkservices2.com"],
         show=True,
         autoreload=False,  # Disable autoreload in production
         threaded=True     # Enable threading for better concurrent handling
