@@ -178,11 +178,13 @@ class PriceAnalysisMotor:
                     logger.info(f"After end date filter: {len(self.integrated_data):,} records")
             
             # Calculate 5-minute revenue
+            # scadavalue is MW for 5-min interval, RRP is $/MWh
+            # Revenue = MW × (5min/60min) × $/MWh = MWh × $/MWh = $
             logger.info("Calculating 5-minute revenues...")
             self.integrated_data['revenue_5min'] = (
                 self.integrated_data['scadavalue'] * 
                 self.integrated_data['RRP'] * 
-                (5.0 / 60.0)  # 5 minutes in hours
+                (5.0 / 60.0)  # Convert MW×5min to MWh, then × $/MWh = $
             )
             
             # Report data overlap period
@@ -220,17 +222,18 @@ class PriceAnalysisMotor:
             
             # Group by hierarchy and calculate aggregations
             grouped = data.groupby(hierarchy).agg({
-                'scadavalue': 'sum',        # Total generation (MW * 5min)
+                'scadavalue': 'sum',        # Total generation (sum of MW readings across 5min intervals)
                 'revenue_5min': 'sum',      # Total revenue ($)
                 'settlementdate': ['min', 'max', 'count']  # Date range and record count
             }).round(2)
             
             # Flatten column names
-            grouped.columns = ['total_generation_mwh', 'total_revenue_dollars', 'start_date', 'end_date', 'record_count']
+            grouped.columns = ['total_generation_sum', 'total_revenue_dollars', 'start_date', 'end_date', 'record_count']
             
-            # Calculate average price ($/MWh)
-            # Convert generation from MW*5min to MWh: MW * (5min / 60min/hr) = MWh
-            grouped['generation_mwh'] = grouped['total_generation_mwh'] * (5.0 / 60.0)
+            # Calculate actual MWh generation
+            # scadavalue sum = sum of MW readings across intervals
+            # Convert to MWh: sum(MW) × (5min / 60min/hr) = sum(MW) × (1/12) = MWh
+            grouped['generation_mwh'] = grouped['total_generation_sum'] * (5.0 / 60.0)
             grouped['average_price_per_mwh'] = np.where(
                 grouped['generation_mwh'] > 0,
                 grouped['total_revenue_dollars'] / grouped['generation_mwh'],
@@ -333,17 +336,18 @@ class PriceAnalysisMotor:
             
             # Group by full hierarchy including DUID for details
             grouped = data.groupby(detail_hierarchy).agg({
-                'scadavalue': 'sum',        # Total generation (MW * 5min)
+                'scadavalue': 'sum',        # Total generation (sum of MW readings across 5min intervals)
                 'revenue_5min': 'sum',      # Total revenue ($)
                 'settlementdate': ['min', 'max', 'count']  # Date range and record count
             }).round(2)
             
             # Flatten column names
-            grouped.columns = ['total_generation_mwh', 'total_revenue_dollars', 'start_date', 'end_date', 'record_count']
+            grouped.columns = ['total_generation_sum', 'total_revenue_dollars', 'start_date', 'end_date', 'record_count']
             
-            # Calculate average price ($/MWh)
-            # Convert generation from MW*5min to MWh: MW * (5min / 60min/hr) = MWh
-            grouped['generation_mwh'] = grouped['total_generation_mwh'] * (5.0 / 60.0)
+            # Calculate actual MWh generation
+            # scadavalue sum = sum of MW readings across intervals
+            # Convert to MWh: sum(MW) × (5min / 60min/hr) = sum(MW) × (1/12) = MWh
+            grouped['generation_mwh'] = grouped['total_generation_sum'] * (5.0 / 60.0)
             grouped['average_price_per_mwh'] = np.where(
                 grouped['generation_mwh'] > 0,
                 grouped['total_revenue_dollars'] / grouped['generation_mwh'],
@@ -556,6 +560,13 @@ class PriceAnalysisMotor:
                 )
                 # Remove original column
                 filtered_duid_data = filtered_duid_data.drop('capacity_utilization_pct', axis=1)
+            
+            # Keep capacity_mw column as-is (already in MW)
+            if 'capacity_mw' in filtered_duid_data.columns:
+                # Round to 1 decimal place
+                filtered_duid_data['capacity_mw'] = filtered_duid_data['capacity_mw'].apply(
+                    lambda x: round(x, 1) if pd.notna(x) else 0.0
+                )
             
             logger.info(f"Created hierarchical data with {len(filtered_duid_data)} DUID rows")
             logger.info(f"Hierarchical display columns: {list(filtered_duid_data.columns)}")

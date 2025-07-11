@@ -391,13 +391,14 @@ class PriceAnalysisUI(param.Parameterized):
                 'revenue_millions': 'Rev ($M)',
                 'avg_price': 'Price ($/MWh)',
                 'capacity_utilization': 'Util (%)',
+                'capacity_mw': 'Cap (MW)',
                 'station_name': 'Station',
                 'owner': 'Owner'
             }
             
             self.column_checkboxes = pn.widgets.CheckBoxGroup(
                 name="Columns:",
-                value=['generation_gwh', 'revenue_millions', 'avg_price'],  # Default columns with new names
+                value=['generation_gwh', 'revenue_millions', 'avg_price', 'capacity_utilization', 'capacity_mw', 'station_name', 'owner'],  # All columns selected by default
                 options=list(column_options.items()),  # Use (value, label) tuples instead of separate lists
                 inline=False,  # Vertical layout within the column
                 width=160,
@@ -647,6 +648,7 @@ class PriceAnalysisUI(param.Parameterized):
                     'revenue_millions': 'total_revenue_dollars', 
                     'avg_price': 'average_price_per_mwh',
                     'capacity_utilization': 'capacity_utilization_pct',
+                    'capacity_mw': 'capacity_mw',
                     'station_name': 'station_name',
                     'owner': 'owner'
                 }
