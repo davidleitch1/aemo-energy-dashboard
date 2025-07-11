@@ -50,7 +50,11 @@ class PriceAnalysisUI(param.Parameterized):
         self.end_date_picker = None
         self.date_preset_buttons = None
         self.apply_date_button = None
+        self.table_title = None  # Dynamic table title
         self.create_ui_components()
+        
+        # Track active date preset for visual feedback
+        self.active_date_preset = None  # Track which preset is active (7, 30, None, or 'custom')
         
         logger.info("Price Analysis UI initialized")
     
@@ -104,6 +108,9 @@ class PriceAnalysisUI(param.Parameterized):
                 width=150
             )
             self.refresh_button.on_click(self._on_refresh_click)
+            
+            # Create dynamic table title
+            self.table_title = pn.pane.Markdown(self._get_table_title())
             
             # Calculate initial data
             self._calculate_and_update_table()
@@ -164,6 +171,10 @@ class PriceAnalysisUI(param.Parameterized):
                 )
                 self.preset_all_button.on_click(lambda event: self._apply_date_preset(None))
                 
+                # Set initial active preset to "All Data"
+                self.active_date_preset = None
+                self._update_preset_button_styles()
+                
                 # Apply button
                 self.apply_date_button = pn.widgets.Button(
                     name="Apply Date Filter",
@@ -185,6 +196,49 @@ class PriceAnalysisUI(param.Parameterized):
             self.start_date_picker = pn.pane.Markdown("**Date controls error**")
             self.end_date_picker = pn.pane.Markdown("")
             self.apply_date_button = pn.pane.Markdown("")
+    
+    def _update_preset_button_styles(self):
+        """Update preset button styles to show which one is active"""
+        try:
+            if hasattr(self, 'preset_7d_button') and hasattr(self.preset_7d_button, 'button_type'):
+                # Reset all buttons to default style
+                self.preset_7d_button.button_type = "light"
+                self.preset_30d_button.button_type = "light" 
+                self.preset_all_button.button_type = "light"
+                
+                # Highlight the active button
+                if self.active_date_preset == 7:
+                    self.preset_7d_button.button_type = "primary"
+                elif self.active_date_preset == 30:
+                    self.preset_30d_button.button_type = "primary"
+                elif self.active_date_preset is None:
+                    self.preset_all_button.button_type = "primary"
+                # If active_date_preset == 'custom', all buttons remain light (default)
+                
+        except Exception as e:
+            logger.error(f"Error updating preset button styles: {e}")
+    
+    def _get_table_title(self) -> str:
+        """Generate dynamic table title with date information"""
+        try:
+            if self.data_loaded and hasattr(self.motor, 'integrated_data') and len(self.motor.integrated_data) > 0:
+                start_date = self.motor.integrated_data['settlementdate'].min().strftime('%Y-%m-%d')
+                end_date = self.motor.integrated_data['settlementdate'].max().strftime('%Y-%m-%d')
+                days = (self.motor.integrated_data['settlementdate'].max() - self.motor.integrated_data['settlementdate'].min()).days
+                
+                if self.active_date_preset == 7:
+                    return f"## Aggregated Results - Last 7 Days ({start_date} to {end_date})"
+                elif self.active_date_preset == 30:
+                    return f"## Aggregated Results - Last 30 Days ({start_date} to {end_date})"
+                elif self.active_date_preset is None:
+                    return f"## Aggregated Results - All Data ({start_date} to {end_date}, {days} days)"
+                else:
+                    return f"## Aggregated Results - Custom Range ({start_date} to {end_date}, {days} days)"
+            else:
+                return "## Aggregated Results"
+        except Exception as e:
+            logger.error(f"Error generating table title: {e}")
+            return "## Aggregated Results"
     
     def _apply_date_preset(self, days: Optional[int]):
         """Apply a date preset (7 days, 30 days, or all data)"""
@@ -208,6 +262,10 @@ class PriceAnalysisUI(param.Parameterized):
             # Update the date pickers
             self.start_date_picker.value = start_dt
             self.end_date_picker.value = end_dt
+            
+            # Update active preset tracking and button styles
+            self.active_date_preset = days
+            self._update_preset_button_styles()
             
             logger.info(f"Applied date preset: {days} days -> {start_dt} to {end_dt}")
             
@@ -288,13 +346,13 @@ class PriceAnalysisUI(param.Parameterized):
                 width=400
             )
             
-            # Apply button for grouping changes
-            self.apply_grouping_button = pn.widgets.Button(
-                name="Apply Grouping",
+            # Unified update button for all changes
+            self.update_analysis_button = pn.widgets.Button(
+                name="Update Analysis",
                 button_type="primary",
                 width=150
             )
-            self.apply_grouping_button.on_click(self._on_apply_grouping)
+            self.update_analysis_button.on_click(self._on_update_analysis)
             
             logger.info("Improved grouping controls created successfully")
             
@@ -303,7 +361,7 @@ class PriceAnalysisUI(param.Parameterized):
             self.category_selector = pn.pane.Markdown("**Grouping controls error**")
             self.region_filters = pn.pane.Markdown("")
             self.fuel_filters = pn.pane.Markdown("")
-            self.apply_grouping_button = pn.pane.Markdown("")
+            self.update_analysis_button = pn.pane.Markdown("")
     
     def _create_column_controls(self):
         """Create checkbox controls for column selection"""
@@ -313,8 +371,9 @@ class PriceAnalysisUI(param.Parameterized):
                 'generation_gwh': 'Generation (GWh)',
                 'revenue_millions': 'Revenue ($M)',
                 'avg_price': 'Avg Price ($/MWh)',
-                'capacity_mw': 'Capacity (MW)',
-                'capacity_utilization_pct': 'Utilization (%)'
+                'capacity_utilization': 'Utilization (%)',
+                'station_name': 'Station Name',
+                'owner': 'Owner'
             }
             
             self.column_checkboxes = pn.widgets.CheckBoxGroup(
@@ -330,6 +389,113 @@ class PriceAnalysisUI(param.Parameterized):
         except Exception as e:
             logger.error(f"Error creating column controls: {e}")
             self.column_checkboxes = pn.pane.Markdown("**Column controls error**")
+    
+    def _on_update_analysis(self, event):
+        """Handle unified update analysis button click - combines date filtering and grouping"""
+        try:
+            # Step 1: Apply date filtering first (if date controls exist)
+            if hasattr(self, 'start_date_picker') and hasattr(self.start_date_picker, 'value'):
+                start_date_str = self.start_date_picker.value.strftime('%Y-%m-%d') if self.start_date_picker.value else None
+                end_date_str = self.end_date_picker.value.strftime('%Y-%m-%d') if self.end_date_picker.value else None
+                
+                logger.info(f"Applying date filter: {start_date_str} to {end_date_str}")
+                
+                # Reload data with date filter
+                if self.motor.load_data():
+                    if self.motor.standardize_columns():
+                        if self.motor.integrate_data(start_date_str, end_date_str):
+                            self.data_loaded = True
+                            logger.info("Date filter applied successfully")
+                        else:
+                            logger.error("Failed to integrate data with date filter")
+                            return
+                    else:
+                        logger.error("Failed to standardize columns for date filtering")
+                        return
+                else:
+                    logger.error("Failed to reload data for date filtering")
+                    return
+            
+            # Step 2: Apply grouping and column selections
+            # Check if widgets are properly initialized
+            if not hasattr(self.category_selector, 'value') or not hasattr(self.column_checkboxes, 'value'):
+                logger.warning("Grouping controls not properly initialized")
+                return
+            
+            # Get selected grouping categories
+            selected_categories = self.category_selector.value if hasattr(self.category_selector, 'value') else ['Fuel']
+            
+            # Get filter selections
+            selected_regions = self.region_filters.value if hasattr(self.region_filters, 'value') else []
+            selected_fuels = self.fuel_filters.value if hasattr(self.fuel_filters, 'value') else []
+            
+            logger.info(f"Selected categories: {selected_categories}")
+            logger.info(f"Region filters: {selected_regions}")
+            logger.info(f"Fuel filters: {selected_fuels}")
+            
+            # Use selected categories as the grouping hierarchy
+            self.selected_grouping = selected_categories if selected_categories else ['Fuel']  # Default fallback
+            
+            # Store filter selections for data filtering
+            self.selected_region_filters = selected_regions
+            self.selected_fuel_filters = selected_fuels
+            if hasattr(self.column_checkboxes, 'value'):
+                # Extract column names from tuples if needed
+                raw_selection = self.column_checkboxes.value
+                if raw_selection:
+                    if isinstance(raw_selection[0], tuple):
+                        # If selection contains tuples, extract just the column names (first element)
+                        self.selected_columns = [item[0] if isinstance(item, tuple) else item for item in raw_selection]
+                    else:
+                        self.selected_columns = raw_selection
+                else:
+                    # If nothing selected, use default
+                    self.selected_columns = ['generation_gwh', 'revenue_millions', 'avg_price']
+            else:
+                self.selected_columns = ['generation_gwh', 'revenue_millions', 'avg_price']  # Default fallback
+            
+            logger.info(f"Applied unified update - grouping: {self.selected_grouping}, columns: {self.selected_columns}")
+            
+            # Step 3: Rebuild the table with all selections
+            self._calculate_and_update_table()
+            
+            # Step 4: Update status with current data state and mark as custom if dates were manually changed
+            if len(self.motor.integrated_data) > 0:
+                filtered_start = self.motor.integrated_data['settlementdate'].min()
+                filtered_end = self.motor.integrated_data['settlementdate'].max()
+                filtered_days = (filtered_end - filtered_start).days
+                status_msg = f"✅ Analysis updated | Period: {filtered_start.strftime('%Y-%m-%d')} to {filtered_end.strftime('%Y-%m-%d')} ({filtered_days} days)"
+                status_msg += f" | Records: {len(self.motor.integrated_data):,}"
+                
+                # Check if date range was manually changed (not matching any preset)
+                if hasattr(self, 'start_date_picker') and hasattr(self.start_date_picker, 'value'):
+                    current_start = self.start_date_picker.value
+                    current_end = self.end_date_picker.value
+                    
+                    # Check if this matches any preset pattern
+                    available_start, available_end = self.motor.get_available_date_range()
+                    if available_start and available_end:
+                        end_dt = datetime.strptime(available_end, '%Y-%m-%d').date()
+                        
+                        # Check against preset patterns
+                        preset_7d_start = end_dt - timedelta(days=6)  # 7 days including today
+                        preset_30d_start = end_dt - timedelta(days=29)  # 30 days including today
+                        all_data_start = datetime.strptime(available_start, '%Y-%m-%d').date()
+                        
+                        if not ((current_start == preset_7d_start and current_end == end_dt) or
+                                (current_start == preset_30d_start and current_end == end_dt) or
+                                (current_start == all_data_start and current_end == end_dt)):
+                            # This is a custom date range
+                            self.active_date_preset = 'custom'
+                            self._update_preset_button_styles()
+                
+            else:
+                status_msg = "⚠️ No data found for selected filters"
+            
+            self.status_text.object = f"**Status:** {status_msg}"
+            
+        except Exception as e:
+            logger.error(f"Error in unified update analysis: {e}")
     
     def _on_apply_grouping(self, event):
         """Handle apply grouping button click with new UI structure"""
@@ -474,9 +640,37 @@ class PriceAnalysisUI(param.Parameterized):
             hierarchical_data = self.motor.create_hierarchical_data(hierarchy_columns, selected_columns, region_filters, fuel_filters)
             
             if not hierarchical_data.empty:
+                # Filter hierarchical data to only show user-selected columns
+                # Map user-selected column names to the formatted column names in hierarchical data
+                user_selected = getattr(self, 'selected_columns', ['generation_gwh', 'revenue_millions', 'avg_price'])
+                
+                # Build list of columns to display: hierarchy + duid + user-selected formatted columns
+                display_cols = hierarchy_columns + ['duid']
+                
+                # Add the formatted column names that correspond to user selections
+                formatted_column_mapping = {
+                    'generation_gwh': 'generation_gwh',
+                    'revenue_millions': 'revenue_millions', 
+                    'avg_price': 'avg_price',
+                    'capacity_utilization': 'capacity_utilization',
+                    'station_name': 'station_name',
+                    'owner': 'owner'
+                }
+                
+                for user_col in user_selected:
+                    formatted_col = formatted_column_mapping.get(user_col, user_col)
+                    if formatted_col in hierarchical_data.columns:
+                        display_cols.append(formatted_col)
+                
+                # Filter the hierarchical data to only include display columns
+                filtered_hierarchical_data = hierarchical_data[display_cols].copy()
+                
+                logger.info(f"Displaying columns: {display_cols}")
+                logger.info(f"Available hierarchical columns: {list(hierarchical_data.columns)}")
+                
                 # Use hierarchical data that includes both group totals and individual DUIDs
                 self.tabulator_table = pn.widgets.Tabulator(
-                    value=hierarchical_data,
+                    value=filtered_hierarchical_data,
                     groupby=hierarchy_columns,  # Panel handles the multi-level grouping
                     pagination=None,  # Disable pagination for scrolling
                     sizing_mode='stretch_width',
@@ -484,10 +678,54 @@ class PriceAnalysisUI(param.Parameterized):
                     show_index=False,
                     sortable=True,
                     selectable=1,
+                    theme='midnight',  # Dark theme
                     configuration={
                         'groupStartOpen': False,  # Start with groups collapsed
                         'groupToggleElement': 'header',  # Make entire header clickable to toggle
-                        'virtualDomBuffer': 300  # Enable virtual scrolling for performance
+                        'virtualDomBuffer': 300,  # Enable virtual scrolling for performance
+                        'columnHeaderSortMulti': True,
+                        'headerFilterPlaceholder': '',
+                        'layout': 'fitColumns',
+                        'responsiveLayout': 'collapse',
+                        'tableBuilt': '''function(){
+                            this.element.style.backgroundColor = "#2F2F2F";
+                            this.element.style.color = "#FFFFFF";
+                        }''',
+                        'renderComplete': '''function(){
+                            // Style headers with highlight background
+                            var headers = this.element.querySelectorAll('.tabulator-header .tabulator-col');
+                            headers.forEach(function(header) {
+                                header.style.backgroundColor = "#404040";
+                                header.style.color = "#FFFFFF";
+                                header.style.borderBottom = "2px solid #555555";
+                            });
+                            
+                            // Style group headers
+                            var groupHeaders = this.element.querySelectorAll('.tabulator-group-header');
+                            groupHeaders.forEach(function(groupHeader) {
+                                groupHeader.style.backgroundColor = "#404040";
+                                groupHeader.style.color = "#FFFFFF";
+                                groupHeader.style.fontWeight = "bold";
+                            });
+                            
+                            // Style data cells
+                            var cells = this.element.querySelectorAll('.tabulator-cell');
+                            cells.forEach(function(cell) {
+                                if (!cell.classList.contains('tabulator-group')) {
+                                    cell.style.backgroundColor = "#2F2F2F";
+                                    cell.style.color = "#FFFFFF";
+                                    cell.style.borderRight = "1px solid #444444";
+                                }
+                            });
+                            
+                            // Style alternating rows
+                            var rows = this.element.querySelectorAll('.tabulator-row');
+                            rows.forEach(function(row, index) {
+                                if (index % 2 === 1) {
+                                    row.style.backgroundColor = "#353535";
+                                }
+                            });
+                        }'''
                     }
                 )
             else:
@@ -500,11 +738,41 @@ class PriceAnalysisUI(param.Parameterized):
                     show_index=False,
                     sortable=True,
                     selectable=1,
+                    theme='midnight',  # Dark theme
                     configuration={
                         'virtualDomBuffer': 300,  # Enable virtual scrolling for performance
                         'initialSort': [  # Set initial sort order based on hierarchy
                             {'column': col, 'dir': 'asc'} for col in hierarchy_columns
-                        ] if hierarchy_columns else []
+                        ] if hierarchy_columns else [],
+                        'tableBuilt': '''function(){
+                            this.element.style.backgroundColor = "#2F2F2F";
+                            this.element.style.color = "#FFFFFF";
+                        }''',
+                        'renderComplete': '''function(){
+                            // Style headers with highlight background
+                            var headers = this.element.querySelectorAll('.tabulator-header .tabulator-col');
+                            headers.forEach(function(header) {
+                                header.style.backgroundColor = "#404040";
+                                header.style.color = "#FFFFFF";
+                                header.style.borderBottom = "2px solid #555555";
+                            });
+                            
+                            // Style data cells
+                            var cells = this.element.querySelectorAll('.tabulator-cell');
+                            cells.forEach(function(cell) {
+                                cell.style.backgroundColor = "#2F2F2F";
+                                cell.style.color = "#FFFFFF";
+                                cell.style.borderRight = "1px solid #444444";
+                            });
+                            
+                            // Style alternating rows
+                            var rows = this.element.querySelectorAll('.tabulator-row');
+                            rows.forEach(function(row, index) {
+                                if (index % 2 === 1) {
+                                    row.style.backgroundColor = "#353535";
+                                }
+                            });
+                        }'''
                     }
                 )
             
@@ -524,6 +792,10 @@ class PriceAnalysisUI(param.Parameterized):
                 self.tabulator_container.append(self.tabulator_table)
             
             logger.info(f"Table updated with hierarchical data (aggregated totals + individual DUIDs)")
+            
+            # Update the table title with current data information
+            if hasattr(self, 'table_title') and self.table_title is not None:
+                self.table_title.object = self._get_table_title()
             
         except Exception as e:
             logger.error(f"Error calculating aggregations: {e}")
@@ -660,7 +932,6 @@ class PriceAnalysisUI(param.Parameterized):
                 ),
                 pn.pane.Markdown("**Quick Presets:**"),
                 date_presets_row,
-                self.apply_date_button,
                 width=350
             )
         else:
@@ -675,7 +946,6 @@ class PriceAnalysisUI(param.Parameterized):
                 self.region_filters,
                 "**Fuel Filters:**", 
                 self.fuel_filters,
-                self.apply_grouping_button,
                 width=450
             )
         else:
@@ -699,10 +969,10 @@ class PriceAnalysisUI(param.Parameterized):
                 width=350
             )
         
-        # Create refresh panel
-        refresh_panel = pn.Column(
+        # Create actions panel with unified update button only
+        actions_panel = pn.Column(
             "### Actions",
-            self.refresh_button,
+            self.update_analysis_button,
             width=150
         )
         
@@ -732,13 +1002,13 @@ class PriceAnalysisUI(param.Parameterized):
                     pn.Spacer(height=15),
                     column_panel,
                     pn.Spacer(height=15),
-                    refresh_panel,
+                    actions_panel,
                     pn.Spacer(height=15),
                     info_panel,
                     width=500
                 ),
                 pn.Column(
-                    "## Aggregated Results",
+                    self.table_title if hasattr(self, 'table_title') and self.table_title is not None else "## Aggregated Results",
                     self.tabulator_container,
                     pn.Spacer(height=20),
                     self.detail_container,

@@ -191,3 +191,53 @@ The Price Analysis tab has been successfully transformed from a rigid hierarchy 
 - **Custom Filtering:** Any combination of region/fuel filters with any grouping structure
 
 This implementation successfully transforms the Price Analysis tab from a rigid, problematic hierarchy system into a powerful, flexible analytics tool that gives users full control over how they view and analyze the electricity market data.
+
+## Next Development Phase: Enhanced User Experience
+
+### Recently Completed ✅
+
+#### 1. Fix Column Selection Logic ✅ COMPLETED
+**Solution:** Successfully implemented column filtering in hierarchical data display. The system now correctly filters columns based on user selection and maps UI column names to database column names.
+
+#### 2. Add Station Name Column ✅ COMPLETED
+**Solution:** Added Station Name mapping from DUID to Site Name using gen_info.pkl data. Users can now see readable station names instead of cryptic DUID codes.
+
+#### 3. Add Owner Column ✅ COMPLETED  
+**Solution:** Added Owner column extraction and display. Users can now analyze market performance by company ownership using data from gen_info.pkl mapping.
+
+#### 4. Unified Update Button ✅ COMPLETED
+**Solution:** Successfully replaced separate "Apply Grouping" and "Apply Date Filter" buttons with single "Update Analysis" button. The unified button now:
+- Applies date filtering first (if date controls exist)
+- Then applies grouping and column selections
+- Updates table with all user selections consistently
+- Provides clear status feedback on the update results
+- Reduces UI clutter and prevents partial updates
+
+### Current Priority Issues
+
+#### 1. Add Capacity Utilization to Column Choices 📊 IN PROGRESS
+**Status:** Column option is available in UI and being selected by users, but data pipeline verification needed.
+**Requirement:** Ensure "Capacity Utilization (%)" data flows correctly through the entire pipeline.
+**Current Evidence:** Logs show `capacity_utilization` being selected and processed.
+**Next Step:** Verify the data appears correctly in the final table display.
+
+#### 6. Visual Date Filter Feedback 🎨 LOW PRIORITY
+**Requirement:** Date preset buttons (Last 7 Days, Last 30 Days, All Data) should change color when selected.
+**Current Behavior:** Buttons don't show which date range is currently active.
+**Expected Behavior:** Active date range button should be highlighted/different color.
+**Benefit:** Clear visual feedback of current date filter state.
+**Implementation:** Add button state management with active/inactive styling.
+
+### Implementation Priority Order
+1. **Fix Column Selection Logic** - Core functionality broken
+2. **Add Capacity Utilization Column** - Important missing metric
+3. **Unified Update Button** - Better UX flow
+4. **Add Station Name Column** - User-friendly display
+5. **Add Owner Column** - Additional analysis dimension  
+6. **Date Filter Visual Feedback** - Polish/visual enhancement
+
+### Technical Notes
+- Column selection fix likely involves Tabulator `hidden_columns` parameter or DataFrame filtering
+- New columns require updates to both UI options and data pipeline
+- Unified button needs to combine date and grouping filter logic
+- Station Name/Owner columns need proper mapping from DUID to gen_info.pkl data

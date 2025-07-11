@@ -493,6 +493,33 @@ class PriceAnalysisMotor:
             # Filter the DUID data to only include display columns
             filtered_duid_data = duid_data[display_columns].copy()
             
+            # Add Station Name and Owner columns from the original integrated data
+            if not filtered_duid_data.empty:
+                # Get unique DUIDs from the filtered data
+                duids = filtered_duid_data['duid'].unique()
+                
+                # Extract Station Name (Site Name) and Owner info for these DUIDs
+                duid_info = original_data.groupby('duid').agg({
+                    'Site Name': 'first',
+                    'Owner': 'first'
+                }).reset_index()
+                
+                # Merge this info into the filtered data
+                filtered_duid_data = filtered_duid_data.merge(
+                    duid_info[duid_info['duid'].isin(duids)],
+                    on='duid',
+                    how='left'
+                )
+                
+                # Rename for user-friendly display
+                if 'Site Name' in filtered_duid_data.columns:
+                    filtered_duid_data['station_name'] = filtered_duid_data['Site Name']
+                    filtered_duid_data = filtered_duid_data.drop('Site Name', axis=1)
+                
+                if 'Owner' in filtered_duid_data.columns:
+                    filtered_duid_data['owner'] = filtered_duid_data['Owner']
+                    filtered_duid_data = filtered_duid_data.drop('Owner', axis=1)
+            
             # Apply formatting transformations
             if 'generation_mwh' in filtered_duid_data.columns:
                 # Convert MWh to GWh
@@ -521,6 +548,14 @@ class PriceAnalysisMotor:
                 )
                 # Remove original column
                 filtered_duid_data = filtered_duid_data.drop('average_price_per_mwh', axis=1)
+            
+            if 'capacity_utilization_pct' in filtered_duid_data.columns:
+                # Keep capacity utilization as-is, just ensure proper rounding
+                filtered_duid_data['capacity_utilization'] = filtered_duid_data['capacity_utilization_pct'].apply(
+                    lambda x: round(x, 1) if pd.notna(x) else 0.0
+                )
+                # Remove original column
+                filtered_duid_data = filtered_duid_data.drop('capacity_utilization_pct', axis=1)
             
             logger.info(f"Created hierarchical data with {len(filtered_duid_data)} DUID rows")
             logger.info(f"Hierarchical display columns: {list(filtered_duid_data.columns)}")
