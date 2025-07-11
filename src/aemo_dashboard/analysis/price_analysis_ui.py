@@ -346,6 +346,21 @@ class PriceAnalysisUI(param.Parameterized):
                 width=400
             )
             
+            # Uncheck All buttons
+            self.uncheck_all_regions_button = pn.widgets.Button(
+                name="Uncheck All Regions",
+                button_type="light",
+                width=150
+            )
+            self.uncheck_all_regions_button.on_click(self._uncheck_all_regions)
+            
+            self.uncheck_all_fuels_button = pn.widgets.Button(
+                name="Uncheck All Fuels", 
+                button_type="light",
+                width=150
+            )
+            self.uncheck_all_fuels_button.on_click(self._uncheck_all_fuels)
+            
             # Unified update button for all changes
             self.update_analysis_button = pn.widgets.Button(
                 name="Update Analysis",
@@ -361,6 +376,8 @@ class PriceAnalysisUI(param.Parameterized):
             self.category_selector = pn.pane.Markdown("**Grouping controls error**")
             self.region_filters = pn.pane.Markdown("")
             self.fuel_filters = pn.pane.Markdown("")
+            self.uncheck_all_regions_button = pn.pane.Markdown("")
+            self.uncheck_all_fuels_button = pn.pane.Markdown("")
             self.update_analysis_button = pn.pane.Markdown("")
     
     def _create_column_controls(self):
@@ -497,6 +514,24 @@ class PriceAnalysisUI(param.Parameterized):
         except Exception as e:
             logger.error(f"Error in unified update analysis: {e}")
     
+    def _uncheck_all_regions(self, event):
+        """Uncheck all region filters"""
+        try:
+            if hasattr(self, 'region_filters') and hasattr(self.region_filters, 'value'):
+                self.region_filters.value = []
+                logger.info("Unchecked all regions")
+        except Exception as e:
+            logger.error(f"Error unchecking all regions: {e}")
+    
+    def _uncheck_all_fuels(self, event):
+        """Uncheck all fuel filters"""
+        try:
+            if hasattr(self, 'fuel_filters') and hasattr(self.fuel_filters, 'value'):
+                self.fuel_filters.value = []
+                logger.info("Unchecked all fuels")
+        except Exception as e:
+            logger.error(f"Error unchecking all fuels: {e}")
+    
     def _on_apply_grouping(self, event):
         """Handle apply grouping button click with new UI structure"""
         try:
@@ -580,7 +615,10 @@ class PriceAnalysisUI(param.Parameterized):
                 column_mapping = {
                     'generation_gwh': 'generation_mwh',
                     'revenue_millions': 'total_revenue_dollars', 
-                    'avg_price': 'average_price_per_mwh'
+                    'avg_price': 'average_price_per_mwh',
+                    'capacity_utilization': 'capacity_utilization_pct',
+                    'station_name': 'station_name',
+                    'owner': 'owner'
                 }
                 selected_columns = [column_mapping.get(col, col) for col in user_selected_columns]
             else:
@@ -944,8 +982,10 @@ class PriceAnalysisUI(param.Parameterized):
                 self.category_selector,
                 "**Region Filters:**",
                 self.region_filters,
+                pn.Row(self.uncheck_all_regions_button, width=450),
                 "**Fuel Filters:**", 
                 self.fuel_filters,
+                pn.Row(self.uncheck_all_fuels_button, width=450),
                 width=450
             )
         else:
