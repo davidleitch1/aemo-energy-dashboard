@@ -18,7 +18,6 @@ import pickle
 from pathlib import Path
 import json
 import sys
-import logging
 from bokeh.models import DatetimeTickFormatter
 from dotenv import load_dotenv
 
@@ -137,15 +136,6 @@ class EnergyDashboard(param.Parameterized):
         doc="Select region to display"
     )
     
-    show_generation = param.Boolean(
-        default=True,
-        doc="Show generation by fuel type"
-    )
-    
-    show_utilization = param.Boolean(
-        default=False,
-        doc="Show capacity utilization"
-    )
     
     def __init__(self, **params):
         super().__init__(**params)
@@ -1012,47 +1002,13 @@ class EnergyDashboard(param.Parameterized):
             logger.error(f"Error updating plots: {e}")
             # Don't crash the application, just log and continue
     
-    def update_plot_visibility(self):
-        """Update plot visibility based on checkbox states"""
-        try:
-            # Create a new main content column with only the visible plots
-            visible_plots = []
-            
-            if self.show_generation and self.plot_pane is not None:
-                visible_plots.append(self.plot_pane)
-            
-            if self.show_utilization and self.utilization_pane is not None:
-                visible_plots.append(self.utilization_pane)
-            
-            # If no plots are selected, show a message
-            if not visible_plots:
-                empty_message = pn.pane.HTML(
-                    "<div style='text-align: center; color: #888; padding: 50px;'>"
-                    "<h3>No charts selected</h3>"
-                    "<p>Please select at least one chart type to display</p>"
-                    "</div>",
-                    sizing_mode='stretch_width',
-                    height=200
-                )
-                visible_plots = [empty_message]
-            
-            # Update the main content with the visible plots
-            if self.main_content is not None:
-                self.main_content.objects = visible_plots
-            
-            logger.info(f"Updated plot visibility: generation={self.show_generation}, utilization={self.show_utilization}")
-            
-        except Exception as e:
-            logger.error(f"Error updating plot visibility: {e}")
-    
     async def auto_update_loop(self):
         """Automatic update loop every 4.5 minutes with better error handling"""
         while True:
             try:
                 await asyncio.sleep(270)  # 4.5 minutes
-                # Only update data if plots are visible
-                if self.show_generation or self.show_utilization:
-                    self.update_plot()
+                # Update plots in both tabs
+                self.update_plot()
                 logger.info("Auto-update completed")
             except asyncio.CancelledError:
                 logger.info("Auto-update loop cancelled")
@@ -1082,11 +1038,6 @@ class EnergyDashboard(param.Parameterized):
         logger.info(f"Region changed to: {self.region}")
         self.update_plot()
     
-    @param.depends('show_generation', 'show_utilization', watch=True)
-    def on_plot_visibility_change(self):
-        """Called when plot visibility checkboxes change"""
-        logger.info(f"Visibility changed: generation={self.show_generation}, utilization={self.show_utilization}")
-        self.update_plot_visibility()
     
     def test_vol_price(self):
         """Test method to verify vol_price functionality"""
@@ -1120,7 +1071,7 @@ class EnergyDashboard(param.Parameterized):
             return None
 
     def create_dashboard(self):
-        """Create the complete dashboard with improved error handling"""
+        """Create the complete dashboard with tabbed interface"""
         try:
             # Dashboard title with update time
             title = pn.pane.HTML(
@@ -1134,7 +1085,7 @@ class EnergyDashboard(param.Parameterized):
                 sizing_mode='stretch_width'
             )
             
-            # Region selector
+            # Shared region selector
             region_selector = pn.Param(
                 self,
                 parameters=['region'],
@@ -1144,62 +1095,50 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
-            # Plot visibility checkboxes - arranged horizontally
-            generation_checkbox = pn.Param(
-                self,
-                parameters=['show_generation'],
-                widgets={'show_generation': pn.widgets.Checkbox},
-                name="",
-                width=150,
-                margin=(10, 5)
-            )
-            
-            utilization_checkbox = pn.Param(
-                self,
-                parameters=['show_utilization'],
-                widgets={'show_utilization': pn.widgets.Checkbox},
-                name="",
-                width=150,
-                margin=(10, 5)
-            )
-            
-            # Combine checkboxes in a horizontal row
-            plot_controls = pn.Row(
-                generation_checkbox,
-                utilization_checkbox,
-                width=300,
-                margin=(10, 0)
-            )
-            
-            # Create control row with region selector and plot toggles
+            # Create control row with centered region selector
             control_row = pn.Row(
                 pn.Spacer(),
                 region_selector,
-                pn.Spacer(width=80),  # Increased spacing to prevent overlap
-                plot_controls,
                 pn.Spacer(),
                 sizing_mode='stretch_width'
             )
             
-            # Main content - plots that can be toggled
-            self.main_content = pn.Column(
+            # Create tabs for different views
+            # Generation tab
+            generation_tab = pn.Column(
                 self.plot_pane,
+                sizing_mode='stretch_width',
+                margin=(10, 0)
+            )
+            
+            # Capacity utilization tab  
+            utilization_tab = pn.Column(
                 self.utilization_pane,
+                sizing_mode='stretch_width',
+                margin=(10, 0)
+            )
+            
+            # Create tabbed interface
+            tabs = pn.Tabs(
+                ("Generation by Fuel", generation_tab),
+                ("Capacity Utilization", utilization_tab),
+                dynamic=True,
+                closable=False,
                 sizing_mode='stretch_width'
             )
             
-            # Complete vertical layout - let content determine height naturally
+            # Complete dashboard layout
             dashboard = pn.Column(
                 title,
                 self.update_time_display,
                 control_row,
-                pn.pane.HTML("<div style='height: 10px;'></div>"),  # Reduced spacer
-                self.main_content,
+                pn.pane.HTML("<div style='height: 10px;'></div>"),
+                tabs,
                 sizing_mode='stretch_width'
             )
             
-            # Initialize plot visibility
-            self.update_plot_visibility()
+            # Initialize plots for both tabs
+            self.update_plot()
             
             return dashboard
             
