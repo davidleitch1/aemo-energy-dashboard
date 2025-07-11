@@ -87,3 +87,107 @@ Replace the rigid "Aggregation Hierarchy" dropdown with flexible controls:
 4. **Technology Focus:** Group by Technology → Fuel → Compare technologies within fuel types
 
 This approach transforms the Price Analysis tab from a rigid hierarchy viewer into a powerful, user-driven analytics tool.
+
+## Dashboard Control Commands
+
+### Restart Dashboard
+```bash
+# Kill existing dashboard process
+pkill -f "python -m aemo_dashboard"
+
+# Start dashboard (run from src directory)
+cd "/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard/src" && uv run python -m aemo_dashboard.generation.gen_dash &
+```
+
+### Dashboard URLs
+- Main dashboard: http://localhost:5010
+- Navigate to "Average Price Analysis" tab to see custom pivot table builder
+
+### Troubleshooting
+- If port 5010 is in use: `lsof -ti:5010 | xargs kill -9`
+- Check logs: `tail -f /Users/davidleitch/Library/Mobile\ Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard/logs/aemo_dashboard.log`
+
+## Custom Pivot Table Builder Implementation (COMPLETED)
+
+### Final Status: ✅ Major Implementation Complete
+
+The Price Analysis tab has been successfully transformed from a rigid hierarchy system into a flexible, user-driven pivot table builder. This implementation addresses the fundamental issue that every DUID creates its own group, making traditional grouping ineffective.
+
+#### ✅ Completed Features
+
+**1. Redesigned User Interface**
+- **Category Selection:** Users select which dimensions to group by (Region, Fuel)
+- **Region Filters:** Checkboxes to select which regions to include (NSW1, QLD1, SA1, TAS1, VIC1)  
+- **Fuel Filters:** Checkboxes to select which fuel types to include (Coal, Gas, Solar, Wind, etc.)
+- **Column Selection:** Choose which data columns to display with shorter titles
+- **Apply Button:** Triggers recalculation with new selections
+
+**2. Hierarchical DUID Display**
+- ✅ Individual DUIDs are now properly nested under their parent groups
+- ✅ Users can click on group headers (e.g., "Coal") to expand and see individual DUIDs
+- ✅ Groups start collapsed by default for clean initial view
+- ✅ Removed separate detail table - everything is in one hierarchical table
+
+**3. Data Filtering System**
+- ✅ Actual data filtering implemented (not just UI filtering)
+- ✅ Region filters correctly limit data to selected regions only
+- ✅ Fuel filters correctly limit data to selected fuel types only
+- ✅ Filtered data maintains proper aggregations and calculations
+
+**4. Formatting Improvements**
+- ✅ Generation displayed in GWh (converted from MWh ÷ 1000)
+- ✅ Revenue displayed in $millions (converted from dollars ÷ 1,000,000)
+- ✅ Smart decimal rounding: 0 decimal places if >10, otherwise 1 decimal place
+- ✅ Shorter column titles: "Generation (GWh)", "Revenue ($M)", "Avg Price ($/MWh)"
+- ✅ Removed unnecessary `_row_type` column
+
+**5. Technical Architecture**
+- ✅ Flexible grouping system supports any combination of available dimensions
+- ✅ Column mapping system handles UI names vs database column names  
+- ✅ Proper data integration with filtering applied before aggregation
+- ✅ Hierarchical data structure compatible with Panel's Tabulator groupby functionality
+
+#### ⚠️ Known Issues Requiring Future Work
+
+**1. Column Selection Logic**
+- **Issue:** Column selection partially works but may not hide all unselected columns consistently
+- **Impact:** Users see more columns than they selected
+- **Priority:** Medium - functional but not polished
+
+**2. Date Range Integration**
+- **Issue:** Date filtering works but could be better integrated with the grouping controls
+- **Impact:** Users need to apply date filters separately from grouping changes
+- **Priority:** Low - workaround available
+
+**3. Additional Formatting**
+- **Issue:** Some edge cases in number formatting may need refinement
+- **Impact:** Minor display inconsistencies in very large or very small numbers
+- **Priority:** Low - cosmetic
+
+#### Technical Implementation Details
+
+**Key Files Modified:**
+- `src/aemo_dashboard/analysis/price_analysis_ui.py` - Complete UI redesign
+- `src/aemo_dashboard/analysis/price_analysis.py` - Added filtering and formatting logic
+
+**Major Changes:**
+1. **UI Redesign:** Replaced 3-level hierarchy selectors with category + filter approach
+2. **Data Filtering:** Added region_filters and fuel_filters parameters throughout data pipeline  
+3. **Hierarchical Display:** Modified `create_hierarchical_data()` to include DUID-level details in main table
+4. **Formatting Pipeline:** Added transformation logic for GWh, $millions, and smart rounding
+5. **Column Mapping:** Implemented mapping between UI column names and database column names
+
+**User Workflow:**
+1. Select grouping categories (e.g., "Fuel" + "Region")
+2. Choose which regions/fuels to include via filter checkboxes
+3. Select which data columns to display  
+4. Click "Apply Grouping" to rebuild table
+5. Expand/collapse groups to see individual DUIDs
+
+#### Example Use Cases Now Supported
+- **Fuel Analysis:** Group by Fuel only, filter to specific regions → See fuel performance by region
+- **Regional Focus:** Group by Region, filter to Coal only → See coal performance across regions
+- **Multi-level:** Group by Fuel+Region, filter to NSW1+VIC1 → Detailed breakdown of two key markets
+- **Custom Filtering:** Any combination of region/fuel filters with any grouping structure
+
+This implementation successfully transforms the Price Analysis tab from a rigid, problematic hierarchy system into a powerful, flexible analytics tool that gives users full control over how they view and analyze the electricity market data.

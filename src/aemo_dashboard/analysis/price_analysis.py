@@ -424,6 +424,112 @@ class PriceAnalysisMotor:
         except Exception as e:
             logger.error(f"Error preparing tabulator data: {e}")
             return df.copy()  # Return copy of original on error
+    
+    def create_hierarchical_data(self, hierarchy: List[str], selected_columns: List[str], region_filters: List[str] = None, fuel_filters: List[str] = None) -> pd.DataFrame:
+        """
+        Create a hierarchical DataFrame that includes both aggregated totals and individual DUIDs
+        for proper groupby functionality in Panel's Tabulator.
+        
+        Args:
+            hierarchy: List of columns to group by (e.g., ['Fuel', 'Region'])
+            selected_columns: List of data columns to include
+            region_filters: List of regions to include (filter)
+            fuel_filters: List of fuels to include (filter)
+            
+        Returns:
+            DataFrame with both group totals and individual DUIDs for hierarchical display
+        """
+        try:
+            if self.integrated_data is None:
+                raise ValueError("Data not integrated yet. Call integrate_data() first.")
+            
+            logger.info(f"Creating hierarchical data for hierarchy: {hierarchy}")
+            logger.info(f"Applying filters - Regions: {region_filters}, Fuels: {fuel_filters}")
+            
+            # Apply filters to the integrated data before processing
+            filtered_data = self.integrated_data.copy()
+            
+            # Apply region filter
+            if region_filters:
+                filtered_data = filtered_data[filtered_data['Region'].isin(region_filters)]
+                logger.info(f"After region filter: {len(filtered_data)} records")
+            
+            # Apply fuel filter  
+            if fuel_filters:
+                filtered_data = filtered_data[filtered_data['Fuel'].isin(fuel_filters)]
+                logger.info(f"After fuel filter: {len(filtered_data)} records")
+            
+            if len(filtered_data) == 0:
+                logger.warning("No data left after applying filters")
+                return pd.DataFrame()
+            
+            # Temporarily store the original data and use filtered data
+            original_data = self.integrated_data
+            self.integrated_data = filtered_data
+            
+            # Calculate DUID-level details (these will be the leaf nodes)
+            duid_hierarchy = hierarchy + ['duid']
+            duid_data = self.calculate_duid_details(hierarchy)
+            
+            # Restore original data
+            self.integrated_data = original_data
+            
+            if duid_data.empty:
+                logger.warning("No DUID data available for hierarchical display")
+                return pd.DataFrame()
+            
+            # Ensure we only include the columns we need
+            available_columns = set(duid_data.columns)
+            hierarchy_cols = [col for col in hierarchy if col in available_columns]
+            data_cols = [col for col in selected_columns if col in available_columns]
+            
+            if not hierarchy_cols:
+                logger.warning("No valid hierarchy columns found")
+                return pd.DataFrame()
+                
+            # Build the columns we need for display
+            display_columns = hierarchy_cols + ['duid'] + data_cols
+            
+            # Filter the DUID data to only include display columns
+            filtered_duid_data = duid_data[display_columns].copy()
+            
+            # Apply formatting transformations
+            if 'generation_mwh' in filtered_duid_data.columns:
+                # Convert MWh to GWh
+                filtered_duid_data['generation_gwh'] = filtered_duid_data['generation_mwh'] / 1000
+                # Round to 0 decimal places if > 10, otherwise 1 decimal place
+                filtered_duid_data['generation_gwh'] = filtered_duid_data['generation_gwh'].apply(
+                    lambda x: round(x, 0) if x > 10 else round(x, 1)
+                )
+                # Remove original MWh column
+                filtered_duid_data = filtered_duid_data.drop('generation_mwh', axis=1)
+            
+            if 'total_revenue_dollars' in filtered_duid_data.columns:
+                # Convert dollars to millions
+                filtered_duid_data['revenue_millions'] = filtered_duid_data['total_revenue_dollars'] / 1_000_000
+                # Round to 0 decimal places if > 10, otherwise 1 decimal place
+                filtered_duid_data['revenue_millions'] = filtered_duid_data['revenue_millions'].apply(
+                    lambda x: round(x, 0) if x > 10 else round(x, 1)
+                )
+                # Remove original dollars column
+                filtered_duid_data = filtered_duid_data.drop('total_revenue_dollars', axis=1)
+            
+            if 'average_price_per_mwh' in filtered_duid_data.columns:
+                # Round price to 0 decimal places if > 10, otherwise 1 decimal place
+                filtered_duid_data['avg_price'] = filtered_duid_data['average_price_per_mwh'].apply(
+                    lambda x: round(x, 0) if x > 10 else round(x, 1)
+                )
+                # Remove original column
+                filtered_duid_data = filtered_duid_data.drop('average_price_per_mwh', axis=1)
+            
+            logger.info(f"Created hierarchical data with {len(filtered_duid_data)} DUID rows")
+            logger.info(f"Hierarchical display columns: {list(filtered_duid_data.columns)}")
+            
+            return filtered_duid_data
+            
+        except Exception as e:
+            logger.error(f"Error creating hierarchical data: {e}")
+            return pd.DataFrame()
 
 # Example usage and testing
 if __name__ == "__main__":

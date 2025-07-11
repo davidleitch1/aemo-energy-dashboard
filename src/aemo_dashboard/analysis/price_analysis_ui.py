@@ -20,10 +20,13 @@ class PriceAnalysisUI(param.Parameterized):
     """UI component for price analysis with flexible aggregation"""
     
     # Parameters for reactive UI
-    selected_hierarchy = param.String(default="Fuel → Region → DUID")
     refresh_data = param.Boolean(default=False)
     start_date = param.Date(default=None)
     end_date = param.Date(default=None)
+    
+    # Grouping and column selection parameters
+    selected_grouping = param.List(default=['Fuel'], bounds=(0, 3))
+    selected_columns = param.List(default=['generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh'])
     
     def __init__(self):
         super().__init__()
@@ -35,7 +38,9 @@ class PriceAnalysisUI(param.Parameterized):
         self._initialize_motor()
         
         # Create UI components
-        self.hierarchy_selector = None
+        self.grouping_checkboxes = None
+        self.column_checkboxes = None
+        self.apply_grouping_button = None
         self.tabulator_table = None
         self.tabulator_container = None  # Container for dynamic tabulator updates
         self.detail_table = None  # Table for DUID details
@@ -84,19 +89,10 @@ class PriceAnalysisUI(param.Parameterized):
         
         self.status_text = pn.pane.Markdown(f"**Status:** {status_msg}")
         
-        # Hierarchy selector
+        # Grouping and column selection controls
         if self.data_loaded:
-            available_hierarchies = self.motor.get_available_hierarchies()
-            self.hierarchy_selector = pn.widgets.Select(
-                name="Aggregation Hierarchy",
-                value=list(available_hierarchies.keys())[0],
-                options=list(available_hierarchies.keys()),
-                width=300
-            )
-            self.selected_hierarchy = self.hierarchy_selector.value
-            
-            # Watch for changes
-            self.hierarchy_selector.param.watch(self._on_hierarchy_change, 'value')
+            self._create_grouping_controls()
+            self._create_column_controls()
             
             # Date range controls
             self._create_date_controls()
@@ -113,7 +109,8 @@ class PriceAnalysisUI(param.Parameterized):
             self._calculate_and_update_table()
             
         else:
-            self.hierarchy_selector = pn.pane.Markdown("**Data loading failed - hierarchy selection unavailable**")
+            self.grouping_checkboxes = pn.pane.Markdown("**Data loading failed - grouping controls unavailable**")
+            self.column_checkboxes = pn.pane.Markdown("**Data loading failed - column controls unavailable**")
             self.tabulator_table = pn.pane.Markdown("**Cannot display table without data**")
             self.tabulator_container = pn.Column(self.tabulator_table, sizing_mode='stretch_width')
             self.detail_container = pn.Column(sizing_mode='stretch_width')
@@ -256,11 +253,131 @@ class PriceAnalysisUI(param.Parameterized):
         except Exception as e:
             logger.error(f"Error applying date filter: {e}")
     
-    def _on_hierarchy_change(self, event):
-        """Handle hierarchy selection change"""
-        self.selected_hierarchy = event.new
-        logger.info(f"Hierarchy changed to: {self.selected_hierarchy}")
-        self._calculate_and_update_table()
+    def _create_grouping_controls(self):
+        """Create improved grouping controls with category selection and item filters"""
+        try:
+            # Get unique values from data for filter options
+            regions = ['NSW1', 'QLD1', 'SA1', 'TAS1', 'VIC1']  # Known regions
+            fuels = self.motor.integrated_data['Fuel'].unique().tolist() if self.motor.integrated_data is not None else ['Coal', 'Gas', 'Solar', 'Wind']
+            technologies = ['CCGT', 'OCGT', 'Steam', 'PV', 'Wind'] # Common tech types
+            
+            # Category selection: Which dimensions to group by
+            self.category_selector = pn.widgets.CheckBoxGroup(
+                name="Group by Categories:",
+                value=['Fuel'],  # Default selection
+                options=['Region', 'Fuel'],
+                inline=True,
+                width=400
+            )
+            
+            # Region filters
+            self.region_filters = pn.widgets.CheckBoxGroup(
+                name="Include Regions:",
+                value=regions,  # Default: all regions
+                options=regions,
+                inline=True,
+                width=400
+            )
+            
+            # Fuel filters
+            self.fuel_filters = pn.widgets.CheckBoxGroup(
+                name="Include Fuels:",
+                value=fuels,  # Default: all fuels
+                options=fuels,
+                inline=False,  # Vertical layout for readability
+                width=400
+            )
+            
+            # Apply button for grouping changes
+            self.apply_grouping_button = pn.widgets.Button(
+                name="Apply Grouping",
+                button_type="primary",
+                width=150
+            )
+            self.apply_grouping_button.on_click(self._on_apply_grouping)
+            
+            logger.info("Improved grouping controls created successfully")
+            
+        except Exception as e:
+            logger.error(f"Error creating grouping controls: {e}")
+            self.category_selector = pn.pane.Markdown("**Grouping controls error**")
+            self.region_filters = pn.pane.Markdown("")
+            self.fuel_filters = pn.pane.Markdown("")
+            self.apply_grouping_button = pn.pane.Markdown("")
+    
+    def _create_column_controls(self):
+        """Create checkbox controls for column selection"""
+        try:
+            # Available display columns with shorter names
+            column_options = {
+                'generation_gwh': 'Generation (GWh)',
+                'revenue_millions': 'Revenue ($M)',
+                'avg_price': 'Avg Price ($/MWh)',
+                'capacity_mw': 'Capacity (MW)',
+                'capacity_utilization_pct': 'Utilization (%)'
+            }
+            
+            self.column_checkboxes = pn.widgets.CheckBoxGroup(
+                name="Display Columns:",
+                value=['generation_gwh', 'revenue_millions', 'avg_price'],  # Default columns with new names
+                options=list(column_options.items()),  # Use (value, label) tuples instead of separate lists
+                inline=False,
+                width=350
+            )
+            
+            logger.info("Column controls created successfully")
+            
+        except Exception as e:
+            logger.error(f"Error creating column controls: {e}")
+            self.column_checkboxes = pn.pane.Markdown("**Column controls error**")
+    
+    def _on_apply_grouping(self, event):
+        """Handle apply grouping button click with new UI structure"""
+        try:
+            # Check if widgets are properly initialized
+            if not hasattr(self.category_selector, 'value') or not hasattr(self.column_checkboxes, 'value'):
+                logger.warning("Grouping controls not properly initialized")
+                return
+            
+            # Get selected grouping categories
+            selected_categories = self.category_selector.value if hasattr(self.category_selector, 'value') else ['Fuel']
+            
+            # Get filter selections
+            selected_regions = self.region_filters.value if hasattr(self.region_filters, 'value') else []
+            selected_fuels = self.fuel_filters.value if hasattr(self.fuel_filters, 'value') else []
+            
+            logger.info(f"Selected categories: {selected_categories}")
+            logger.info(f"Region filters: {selected_regions}")
+            logger.info(f"Fuel filters: {selected_fuels}")
+            
+            # Use selected categories as the grouping hierarchy
+            self.selected_grouping = selected_categories if selected_categories else ['Fuel']  # Default fallback
+            
+            # Store filter selections for data filtering
+            self.selected_region_filters = selected_regions
+            self.selected_fuel_filters = selected_fuels
+            if hasattr(self.column_checkboxes, 'value'):
+                # Extract column names from tuples if needed
+                raw_selection = self.column_checkboxes.value
+                if raw_selection:
+                    if isinstance(raw_selection[0], tuple):
+                        # If selection contains tuples, extract just the column names (first element)
+                        self.selected_columns = [item[0] if isinstance(item, tuple) else item for item in raw_selection]
+                    else:
+                        self.selected_columns = raw_selection
+                else:
+                    # If nothing selected, use default
+                    self.selected_columns = ['generation_gwh', 'revenue_millions', 'avg_price']
+            else:
+                self.selected_columns = ['generation_gwh', 'revenue_millions', 'avg_price']  # Default fallback
+            
+            logger.info(f"Applied grouping: {self.selected_grouping}, columns: {self.selected_columns}")
+            
+            # Rebuild the table
+            self._calculate_and_update_table()
+            
+        except Exception as e:
+            logger.error(f"Error applying grouping: {e}")
     
     def _on_refresh_click(self, event):
         """Handle refresh button click"""
@@ -277,16 +394,34 @@ class PriceAnalysisUI(param.Parameterized):
             self.status_text.object = f"**Status:** {status_msg}"
     
     def _calculate_and_update_table(self):
-        """Calculate aggregated data and update the table"""
+        """Calculate aggregated data and update the table using dynamic grouping"""
         if not self.data_loaded:
             return
         
         try:
-            logger.info(f"Calculating aggregations for hierarchy: {self.selected_hierarchy}")
+            # Use dynamic grouping selection
+            hierarchy_columns = self.selected_grouping if hasattr(self, 'selected_grouping') and self.selected_grouping else ['Fuel']
             
-            # Get hierarchy columns
-            available_hierarchies = self.motor.get_available_hierarchies()
-            hierarchy_columns = available_hierarchies[self.selected_hierarchy]
+            # Handle column selection - extract column names from tuples if needed
+            if hasattr(self, 'selected_columns') and self.selected_columns:
+                raw_columns = self.selected_columns
+                if raw_columns and isinstance(raw_columns[0], tuple):
+                    user_selected_columns = [item[0] if isinstance(item, tuple) else item for item in raw_columns]
+                else:
+                    user_selected_columns = raw_columns
+                    
+                # Map new column names back to original column names for aggregated data
+                column_mapping = {
+                    'generation_gwh': 'generation_mwh',
+                    'revenue_millions': 'total_revenue_dollars', 
+                    'avg_price': 'average_price_per_mwh'
+                }
+                selected_columns = [column_mapping.get(col, col) for col in user_selected_columns]
+            else:
+                selected_columns = ['generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh']
+            
+            logger.info(f"Calculating aggregations for grouping: {hierarchy_columns}")
+            logger.info(f"Selected display columns: {selected_columns}")
             
             # Calculate aggregated data
             aggregated_data = self.motor.calculate_aggregated_prices(hierarchy_columns)
@@ -305,7 +440,7 @@ class PriceAnalysisUI(param.Parameterized):
                         aggregated_data = aggregated_data.sort_values(available_sort_cols)
             
             if aggregated_data.empty:
-                self.tabulator_table = pn.pane.Markdown("**No data available for selected hierarchy**")
+                self.tabulator_table = pn.pane.Markdown("**No data available for selected grouping**")
                 if self.tabulator_container is None:
                     self.tabulator_container = pn.Column(self.tabulator_table, sizing_mode='stretch_width')
                 else:
@@ -313,11 +448,35 @@ class PriceAnalysisUI(param.Parameterized):
                     self.tabulator_container.append(self.tabulator_table)
                 return
             
-            # Create tabulator table with proper grouping (aggregated data without DUID)
-            if len(hierarchy_columns) > 1:
-                # Multi-level grouping: Use Panel's groupby with aggregated data
+            # Filter data to only show selected columns (plus grouping columns)
+            # Ensure selected columns actually exist in the data
+            available_columns = set(aggregated_data.columns)
+            valid_selected_columns = [col for col in selected_columns if col in available_columns]
+            
+            if not valid_selected_columns:
+                # Fallback if no valid columns selected - use original column names
+                valid_selected_columns = ['generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh']
+                valid_selected_columns = [col for col in valid_selected_columns if col in available_columns]
+            
+            display_columns = hierarchy_columns + valid_selected_columns
+            filtered_data = aggregated_data[display_columns].copy()
+            
+            logger.info(f"Available columns: {list(available_columns)}")
+            logger.info(f"Valid selected columns: {valid_selected_columns}")
+            logger.info(f"Display columns: {display_columns}")
+            
+            # Get filter selections if they exist
+            region_filters = getattr(self, 'selected_region_filters', None)
+            fuel_filters = getattr(self, 'selected_fuel_filters', None)
+            
+            # Create hierarchical data that includes both totals and DUIDs for proper grouping
+            # Pass the original column names to the hierarchical data method
+            hierarchical_data = self.motor.create_hierarchical_data(hierarchy_columns, selected_columns, region_filters, fuel_filters)
+            
+            if not hierarchical_data.empty:
+                # Use hierarchical data that includes both group totals and individual DUIDs
                 self.tabulator_table = pn.widgets.Tabulator(
-                    value=aggregated_data,  # Use the aggregated DataFrame
+                    value=hierarchical_data,
                     groupby=hierarchy_columns,  # Panel handles the multi-level grouping
                     pagination=None,  # Disable pagination for scrolling
                     sizing_mode='stretch_width',
@@ -332,9 +491,9 @@ class PriceAnalysisUI(param.Parameterized):
                     }
                 )
             else:
-                # Simple table without grouping
+                # Fallback: Simple table without grouping
                 self.tabulator_table = pn.widgets.Tabulator(
-                    value=aggregated_data,
+                    value=filtered_data,
                     pagination=None,  # Disable pagination for scrolling
                     sizing_mode='stretch_width',
                     height=600,
@@ -349,40 +508,12 @@ class PriceAnalysisUI(param.Parameterized):
                     }
                 )
             
-            # Create detail table showing individual DUIDs
-            detail_data = self.motor.calculate_duid_details(hierarchy_columns)
-            if not detail_data.empty and len(hierarchy_columns) > 1:
-                self.detail_table = pn.widgets.Tabulator(
-                    value=detail_data,
-                    pagination=None,
-                    sizing_mode='stretch_width',
-                    height=400,
-                    show_index=False,
-                    sortable=True,
-                    selectable=1,
-                    configuration={
-                        'virtualDomBuffer': 300
-                    }
-                )
-                
-                # Create or update detail container
-                if self.detail_container is None:
-                    self.detail_container = pn.Column(
-                        "### Individual DUID Details",
-                        self.detail_table,
-                        sizing_mode='stretch_width'
-                    )
-                else:
-                    self.detail_container.clear()
-                    self.detail_container.extend([
-                        "### Individual DUID Details",
-                        self.detail_table
-                    ])
+            # Note: Individual DUIDs are now included in the hierarchical table above
+            # Users can click on group headers to expand and see the DUIDs
+            if self.detail_container is None:
+                self.detail_container = pn.Column(sizing_mode='stretch_width')
             else:
-                if self.detail_container is None:
-                    self.detail_container = pn.Column(sizing_mode='stretch_width')
-                else:
-                    self.detail_container.clear()
+                self.detail_container.clear()
             
             # Create or update the tabulator container
             if self.tabulator_container is None:
@@ -392,7 +523,7 @@ class PriceAnalysisUI(param.Parameterized):
                 self.tabulator_container.clear()
                 self.tabulator_container.append(self.tabulator_table)
             
-            logger.info(f"Table updated with {len(aggregated_data)} aggregated rows and {len(detail_data)} DUID details")
+            logger.info(f"Table updated with hierarchical data (aggregated totals + individual DUIDs)")
             
         except Exception as e:
             logger.error(f"Error calculating aggregations: {e}")
@@ -535,12 +666,44 @@ class PriceAnalysisUI(param.Parameterized):
         else:
             date_range_panel = pn.pane.Markdown("**Date range controls unavailable**")
         
-        # Create aggregation panel  
-        aggregation_panel = pn.Column(
-            "### Aggregation",
-            self.hierarchy_selector,
+        # Create grouping controls panel with new UI structure  
+        if hasattr(self.category_selector, 'value'):
+            grouping_panel = pn.Column(
+                "### Grouping & Filters",
+                self.category_selector,
+                "**Region Filters:**",
+                self.region_filters,
+                "**Fuel Filters:**", 
+                self.fuel_filters,
+                self.apply_grouping_button,
+                width=450
+            )
+        else:
+            grouping_panel = pn.Column(
+                "### Grouping & Filters",
+                self.category_selector,  # This will be the error message
+                width=450
+            )
+        
+        # Create column selection panel
+        if hasattr(self.column_checkboxes, 'value'):
+            column_panel = pn.Column(
+                "### Display Columns",
+                self.column_checkboxes,
+                width=350
+            )
+        else:
+            column_panel = pn.Column(
+                "### Display Columns",
+                self.column_checkboxes,  # This will be the error message
+                width=350
+            )
+        
+        # Create refresh panel
+        refresh_panel = pn.Column(
+            "### Actions",
             self.refresh_button,
-            width=350
+            width=150
         )
         
         # Create info panel
@@ -565,10 +728,14 @@ class PriceAnalysisUI(param.Parameterized):
                     "## Controls",
                     date_range_panel,
                     pn.Spacer(height=15),
-                    aggregation_panel,
+                    grouping_panel,
+                    pn.Spacer(height=15),
+                    column_panel,
+                    pn.Spacer(height=15),
+                    refresh_panel,
                     pn.Spacer(height=15),
                     info_panel,
-                    width=450
+                    width=500
                 ),
                 pn.Column(
                     "## Aggregated Results",
