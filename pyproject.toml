@@ -53,6 +53,8 @@ aemo-spot-update = "aemo_dashboard.spot_prices.update_spot:main"
 aemo-spot-display = "aemo_dashboard.spot_prices.display_spot:main"
 aemo-gen-dashboard = "aemo_dashboard.generation.gen_dash:main"
 aemo-gen-update = "aemo_dashboard.generation.update_generation:main"
+aemo-transmission-update = "aemo_dashboard.transmission.update_transmission:main"
+aemo-transmission-backfill = "aemo_dashboard.transmission.backfill_transmission:main"
 aemo-manage-duids = "aemo_dashboard.scripts.manage_duid_exceptions:main"
 
 [project.urls]
