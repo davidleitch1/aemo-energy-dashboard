@@ -196,30 +196,43 @@ This implementation successfully transforms the Price Analysis tab from a rigid,
 
 ### Recently Completed ✅
 
-#### 1. Fix Column Selection Logic ✅ COMPLETED
-**Solution:** Successfully implemented column filtering in hierarchical data display. The system now correctly filters columns based on user selection and maps UI column names to database column names.
+#### 1. Complete UI Overhaul ✅ COMPLETED
+**Major Achievement:** Successfully transformed the Price Analysis interface from a problematic rigid system into a comprehensive, user-friendly analytics dashboard.
 
-#### 2. Add Station Name Column ✅ COMPLETED
-**Solution:** Added Station Name mapping from DUID to Site Name using gen_info.pkl data. Users can now see readable station names instead of cryptic DUID codes.
+**✅ Core Functionality Fixed:**
+- **Column Selection Logic:** All 6 columns now work perfectly (Generation GWh, Revenue $M, Avg Price, Capacity Utilization %, Station Name, Owner)
+- **Capacity Utilization:** Fixed missing column mapping (`'capacity_utilization': 'capacity_utilization_pct'`) - now displays correctly
+- **Station Name & Owner:** Added DUID mapping to readable station names and company ownership data
+- **Unified Update Button:** Replaced fragmented Apply buttons with single "Update Analysis" that handles all filters
 
-#### 3. Add Owner Column ✅ COMPLETED  
-**Solution:** Added Owner column extraction and display. Users can now analyze market performance by company ownership using data from gen_info.pkl mapping.
+**🎨 Professional UI Design:**
+- **Dark Theme Integration:** Table styled with white text on black background matching dashboard theme
+- **Column Headers:** Highlighted background (#404040) with proper contrast
+- **Visual Date Feedback:** Active date preset buttons change color (primary vs light)
+- **Dynamic Table Titles:** Shows "Last 7 Days", "Last 30 Days", "All Data", or "Custom Range" with date info
+- **Increased Table Height:** From 600px to 800px for better data viewing
 
-#### 4. Unified Update Button ✅ COMPLETED
-**Solution:** Successfully replaced separate "Apply Grouping" and "Apply Date Filter" buttons with single "Update Analysis" button. The unified button now:
-- Applies date filtering first (if date controls exist)
-- Then applies grouping and column selections
-- Updates table with all user selections consistently
-- Provides clear status feedback on the update results
-- Reduces UI clutter and prevents partial updates
+**🔄 Horizontal Layout Implementation:**
+- **Side-by-Side Sections:** Region | Fuel | Columns arranged horizontally
+- **Compact Design:** Shorter names ("Gen (GWh)", "Rev ($M)", "Price ($/MWh)", "Util (%)")
+- **Checkbox Uncheck All:** Replaced buttons with checkboxes underneath each category header
+- **Proper Vertical Lists:** Each section displays items vertically within its column
 
-### Current Priority Issues
+**🎛️ Enhanced User Experience:**
+- **Smart Default Selection:** All regions, fuels, and default columns pre-selected
+- **Quick Clear Options:** "Uncheck All" checkboxes for instant category clearing
+- **Organized Controls:** Date range and actions in top row, filters below
+- **Improved Spacing:** Better visual separation between sections
 
-#### 1. Add Capacity Utilization to Column Choices 📊 IN PROGRESS
-**Status:** Column option is available in UI and being selected by users, but data pipeline verification needed.
-**Requirement:** Ensure "Capacity Utilization (%)" data flows correctly through the entire pipeline.
-**Current Evidence:** Logs show `capacity_utilization` being selected and processed.
-**Next Step:** Verify the data appears correctly in the final table display.
+### Current Refinements Needed
+
+#### 1. Layout Optimization 🎯 IN PROGRESS
+**Current Status:** Horizontal layout working well but needs final polish
+**Next Steps:**
+- Make selection columns more compact/tighter spacing
+- Move table back to right side of selectors (not below)
+- Position table title on same row as status line
+- Optimize space usage for professional dashboard appearance
 
 #### 6. Visual Date Filter Feedback 🎨 LOW PRIORITY
 **Requirement:** Date preset buttons (Last 7 Days, Last 30 Days, All Data) should change color when selected.

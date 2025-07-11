@@ -328,38 +328,40 @@ class PriceAnalysisUI(param.Parameterized):
                 width=400
             )
             
-            # Region filters
+            # Region filters with shorter names and compact spacing
             self.region_filters = pn.widgets.CheckBoxGroup(
-                name="Include Regions:",
+                name="Regions:",
                 value=regions,  # Default: all regions
                 options=regions,
-                inline=True,
-                width=400
+                inline=False,  # Vertical layout within the column
+                width=120,
+                margin=(5, 0)  # Tighter spacing
             )
             
-            # Fuel filters
+            # Fuel filters with shorter names and compact spacing
             self.fuel_filters = pn.widgets.CheckBoxGroup(
-                name="Include Fuels:",
+                name="Fuels:",
                 value=fuels,  # Default: all fuels
                 options=fuels,
-                inline=False,  # Vertical layout for readability
-                width=400
+                inline=False,  # Vertical layout within the column
+                width=140,
+                margin=(5, 0)  # Tighter spacing
             )
             
-            # Uncheck All buttons
-            self.uncheck_all_regions_button = pn.widgets.Button(
-                name="Uncheck All Regions",
-                button_type="light",
-                width=150
+            # Uncheck All checkboxes (act like master switches)
+            self.uncheck_all_regions_checkbox = pn.widgets.Checkbox(
+                name="Uncheck All",
+                value=False,
+                width=100
             )
-            self.uncheck_all_regions_button.on_click(self._uncheck_all_regions)
+            self.uncheck_all_regions_checkbox.param.watch(self._on_uncheck_all_regions_change, 'value')
             
-            self.uncheck_all_fuels_button = pn.widgets.Button(
-                name="Uncheck All Fuels", 
-                button_type="light",
-                width=150
+            self.uncheck_all_fuels_checkbox = pn.widgets.Checkbox(
+                name="Uncheck All",
+                value=False,
+                width=100
             )
-            self.uncheck_all_fuels_button.on_click(self._uncheck_all_fuels)
+            self.uncheck_all_fuels_checkbox.param.watch(self._on_uncheck_all_fuels_change, 'value')
             
             # Unified update button for all changes
             self.update_analysis_button = pn.widgets.Button(
@@ -376,8 +378,8 @@ class PriceAnalysisUI(param.Parameterized):
             self.category_selector = pn.pane.Markdown("**Grouping controls error**")
             self.region_filters = pn.pane.Markdown("")
             self.fuel_filters = pn.pane.Markdown("")
-            self.uncheck_all_regions_button = pn.pane.Markdown("")
-            self.uncheck_all_fuels_button = pn.pane.Markdown("")
+            self.uncheck_all_regions_checkbox = pn.pane.Markdown("")
+            self.uncheck_all_fuels_checkbox = pn.pane.Markdown("")
             self.update_analysis_button = pn.pane.Markdown("")
     
     def _create_column_controls(self):
@@ -385,27 +387,37 @@ class PriceAnalysisUI(param.Parameterized):
         try:
             # Available display columns with shorter names
             column_options = {
-                'generation_gwh': 'Generation (GWh)',
-                'revenue_millions': 'Revenue ($M)',
-                'avg_price': 'Avg Price ($/MWh)',
-                'capacity_utilization': 'Utilization (%)',
-                'station_name': 'Station Name',
+                'generation_gwh': 'Gen (GWh)',
+                'revenue_millions': 'Rev ($M)',
+                'avg_price': 'Price ($/MWh)',
+                'capacity_utilization': 'Util (%)',
+                'station_name': 'Station',
                 'owner': 'Owner'
             }
             
             self.column_checkboxes = pn.widgets.CheckBoxGroup(
-                name="Display Columns:",
+                name="Columns:",
                 value=['generation_gwh', 'revenue_millions', 'avg_price'],  # Default columns with new names
                 options=list(column_options.items()),  # Use (value, label) tuples instead of separate lists
-                inline=False,
-                width=350
+                inline=False,  # Vertical layout within the column
+                width=160,
+                margin=(5, 0)  # Tighter spacing
             )
+            
+            # Uncheck All checkbox for columns
+            self.uncheck_all_columns_checkbox = pn.widgets.Checkbox(
+                name="Uncheck All",
+                value=False,
+                width=100
+            )
+            self.uncheck_all_columns_checkbox.param.watch(self._on_uncheck_all_columns_change, 'value')
             
             logger.info("Column controls created successfully")
             
         except Exception as e:
             logger.error(f"Error creating column controls: {e}")
             self.column_checkboxes = pn.pane.Markdown("**Column controls error**")
+            self.uncheck_all_columns_checkbox = pn.pane.Markdown("")
     
     def _on_update_analysis(self, event):
         """Handle unified update analysis button click - combines date filtering and grouping"""
@@ -514,23 +526,41 @@ class PriceAnalysisUI(param.Parameterized):
         except Exception as e:
             logger.error(f"Error in unified update analysis: {e}")
     
-    def _uncheck_all_regions(self, event):
-        """Uncheck all region filters"""
+    def _on_uncheck_all_regions_change(self, event):
+        """Handle uncheck all regions checkbox change"""
         try:
-            if hasattr(self, 'region_filters') and hasattr(self.region_filters, 'value'):
-                self.region_filters.value = []
-                logger.info("Unchecked all regions")
+            if event.new:  # If checkbox was just checked
+                if hasattr(self, 'region_filters') and hasattr(self.region_filters, 'value'):
+                    self.region_filters.value = []
+                    logger.info("Unchecked all regions")
+                # Reset checkbox to unchecked state (it's a toggle action)
+                self.uncheck_all_regions_checkbox.value = False
         except Exception as e:
-            logger.error(f"Error unchecking all regions: {e}")
+            logger.error(f"Error handling uncheck all regions: {e}")
     
-    def _uncheck_all_fuels(self, event):
-        """Uncheck all fuel filters"""
+    def _on_uncheck_all_fuels_change(self, event):
+        """Handle uncheck all fuels checkbox change"""
         try:
-            if hasattr(self, 'fuel_filters') and hasattr(self.fuel_filters, 'value'):
-                self.fuel_filters.value = []
-                logger.info("Unchecked all fuels")
+            if event.new:  # If checkbox was just checked
+                if hasattr(self, 'fuel_filters') and hasattr(self.fuel_filters, 'value'):
+                    self.fuel_filters.value = []
+                    logger.info("Unchecked all fuels")
+                # Reset checkbox to unchecked state (it's a toggle action)
+                self.uncheck_all_fuels_checkbox.value = False
         except Exception as e:
-            logger.error(f"Error unchecking all fuels: {e}")
+            logger.error(f"Error handling uncheck all fuels: {e}")
+    
+    def _on_uncheck_all_columns_change(self, event):
+        """Handle uncheck all columns checkbox change"""
+        try:
+            if event.new:  # If checkbox was just checked
+                if hasattr(self, 'column_checkboxes') and hasattr(self.column_checkboxes, 'value'):
+                    self.column_checkboxes.value = []
+                    logger.info("Unchecked all columns")
+                # Reset checkbox to unchecked state (it's a toggle action)
+                self.uncheck_all_columns_checkbox.value = False
+        except Exception as e:
+            logger.error(f"Error handling uncheck all columns: {e}")
     
     def _on_apply_grouping(self, event):
         """Handle apply grouping button click with new UI structure"""
@@ -712,7 +742,7 @@ class PriceAnalysisUI(param.Parameterized):
                     groupby=hierarchy_columns,  # Panel handles the multi-level grouping
                     pagination=None,  # Disable pagination for scrolling
                     sizing_mode='stretch_width',
-                    height=600,
+                    height=800,
                     show_index=False,
                     sortable=True,
                     selectable=1,
@@ -772,7 +802,7 @@ class PriceAnalysisUI(param.Parameterized):
                     value=filtered_data,
                     pagination=None,  # Disable pagination for scrolling
                     sizing_mode='stretch_width',
-                    height=600,
+                    height=800,
                     show_index=False,
                     sortable=True,
                     selectable=1,
@@ -975,38 +1005,62 @@ class PriceAnalysisUI(param.Parameterized):
         else:
             date_range_panel = pn.pane.Markdown("**Date range controls unavailable**")
         
-        # Create grouping controls panel with new UI structure  
+        # Create compact horizontal filters panel
         if hasattr(self.category_selector, 'value'):
-            grouping_panel = pn.Column(
+            # Region control section - compact vertical list
+            region_section = pn.Column(
+                "**Regions:**",
+                self.uncheck_all_regions_checkbox,
+                self.region_filters,
+                width=120,
+                margin=(0, 5)
+            )
+            
+            # Fuel control section - compact vertical list
+            fuel_section = pn.Column(
+                "**Fuels:**",
+                self.uncheck_all_fuels_checkbox,
+                self.fuel_filters,
+                width=140,
+                margin=(0, 5)
+            )
+            
+            # Column control section - compact vertical list
+            if hasattr(self.column_checkboxes, 'value'):
+                column_section = pn.Column(
+                    "**Columns:**",
+                    self.uncheck_all_columns_checkbox,
+                    self.column_checkboxes,
+                    width=160,
+                    margin=(0, 5)
+                )
+            else:
+                column_section = pn.Column(
+                    "**Columns:**",
+                    self.column_checkboxes,  # Error message
+                    width=160,
+                    margin=(0, 5)
+                )
+            
+            # Compact horizontal filters panel
+            filters_panel = pn.Column(
                 "### Grouping & Filters",
                 self.category_selector,
-                "**Region Filters:**",
-                self.region_filters,
-                pn.Row(self.uncheck_all_regions_button, width=450),
-                "**Fuel Filters:**", 
-                self.fuel_filters,
-                pn.Row(self.uncheck_all_fuels_button, width=450),
-                width=450
+                pn.Row(
+                    region_section,
+                    pn.Spacer(width=10),
+                    fuel_section,
+                    pn.Spacer(width=10),
+                    column_section,
+                    sizing_mode='fixed'
+                ),
+                width=470  # Much more compact total width
             )
         else:
-            grouping_panel = pn.Column(
+            filters_panel = pn.Column(
                 "### Grouping & Filters",
                 self.category_selector,  # This will be the error message
-                width=450
-            )
-        
-        # Create column selection panel
-        if hasattr(self.column_checkboxes, 'value'):
-            column_panel = pn.Column(
-                "### Display Columns",
-                self.column_checkboxes,
-                width=350
-            )
-        else:
-            column_panel = pn.Column(
-                "### Display Columns",
-                self.column_checkboxes,  # This will be the error message
-                width=350
+                width=470
             )
         
         # Create actions panel with unified update button only
@@ -1028,27 +1082,34 @@ class PriceAnalysisUI(param.Parameterized):
         Choose different aggregation hierarchies to explore the data from different perspectives.
         """, width=400)
         
-        # Main content
+        # Main content - table back to the right side with compact controls on left
         main_content = pn.Column(
             "# Average Price Analysis",
-            self.status_text,
-            pn.Spacer(height=10),
+            # Status and table title on same row
             pn.Row(
+                self.status_text,
+                pn.Spacer(width=50),
+                self.table_title if hasattr(self, 'table_title') and self.table_title is not None else pn.pane.Markdown("## Aggregated Results"),
+                sizing_mode='stretch_width'
+            ),
+            pn.Spacer(height=15),
+            # Main content row - controls on left, table on right
+            pn.Row(
+                # Left side - compact controls
                 pn.Column(
                     "## Controls",
                     date_range_panel,
-                    pn.Spacer(height=15),
-                    grouping_panel,
-                    pn.Spacer(height=15),
-                    column_panel,
-                    pn.Spacer(height=15),
+                    pn.Spacer(height=10),
                     actions_panel,
                     pn.Spacer(height=15),
+                    filters_panel,
+                    pn.Spacer(height=15),
                     info_panel,
-                    width=500
+                    width=550  # Fixed width for controls
                 ),
+                pn.Spacer(width=20),
+                # Right side - table with full remaining width
                 pn.Column(
-                    self.table_title if hasattr(self, 'table_title') and self.table_title is not None else "## Aggregated Results",
                     self.tabulator_container,
                     pn.Spacer(height=20),
                     self.detail_container,
