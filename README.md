@@ -47,6 +47,26 @@ Real-time Australian Energy Market (AEMO) electricity price and generation dashb
 
 Edit the `.env` file with your settings:
 
+#### Data File Locations
+The system supports two modes:
+
+**Production Mode (Default)**: Uses existing data in iCloud directories
+```bash
+DATA_DIR=/Users/yourusername/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot
+GEN_INFO_FILE=/path/to/existing/gen_info.pkl
+GEN_OUTPUT_FILE=/path/to/existing/gen_output.parquet
+SPOT_HIST_FILE=/path/to/existing/spot_hist.parquet
+```
+
+**Development Mode**: Uses local project data
+```bash
+# Comment out the above paths and use:
+# DATA_DIR=./data
+# (Other files will default to data/ directory)
+```
+
+#### Email and SMS Configuration
+
 ```bash
 # Email alerts (required for DUID notifications)
 ALERT_EMAIL=your-email@icloud.com
