@@ -127,6 +127,23 @@ class Config:
     def extreme_price_threshold(self) -> float:
         return float(os.getenv('EXTREME_PRICE_THRESHOLD', '10000.0'))
     
+    # Twilio SMS configuration
+    @property
+    def twilio_account_sid(self) -> Optional[str]:
+        return os.getenv('TWILIO_ACCOUNT_SID')
+    
+    @property
+    def twilio_auth_token(self) -> Optional[str]:
+        return os.getenv('TWILIO_AUTH_TOKEN')
+    
+    @property
+    def twilio_phone_number(self) -> Optional[str]:
+        return os.getenv('TWILIO_PHONE_NUMBER')
+    
+    @property
+    def my_phone_number(self) -> Optional[str]:
+        return os.getenv('MY_PHONE_NUMBER')
+    
     # AEMO data sources
     @property
     def aemo_dispatch_url(self) -> str:

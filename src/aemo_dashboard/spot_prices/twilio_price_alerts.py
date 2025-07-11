@@ -7,14 +7,20 @@ Add this code to your update_spot.py script to send SMS alerts for price thresho
 from twilio.rest import Client
 import os
 import pickle
-import logging
 from datetime import datetime
+from pathlib import Path
 
-# Twilio Configuration - now from environment variables
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
-MY_PHONE_NUMBER = os.getenv('MY_PHONE_NUMBER')
+from ..shared.config import config
+from ..shared.logging_config import get_logger
+
+# Set up logging
+logger = get_logger(__name__)
+
+# Twilio Configuration - now from shared config
+TWILIO_ACCOUNT_SID = config.twilio_account_sid
+TWILIO_AUTH_TOKEN = config.twilio_auth_token
+TWILIO_PHONE_NUMBER = config.twilio_phone_number
+MY_PHONE_NUMBER = config.my_phone_number
 
 # Validate that all required variables are set
 if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, MY_PHONE_NUMBER]):
@@ -26,13 +32,13 @@ if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER, MY_PHONE
     ] if not val]
     raise ValueError(f"Missing required environment variables: {missing}")
 
-# Price Thresholds
-HIGH_THRESHOLD = 1000.0    # Send alert when price goes above this
-LOW_THRESHOLD = 300.0      # Send alert when price goes back below this
-EXTREME_THRESHOLD = 10000.0  # Use alarm emoji for prices above this
+# Price Thresholds - now from config
+HIGH_THRESHOLD = config.high_price_threshold
+LOW_THRESHOLD = config.low_price_threshold  
+EXTREME_THRESHOLD = config.extreme_price_threshold
 
-# Alert state tracking file
-ALERT_STATE_FILE = "/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/price_alert_state.pkl"
+# Alert state tracking file - use data directory from config
+ALERT_STATE_FILE = Path(config.data_dir) / "price_alert_state.pkl"
 
 
 def initialize_twilio_client():
@@ -43,7 +49,7 @@ def initialize_twilio_client():
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         return client
     except Exception as e:
-        logging.error(f"Failed to initialize Twilio client: {e}")
+        logger.error(f"Failed to initialize Twilio client: {e}")
         return None
 
 
@@ -66,7 +72,7 @@ def load_alert_state():
                 'VIC1': {'high_alert': False, 'high_time': None, 'last_price': 0}
             }
     except Exception as e:
-        logging.error(f"Error loading alert state: {e}")
+        logger.error(f"Error loading alert state: {e}")
         return {}
 
 
@@ -79,7 +85,7 @@ def save_alert_state(alert_state):
         with open(ALERT_STATE_FILE, 'wb') as f:
             pickle.dump(alert_state, f)
     except Exception as e:
-        logging.error(f"Error saving alert state: {e}")
+        logger.error(f"Error saving alert state: {e}")
 
 
 def send_sms(client, message):
@@ -92,10 +98,10 @@ def send_sms(client, message):
             from_=TWILIO_PHONE_NUMBER,
             to=MY_PHONE_NUMBER
         )
-        logging.info(f"SMS sent successfully: {message.sid}")
+        logger.info(f"SMS sent successfully: {message.sid}")
         return True
     except Exception as e:
-        logging.error(f"Failed to send SMS: {e}")
+        logger.error(f"Failed to send SMS: {e}")
         return False
 
 
@@ -112,7 +118,7 @@ def check_price_alerts(new_data_df):
     # Initialize Twilio client
     client = initialize_twilio_client()
     if not client:
-        logging.error("Cannot send alerts - Twilio client not initialized")
+        logger.error("Cannot send alerts - Twilio client not initialized")
         return
     
     # Load current alert state
@@ -147,7 +153,7 @@ def check_price_alerts(new_data_df):
             message = f"ITK price alert {emoji} {region} {urgency} PRICE: ${price:.2f}/MWh at {settlement_time.strftime('%H:%M on %d/%m/%Y')}. Threshold: ${HIGH_THRESHOLD}"
             
             if send_sms(client, message):
-                logging.info(f"High price alert sent for {region}: ${price:.2f}")
+                logger.info(f"High price alert sent for {region}: ${price:.2f}")
             
         # Check for price returning below low threshold
         elif price <= LOW_THRESHOLD and current_state['high_alert']:
@@ -171,13 +177,13 @@ def check_price_alerts(new_data_df):
                     else:
                         duration_str = f"Duration: {minutes}m"
                 except Exception as e:
-                    logging.error(f"Error calculating duration: {e}")
+                    logger.error(f"Error calculating duration: {e}")
                     duration_str = "Duration: unknown"
             
             message = f"ITK price alert ✅ {region} PRICE RECOVERED: ${price:.2f}/MWh at {settlement_time.strftime('%H:%M on %d/%m/%Y')}. Below ${LOW_THRESHOLD}. {duration_str}"
             
             if send_sms(client, message):
-                logging.info(f"Recovery alert sent for {region}: ${price:.2f}")
+                logger.info(f"Recovery alert sent for {region}: ${price:.2f}")
         
         # Always update last known price
         current_state['last_price'] = price

@@ -22,7 +22,7 @@ logger.info("Display spot dashboard starting...")
 
 # Function to open the parquet file with robust error handling
 def open_parquet_file(path):
-    logger.info("path ", path)
+    logger.info(f"path {path}")
     
     # Try multiple approaches to load the parquet file
     for attempt, method in enumerate([
@@ -130,7 +130,7 @@ def get_data():
     data = open_parquet_file(file_path)
     logger.info("file opened")
     prices = data.pivot(columns='REGIONID', values='RRP')
-    logger.info("REGIONID", "               ", "NSW1")
+    logger.info("REGIONID                NSW1")
     logger.info("SETTLEMENTDATE")
     logger.info(prices.tail(5))
     return prices
@@ -199,20 +199,35 @@ def update_plot(event=None):
     mpl_pane.object = fig
     table_pane.object = display_table(prices)
 
-# Create an initial plot
-print ("script started line 132")
-prices = get_data()
-print ("step 2 ")
-fig = pcht(prices)
-table = display_table(prices)
-mpl_pane = pn.pane.Matplotlib(fig, sizing_mode='stretch_both')
-table_pane = pn.pane.DataFrame(table, sizing_mode='stretch_both')
+def create_app():
+    """Create the dashboard app"""
+    logger.info("Creating spot price dashboard app...")
+    
+    # Create an initial plot
+    prices = get_data()
+    fig = pcht(prices)
+    table = display_table(prices)
+    mpl_pane = pn.pane.Matplotlib(fig, sizing_mode='stretch_both')
+    table_pane = pn.pane.DataFrame(table, sizing_mode='stretch_both')
 
-# Set up periodic callback to update the plot every 5 minutes
-pn.state.add_periodic_callback(update_plot, 270000)  # 270000ms = 4.5 minutes
+    # Layout for the Panel
+    layout = pn.Column(table_pane, mpl_pane, max_width=450, max_height=630)
+    
+    return layout
 
-# Layout for the Panel
-layout = pn.Column(table_pane,mpl_pane, max_width=450,max_height=630)
+def main():
+    """Main function to run the dashboard"""
+    logger.info("Starting spot price dashboard...")
+    
+    # Create the app factory function that sets up callbacks inside the server context
+    def app_factory():
+        app = create_app()
+        # Set up periodic callback inside the server context
+        pn.state.add_periodic_callback(update_plot, 270000)  # 270000ms = 4.5 minutes
+        return app
+    
+    # Serve with specific port using the app factory
+    pn.serve(app_factory, port=5007, show=True, autoreload=False)
 
-# Serve the Panel
-layout.servable()
+if __name__ == "__main__":
+    main()

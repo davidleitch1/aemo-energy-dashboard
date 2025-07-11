@@ -18,7 +18,9 @@ import pickle
 from pathlib import Path
 import json
 import sys
+import logging
 from bokeh.models import DatetimeTickFormatter
+from dotenv import load_dotenv
 
 from ..shared.config import config
 from ..shared.logging_config import setup_logging, get_logger
@@ -199,7 +201,7 @@ class EnergyDashboard(param.Parameterized):
             self.utilization_pane.visible = True
             
         except Exception as e:
-            logging.error(f"Error initializing panes: {e}")
+            logger.error(f"Error initializing panes: {e}")
             # Create fallback empty panes
             self.plot_pane = pn.pane.HTML("Loading generation chart...", height=600)
             self.utilization_pane = pn.pane.HTML("Loading utilization chart...", height=500)
@@ -215,14 +217,14 @@ class EnergyDashboard(param.Parameterized):
                 self.duid_to_fuel = dict(zip(self.gen_info_df['DUID'], self.gen_info_df['Fuel']))
                 self.duid_to_region = dict(zip(self.gen_info_df['DUID'], self.gen_info_df['Region']))
                 
-                logging.info(f"Loaded {len(self.gen_info_df)} DUID mappings")
-                logging.info(f"Fuel types: {self.gen_info_df['Fuel'].unique()}")
+                logger.info(f"Loaded {len(self.gen_info_df)} DUID mappings")
+                logger.info(f"Fuel types: {self.gen_info_df['Fuel'].unique()}")
                 
             else:
-                logging.error(f"gen_info.pkl not found at {GEN_INFO_FILE}")
+                logger.error(f"gen_info.pkl not found at {GEN_INFO_FILE}")
                 
         except Exception as e:
-            logging.error(f"Error loading gen_info.pkl: {e}")
+            logger.error(f"Error loading gen_info.pkl: {e}")
     
     def load_duid_exception_list(self):
         """Load the list of DUIDs to ignore for email alerts"""
@@ -273,9 +275,9 @@ class EnergyDashboard(param.Parameterized):
         known_exception_duids = unknown_duids & exception_duids
         
         # Always log the issue
-        logging.warning(f"🚨 Found {len(unknown_duids)} unknown DUIDs not in gen_info.pkl:")
-        logging.warning(f"   - {len(new_unknown_duids)} are NEW (will trigger email if enabled)")
-        logging.warning(f"   - {len(known_exception_duids)} are in exception list (no email)")
+        logger.warning(f"🚨 Found {len(unknown_duids)} unknown DUIDs not in gen_info.pkl:")
+        logger.warning(f"   - {len(new_unknown_duids)} are NEW (will trigger email if enabled)")
+        logger.warning(f"   - {len(known_exception_duids)} are in exception list (no email)")
         
         for duid in sorted(unknown_duids):
             # Get some sample data for this DUID
@@ -283,9 +285,9 @@ class EnergyDashboard(param.Parameterized):
             if not duid_data.empty:
                 sample = duid_data.iloc[-1]  # Most recent record
                 exception_flag = " [EXCEPTION LIST]" if duid in exception_duids else " [NEW]"
-                logging.warning(f"  - {duid}: {sample['scadavalue']:.1f} MW at {sample['settlementdate']}{exception_flag}")
+                logger.warning(f"  - {duid}: {sample['scadavalue']:.1f} MW at {sample['settlementdate']}{exception_flag}")
             else:
-                logging.warning(f"  - {duid}: No data found")
+                logger.warning(f"  - {duid}: No data found")
         
         # Only send email for new unknown DUIDs not in exception list
         if new_unknown_duids:
@@ -298,9 +300,9 @@ class EnergyDashboard(param.Parameterized):
                     # to prevent repeated emails about the same DUIDs
                     if os.getenv('AUTO_ADD_TO_EXCEPTIONS', 'true').lower() == 'true':
                         self.add_duids_to_exception_list(new_unknown_duids)
-                        logging.info("Auto-added alerted DUIDs to exception list")
+                        logger.info("Auto-added alerted DUIDs to exception list")
             else:
-                logging.info(f"Email alerts disabled - would have alerted about {len(new_unknown_duids)} new DUIDs")
+                logger.info(f"Email alerts disabled - would have alerted about {len(new_unknown_duids)} new DUIDs")
 
     def should_send_email_alert(self, unknown_duids):
         """Check if we should send an email alert (rate limiting)"""
@@ -313,7 +315,7 @@ class EnergyDashboard(param.Parameterized):
                 with open(cache_file, 'r') as f:
                     alert_cache = json.load(f)
         except Exception as e:
-            logging.error(f"Error loading alert cache: {e}")
+            logger.error(f"Error loading alert cache: {e}")
         
         # Check if any DUID needs alerting (hasn't been alerted in last 24 hours)
         now = datetime.now()
@@ -337,7 +339,7 @@ class EnergyDashboard(param.Parameterized):
                 with open(cache_file, 'w') as f:
                     json.dump(alert_cache, f, indent=2, default=str)
             except Exception as e:
-                logging.error(f"Error saving alert cache: {e}")
+                logger.error(f"Error saving alert cache: {e}")
             
             return True
         
@@ -354,7 +356,7 @@ class EnergyDashboard(param.Parameterized):
             smtp_port = int(os.getenv('SMTP_PORT', '587'))
             
             if not all([sender_email, sender_password]):
-                logging.error("Email credentials not configured. Set ALERT_EMAIL and ALERT_PASSWORD environment variables.")
+                logger.error("Email credentials not configured. Set ALERT_EMAIL and ALERT_PASSWORD environment variables.")
                 return
             
             # Create email
@@ -373,10 +375,10 @@ class EnergyDashboard(param.Parameterized):
                 server.login(sender_email, sender_password)
                 server.send_message(msg)
             
-            logging.info(f"✅ Email alert sent for {len(unknown_duids)} unknown DUIDs via {smtp_server}")
+            logger.info(f"✅ Email alert sent for {len(unknown_duids)} unknown DUIDs via {smtp_server}")
             
         except Exception as e:
-            logging.error(f"❌ Failed to send email alert: {e}")
+            logger.error(f"❌ Failed to send email alert: {e}")
 
     def create_alert_email_body(self, unknown_duids, df):
         """Create HTML email body"""
@@ -469,17 +471,17 @@ class EnergyDashboard(param.Parameterized):
                 dropped_count = original_count - len(df)
                 
                 if dropped_count > 0:
-                    logging.warning(f"Dropped {dropped_count} records ({dropped_count/original_count*100:.1f}%) due to unknown DUIDs")
+                    logger.warning(f"Dropped {dropped_count} records ({dropped_count/original_count*100:.1f}%) due to unknown DUIDs")
                 
                 self.gen_output_df = df
-                logging.info(f"Loaded {len(df)} generation records for last {self.hours} hours")
+                logger.info(f"Loaded {len(df)} generation records for last {self.hours} hours")
                 
             else:
-                logging.error(f"gen_output.parquet not found at {GEN_OUTPUT_FILE}")
+                logger.error(f"gen_output.parquet not found at {GEN_OUTPUT_FILE}")
                 self.gen_output_df = pd.DataFrame()
                 
         except Exception as e:
-            logging.error(f"Error loading generation data: {e}")
+            logger.error(f"Error loading generation data: {e}")
             self.gen_output_df = pd.DataFrame()
 
     def load_price_data(self):
@@ -488,7 +490,7 @@ class EnergyDashboard(param.Parameterized):
             price_file = Path("/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-spot-dashboard/spot_hist.parquet")
             
             if not os.path.exists(price_file):
-                logging.error(f"Price data file not found at {price_file}")
+                logger.error(f"Price data file not found at {price_file}")
                 return pd.DataFrame()
             
             # Calculate time window - same as generation data (24 hours)
@@ -499,25 +501,25 @@ class EnergyDashboard(param.Parameterized):
             df = pd.read_parquet(price_file)
             
             # Debug: Check the structure
-            logging.info(f"Price data columns: {df.columns.tolist()}")
-            logging.info(f"Price data index: {df.index.name}")
-            logging.info(f"Price data shape: {df.shape}")
-            logging.info(f"Price data dtypes:\n{df.dtypes}")
+            logger.info(f"Price data columns: {df.columns.tolist()}")
+            logger.info(f"Price data index: {df.index.name}")
+            logger.info(f"Price data shape: {df.shape}")
+            logger.info(f"Price data dtypes:\n{df.dtypes}")
             
             # Check if SETTLEMENTDATE is the index
             if df.index.name == 'SETTLEMENTDATE':
                 # Reset index to make SETTLEMENTDATE a regular column
                 df = df.reset_index()
-                logging.info("Reset index - SETTLEMENTDATE is now a column")
+                logger.info("Reset index - SETTLEMENTDATE is now a column")
             
             # Now check columns again
-            logging.info(f"Columns after reset_index: {df.columns.tolist()}")
+            logger.info(f"Columns after reset_index: {df.columns.tolist()}")
             
             # Verify we have the required columns
             required_cols = ['SETTLEMENTDATE', 'RRP', 'REGIONID']
             missing_cols = [col for col in required_cols if col not in df.columns]
             if missing_cols:
-                logging.error(f"Missing required columns: {missing_cols}")
+                logger.error(f"Missing required columns: {missing_cols}")
                 return pd.DataFrame()
             
             # Convert settlement date if it's not already datetime
@@ -526,7 +528,7 @@ class EnergyDashboard(param.Parameterized):
             
             # Filter to time window
             df = df[df['SETTLEMENTDATE'] >= start_time]
-            logging.info(f"Price data shape after time filtering: {df.shape}")
+            logger.info(f"Price data shape after time filtering: {df.shape}")
             
             # Filter by region
             if self.region != 'NEM':
@@ -535,8 +537,8 @@ class EnergyDashboard(param.Parameterized):
                 # For NEM, use NSW1 as representative (or you could average all regions)
                 df = df[df['REGIONID'] == 'NSW1']
             
-            logging.info(f"Price data shape after region filtering: {df.shape}")
-            logging.info(f"Available regions in data: {df['REGIONID'].unique()}")
+            logger.info(f"Price data shape after region filtering: {df.shape}")
+            logger.info(f"Available regions in data: {df['REGIONID'].unique()}")
             
             # Ensure data is sorted by time
             df = df.sort_values('SETTLEMENTDATE')
@@ -559,19 +561,19 @@ class EnergyDashboard(param.Parameterized):
                 # Reset index to get settlementdate back as column
                 clean_df = clean_df.reset_index()
                 
-                logging.info(f"Loaded {len(clean_df)} price records for last {self.hours} hours")
+                logger.info(f"Loaded {len(clean_df)} price records for last {self.hours} hours")
                 if not clean_df.empty:
-                    logging.info(f"Price range: ${clean_df['RRP'].min():.2f} to ${clean_df['RRP'].max():.2f}")
-                    logging.info(f"Time range: {clean_df['settlementdate'].min()} to {clean_df['settlementdate'].max()}")
+                    logger.info(f"Price range: ${clean_df['RRP'].min():.2f} to ${clean_df['RRP'].max():.2f}")
+                    logger.info(f"Time range: {clean_df['settlementdate'].min()} to {clean_df['settlementdate'].max()}")
                 
                 return clean_df
                 
             else:
-                logging.warning("No price data found for the specified time window and region")
+                logger.warning("No price data found for the specified time window and region")
                 return pd.DataFrame()
             
         except Exception as e:
-            logging.error(f"Error loading price data: {e}")
+            logger.error(f"Error loading price data: {e}")
             import traceback
             traceback.print_exc()
             return pd.DataFrame()
@@ -680,7 +682,7 @@ class EnergyDashboard(param.Parameterized):
         fuel_capacity = capacity_df.groupby('Fuel')['Clean_Capacity'].sum()
         
         # Debug: Log capacity data for troubleshooting
-        logging.info(f"Fuel capacities for {self.region}: {fuel_capacity.to_dict()}")
+        logger.info(f"Fuel capacities for {self.region}: {fuel_capacity.to_dict()}")
         
         # Calculate utilization for each time period and fuel
         utilization_data = []
@@ -693,7 +695,7 @@ class EnergyDashboard(param.Parameterized):
                 
                 # Debug logging for first few calculations
                 if len(utilization_data) < 5:
-                    logging.info(f"Fuel: {fuel}, Generation: {generation_mw:.2f} MW, Capacity: {capacity_mw:.2f} MW, Utilization: {utilization:.2f}%")
+                    logger.info(f"Fuel: {fuel}, Generation: {generation_mw:.2f} MW, Capacity: {capacity_mw:.2f} MW, Utilization: {utilization:.2f}%")
                 
                 # Cap at 100% to handle any data anomalies and negative values
                 utilization = max(0, min(utilization, 100))
@@ -704,13 +706,13 @@ class EnergyDashboard(param.Parameterized):
                 })
         
         if not utilization_data:
-            logging.warning("No utilization data calculated")
+            logger.warning("No utilization data calculated")
             return pd.DataFrame()
         
         utilization_df = pd.DataFrame(utilization_data)
         
         # Debug: Check the raw utilization values
-        logging.info(f"Sample utilization values: {utilization_df['utilization'].head().tolist()}")
+        logger.info(f"Sample utilization values: {utilization_df['utilization'].head().tolist()}")
         
         # Pivot to get fuel types as columns
         pivot_df = utilization_df.pivot(index='settlementdate', columns='fuel', values='utilization')
@@ -720,8 +722,8 @@ class EnergyDashboard(param.Parameterized):
         pivot_df = pivot_df.clip(lower=0, upper=100)
         
         # Debug: Check final pivot values
-        logging.info(f"Final pivot data shape: {pivot_df.shape}")
-        logging.info(f"Final pivot max values: {pivot_df.max().to_dict()}")
+        logger.info(f"Final pivot data shape: {pivot_df.shape}")
+        logger.info(f"Final pivot max values: {pivot_df.max().to_dict()}")
         
         return pivot_df
     
@@ -894,12 +896,12 @@ class EnergyDashboard(param.Parameterized):
             )
             
             self.last_update = datetime.now()
-            logging.info(f"Plot updated for {self.region}, {self.hours} hours")
+            logger.info(f"Plot updated for {self.region}, {self.hours} hours")
             
             return combined_layout
             
         except Exception as e:
-            logging.error(f"Error creating plot: {e}")
+            logger.error(f"Error creating plot: {e}")
             # Return fallback plot
             return hv.Text(0.5, 0.5, f'Error creating plot: {str(e)}').opts(
                 bgcolor='black',
@@ -976,7 +978,7 @@ class EnergyDashboard(param.Parameterized):
             return line_plot
             
         except Exception as e:
-            logging.error(f"Error creating utilization plot: {e}")
+            logger.error(f"Error creating utilization plot: {e}")
             # Return fallback plot
             return hv.Text(0.5, 0.5, f'Error creating utilization plot: {str(e)}').opts(
                 bgcolor='black',
@@ -987,7 +989,7 @@ class EnergyDashboard(param.Parameterized):
     def update_plot(self):
         """Update both plots with fresh data and proper error handling"""
         try:
-            logging.info("Starting plot update...")
+            logger.info("Starting plot update...")
             
             # Create new plots
             new_generation_plot = self.create_plot()
@@ -1004,10 +1006,10 @@ class EnergyDashboard(param.Parameterized):
             if self.update_time_display is not None:
                 self.update_time_display.object = f"<div style='text-align: center; color: #4a9da8; font-size: 16px; margin: 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')}</div>"
             
-            logging.info("Plot update completed successfully")
+            logger.info("Plot update completed successfully")
             
         except Exception as e:
-            logging.error(f"Error updating plots: {e}")
+            logger.error(f"Error updating plots: {e}")
             # Don't crash the application, just log and continue
     
     def update_plot_visibility(self):
@@ -1038,10 +1040,10 @@ class EnergyDashboard(param.Parameterized):
             if self.main_content is not None:
                 self.main_content.objects = visible_plots
             
-            logging.info(f"Updated plot visibility: generation={self.show_generation}, utilization={self.show_utilization}")
+            logger.info(f"Updated plot visibility: generation={self.show_generation}, utilization={self.show_utilization}")
             
         except Exception as e:
-            logging.error(f"Error updating plot visibility: {e}")
+            logger.error(f"Error updating plot visibility: {e}")
     
     async def auto_update_loop(self):
         """Automatic update loop every 4.5 minutes with better error handling"""
@@ -1051,12 +1053,12 @@ class EnergyDashboard(param.Parameterized):
                 # Only update data if plots are visible
                 if self.show_generation or self.show_utilization:
                     self.update_plot()
-                logging.info("Auto-update completed")
+                logger.info("Auto-update completed")
             except asyncio.CancelledError:
-                logging.info("Auto-update loop cancelled")
+                logger.info("Auto-update loop cancelled")
                 break
             except Exception as e:
-                logging.error(f"Error in auto-update loop: {e}")
+                logger.error(f"Error in auto-update loop: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute before retrying
     
     def start_auto_update(self):
@@ -1068,22 +1070,22 @@ class EnergyDashboard(param.Parameterized):
             
             # Start new task
             self.update_task = asyncio.create_task(self.auto_update_loop())
-            logging.info("Auto-update started")
+            logger.info("Auto-update started")
         except RuntimeError as e:
             # No event loop running yet - will start later
-            logging.info(f"Event loop not ready - auto-update will start when served: {e}")
+            logger.info(f"Event loop not ready - auto-update will start when served: {e}")
             pass
     
     @param.depends('region', watch=True)
     def on_region_change(self):
         """Called when region parameter changes"""
-        logging.info(f"Region changed to: {self.region}")
+        logger.info(f"Region changed to: {self.region}")
         self.update_plot()
     
     @param.depends('show_generation', 'show_utilization', watch=True)
     def on_plot_visibility_change(self):
         """Called when plot visibility checkboxes change"""
-        logging.info(f"Visibility changed: generation={self.show_generation}, utilization={self.show_utilization}")
+        logger.info(f"Visibility changed: generation={self.show_generation}, utilization={self.show_utilization}")
         self.update_plot_visibility()
     
     def test_vol_price(self):
@@ -1202,7 +1204,7 @@ class EnergyDashboard(param.Parameterized):
             return dashboard
             
         except Exception as e:
-            logging.error(f"Error creating dashboard: {e}")
+            logger.error(f"Error creating dashboard: {e}")
             # Return error message dashboard
             return pn.pane.HTML(f"<h1>Error creating dashboard: {str(e)}</h1>", 
                               sizing_mode='stretch_width')
@@ -1223,7 +1225,7 @@ def create_app():
                 try:
                     dashboard.start_auto_update()
                 except Exception as e:
-                    logging.error(f"Error starting dashboard updates: {e}")
+                    logger.error(f"Error starting dashboard updates: {e}")
             
             # Hook into Panel's server startup
             pn.state.onload(start_dashboard_updates)
@@ -1231,7 +1233,7 @@ def create_app():
             return app
             
         except Exception as e:
-            logging.error(f"Error creating app: {e}")
+            logger.error(f"Error creating app: {e}")
             return pn.pane.HTML(f"<h1>Application Error: {str(e)}</h1>")
     
     return _create_dashboard
@@ -1282,14 +1284,14 @@ def main():
     app_factory = create_app()
     
     print("Starting Interactive Energy Generation Dashboard...")
-    print("Navigate to: http://localhost:5008")
+    print("Navigate to: http://localhost:5009")
     print("Press Ctrl+C to stop the server")
     
     # Serve the app with dark theme and proper session handling
     pn.serve(
         app_factory, 
-        port=5008, 
-        allow_websocket_origin=["localhost:5008", "nemgen.itkservices2.com"],
+        port=5009, 
+        allow_websocket_origin=["localhost:5009", "nemgen.itkservices2.com"],
         show=True,
         autoreload=False,  # Disable autoreload in production
         threaded=True     # Enable threading for better concurrent handling
