@@ -25,6 +25,7 @@ from ..shared.config import config
 from ..shared.logging_config import setup_logging, get_logger
 from ..shared.email_alerts import EmailAlertManager
 from ..analysis.price_analysis_ui import create_price_analysis_tab
+from ..station.station_analysis_ui import create_station_analysis_tab
 
 # Set up logging
 setup_logging()
@@ -1128,11 +1129,21 @@ class EnergyDashboard(param.Parameterized):
                 logger.error(f"Error creating price analysis tab: {e}")
                 price_analysis_tab = pn.pane.Markdown(f"**Error loading Price Analysis:** {e}")
             
+            # Station analysis tab
+            try:
+                logger.info("Creating station analysis tab...")
+                station_analysis_tab = create_station_analysis_tab()
+                logger.info("Station analysis tab created successfully")
+            except Exception as e:
+                logger.error(f"Error creating station analysis tab: {e}")
+                station_analysis_tab = pn.pane.Markdown(f"**Error loading Station Analysis:** {e}")
+            
             # Create tabbed interface
             tabs = pn.Tabs(
                 ("Generation by Fuel", generation_tab),
                 ("Capacity Utilization", utilization_tab),
                 ("Average Price Analysis", price_analysis_tab),
+                ("Station Analysis", station_analysis_tab),
                 dynamic=True,
                 closable=False,
                 sizing_mode='stretch_width'
