@@ -1,20 +1,18 @@
 # AEMO Energy Dashboard - Development Notes
 
-## Current Status ✅ FULLY OPERATIONAL
+## Current Status ✅ FULLY OPERATIONAL - RESTRUCTURED DESIGN
 
-The dashboard is now fully functional with four main tabs:
+The dashboard is now fully functional with three main tabs (Generation by Fuel tab restructured):
 
-### ✅ **Generation by Fuel Tab**
-- **Status:** Working perfectly
-- **Features:** Interactive stacked area chart showing generation by fuel type over time
+### ✅ **Generation by Fuel Tab** - RESTRUCTURED DESIGN
+- **Status:** Working perfectly with new layout structure
+- **New Layout:** Region selector moved to left side, charts in subtabs on right side
+- **Subtabs:** 
+  - **Generation Stack:** Interactive stacked area chart showing generation by fuel type
+  - **Capacity Utilization:** Capacity utilization percentages by fuel type  
 - **Data:** Real-time AEMO generation data with 5-minute intervals
-- **Charts:** Dual chart view (generation stack + price overlay)
-
-### ✅ **Capacity Utilization Tab** 
-- **Status:** Working perfectly - separate tab as requested
-- **Features:** Capacity utilization percentages by fuel type
+- **Region Control:** Left-side panel with region selector (NEM, NSW1, QLD1, SA1, TAS1, VIC1)
 - **Data Integrity:** Fixed capacity calculations using SUMMED AEMO nameplate capacities
-- **Issue Resolved:** Previously showed >400% utilization due to individual wind farm phase capacities
 
 ### ✅ **Average Price Analysis Tab**
 - **Status:** Fully functional custom pivot table builder
@@ -446,7 +444,9 @@ cd "/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AE
 
 ### Dashboard URLs
 - Main dashboard: http://localhost:5010
-- All four tabs: Generation by Fuel | Capacity Utilization | Average Price Analysis | Station Analysis
+- Dashboard title: "Nem Analysis" 
+- Footer: "Last Updated: [time] | data:AEMO, design ITK"
+- Three main tabs: Generation by Fuel | Average Price Analysis | Station Analysis
 
 ### Troubleshooting
 - If port 5010 is in use: `lsof -ti:5010 | xargs kill -9`
@@ -462,7 +462,18 @@ cd "/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AE
 - ✅ **Price Analysis Functionality:** Fully working custom pivot table builder with hierarchical display
 - ✅ **Professional UI Design:** Dark theme, proper contrast, intuitive user experience
 
-### Current Status: Ready for Station Tab Development
+## Recent Dashboard Restructuring ✅ COMPLETED
+
+### Major Design Changes:
+- **Dashboard Title:** Changed to "Nem Analysis" 
+- **Footer Attribution:** Changed to "data:AEMO, design ITK"
+- **Generation Tab Restructure:** 
+  - Moved region selector from main dashboard into Generation by Fuel tab
+  - Layout now matches Station Analysis pattern: controls on left, charts on right
+  - Capacity Utilization moved from separate main tab to subtab within Generation by Fuel
+- **Tab Structure:** Reduced from 4 main tabs to 3 main tabs with internal subtabs
+
+### Current Status: Fully Operational with New Structure
 The dashboard foundation is solid and all core functionality is working perfectly. 
 
 ## ✅ **Phase 1 Complete: Station Analysis Tab - Basic Infrastructure**

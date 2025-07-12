@@ -823,7 +823,7 @@ class EnergyDashboard(param.Parameterized):
                 
                 # Combine both plots
                 area_plot = (main_plot * negative_plot).opts(
-                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data: AEMO, chart: ITK',
+                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
                     show_grid=True,
                     bgcolor='black',
                     xaxis=None  # Hide x-axis since price chart will show it
@@ -837,7 +837,7 @@ class EnergyDashboard(param.Parameterized):
                     stacked=True,
                     width=900,
                     height=300,  # Reduced height to make room for price chart
-                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data: AEMO, chart: ITK',
+                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
                     ylabel='Generation (MW)',
                     xlabel='',  # Remove x-label since it will be on the price chart
                     grid=True,
@@ -945,7 +945,7 @@ class EnergyDashboard(param.Parameterized):
                 y=fuel_types,
                 width=900,
                 height=400,
-                title=f'Capacity Utilization by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data: AEMO, chart: ITK',
+                title=f'Capacity Utilization by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
                 ylabel='Capacity Utilization (%)',
                 xlabel='Time',
                 grid=False,
@@ -1072,53 +1072,83 @@ class EnergyDashboard(param.Parameterized):
             traceback.print_exc()
             return None
 
+    def _create_generation_tab(self):
+        """Create the Generation by Fuel tab with left-side controls and right-side chart subtabs"""
+        try:
+            # Region selector for left side
+            region_selector = pn.Param(
+                self,
+                parameters=['region'],
+                widgets={'region': pn.widgets.Select},
+                name="Region Selection",
+                width=280,
+                margin=(10, 0)
+            )
+            
+            # Create left-side control panel
+            control_panel = pn.Column(
+                "### Generation by Fuel Controls",
+                region_selector,
+                pn.pane.Markdown("""
+                **Region Options:**
+                - **NEM:** All regions combined
+                - **NSW1:** New South Wales  
+                - **QLD1:** Queensland
+                - **SA1:** South Australia
+                - **TAS1:** Tasmania
+                - **VIC1:** Victoria
+                """),
+                width=300,
+                sizing_mode='fixed'
+            )
+            
+            # Create subtabs for charts
+            chart_subtabs = pn.Tabs(
+                ("Generation Stack", pn.Column(
+                    "#### Generation by Fuel Type",
+                    self.plot_pane,
+                    sizing_mode='stretch_width'
+                )),
+                ("Capacity Utilization", pn.Column(
+                    "#### Capacity Utilization by Fuel",
+                    self.utilization_pane,
+                    sizing_mode='stretch_width'
+                )),
+                dynamic=True,
+                sizing_mode='stretch_width'
+            )
+            
+            # Create main layout with controls on left, charts on right
+            generation_tab_layout = pn.Row(
+                control_panel,
+                chart_subtabs,
+                sizing_mode='stretch_width'
+            )
+            
+            return generation_tab_layout
+            
+        except Exception as e:
+            logger.error(f"Error creating generation tab: {e}")
+            return pn.pane.Markdown(f"**Error creating Generation tab:** {e}")
+
     def create_dashboard(self):
         """Create the complete dashboard with tabbed interface"""
         try:
             # Dashboard title with update time
             title = pn.pane.HTML(
-                "<h1 style='color: #4a9da8; margin: 10px 0 5px 0; text-align: center;'>Operational supply</h1>",
+                "<h1 style='color: #4a9da8; margin: 10px 0 5px 0; text-align: center;'>Nem Analysis</h1>",
                 sizing_mode='stretch_width'
             )
             
             # Update time display
             self.update_time_display = pn.pane.HTML(
-                f"<div style='text-align: center; color: #4a9da8; font-size: 16px; margin: 0 0 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')}</div>",
-                sizing_mode='stretch_width'
-            )
-            
-            # Shared region selector
-            region_selector = pn.Param(
-                self,
-                parameters=['region'],
-                widgets={'region': pn.widgets.Select},
-                name="Region",
-                width=200,
-                margin=(10, 0)
-            )
-            
-            # Create control row with centered region selector
-            control_row = pn.Row(
-                pn.Spacer(),
-                region_selector,
-                pn.Spacer(),
+                f"<div style='text-align: center; color: #4a9da8; font-size: 16px; margin: 0 0 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>",
                 sizing_mode='stretch_width'
             )
             
             # Create tabs for different views
-            # Generation tab
-            generation_tab = pn.Column(
-                self.plot_pane,
-                sizing_mode='stretch_width',
-                margin=(10, 0)
-            )
-            
-            # Capacity utilization tab  
-            utilization_tab = pn.Column(
-                self.utilization_pane,
-                sizing_mode='stretch_width',
-                margin=(10, 0)
-            )
+            # Generation tab with embedded region selector and subtabs
+            generation_tab = self._create_generation_tab()
             
             # Price analysis tab
             try:
@@ -1141,7 +1171,6 @@ class EnergyDashboard(param.Parameterized):
             # Create tabbed interface
             tabs = pn.Tabs(
                 ("Generation by Fuel", generation_tab),
-                ("Capacity Utilization", utilization_tab),
                 ("Average Price Analysis", price_analysis_tab),
                 ("Station Analysis", station_analysis_tab),
                 dynamic=True,
@@ -1153,7 +1182,6 @@ class EnergyDashboard(param.Parameterized):
             dashboard = pn.Column(
                 title,
                 self.update_time_display,
-                control_row,
                 pn.pane.HTML("<div style='height: 10px;'></div>"),
                 tabs,
                 sizing_mode='stretch_width'
