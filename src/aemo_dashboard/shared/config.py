@@ -64,6 +64,7 @@ class Config:
         self.gen_output_file = self._get_file_path('GEN_OUTPUT_FILE', 'gen_output.parquet')
         self.gen_info_file = self._get_file_path('GEN_INFO_FILE', 'gen_info.pkl')
         self.transmission_output_file = self._get_file_path('TRANSMISSION_OUTPUT_FILE', 'transmission_flows.parquet')
+        self.rooftop_solar_file = self._get_file_path('ROOFTOP_SOLAR_FILE', 'rooftop_solar.parquet')
     
     def _get_file_path(self, env_var: str, default_name: str) -> Path:
         """Get file path from environment or use default in data directory"""

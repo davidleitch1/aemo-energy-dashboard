@@ -144,11 +144,12 @@ class EnergyDashboard(param.Parameterized):
         self.gen_info_df = None
         self.gen_output_df = None
         self.transmission_df = None  # Add transmission data
+        self.rooftop_df = None  # Add rooftop solar data
         self.duid_to_fuel = {}
         self.duid_to_region = {}
         self.last_update = None
         self.update_task = None
-        self.hours = 24  # Fixed 24 hours
+        self.hours = 48  # 48 hours to include July 12 daytime rooftop data
         self._plot_objects = {}  # Cache for plot objects
         
         # Initialize email alert manager
@@ -617,6 +618,41 @@ class EnergyDashboard(param.Parameterized):
             logger.error(f"Error loading transmission data: {e}")
             self.transmission_df = pd.DataFrame()
 
+    def load_rooftop_solar_data(self):
+        """Load and process rooftop solar data from parquet file"""
+        try:
+            rooftop_file = config.rooftop_solar_file
+            
+            if not os.path.exists(rooftop_file):
+                logger.warning(f"Rooftop solar data file not found at {rooftop_file}")
+                self.rooftop_df = pd.DataFrame()
+                return
+            
+            # Calculate time window - same as generation data
+            end_time = datetime.now()
+            start_time = end_time - timedelta(hours=self.hours)
+            
+            # Load rooftop solar data
+            df = pd.read_parquet(rooftop_file)
+            logger.info(f"Loaded rooftop solar data shape: {df.shape}")
+            
+            # Ensure datetime column
+            if not pd.api.types.is_datetime64_any_dtype(df['settlementdate']):
+                df['settlementdate'] = pd.to_datetime(df['settlementdate'])
+            
+            # Filter to time window
+            df = df[df['settlementdate'] >= start_time]
+            logger.info(f"Rooftop solar data shape after time filtering: {df.shape}")
+            
+            # Store rooftop solar data
+            self.rooftop_df = df
+            logger.info(f"Loaded {len(df)} rooftop solar records for last {self.hours} hours")
+            logger.info(f"Available regions: {[col for col in df.columns if col != 'settlementdate']}")
+            
+        except Exception as e:
+            logger.error(f"Error loading rooftop solar data: {e}")
+            self.rooftop_df = pd.DataFrame()
+
     def calculate_regional_transmission_flows(self):
         """Calculate net transmission flows for the selected region"""
         if self.transmission_df is None or self.transmission_df.empty or self.region == 'NEM':
@@ -760,10 +796,50 @@ class EnergyDashboard(param.Parameterized):
             except Exception as e:
                 logger.error(f"Error adding transmission flows: {e}")
         
+        # Add rooftop solar data if available
+        try:
+            # Load rooftop solar data if not already loaded
+            if self.rooftop_df is None:
+                self.load_rooftop_solar_data()
+            
+            if not self.rooftop_df.empty:
+                rooftop_df = self.rooftop_df.copy()
+                rooftop_df['settlementdate'] = pd.to_datetime(rooftop_df['settlementdate'])
+                rooftop_df.set_index('settlementdate', inplace=True)
+                
+                if self.region == 'NEM':
+                    # For NEM view, sum all main regions (ending in '1')
+                    main_regions = ['NSW1', 'QLD1', 'SA1', 'TAS1', 'VIC1']
+                    available_regions = [r for r in main_regions if r in rooftop_df.columns]
+                    
+                    if available_regions:
+                        # Sum rooftop solar across all regions
+                        total_rooftop = rooftop_df[available_regions].sum(axis=1)
+                        rooftop_values = total_rooftop.reindex(pivot_df.index, fill_value=0)
+                        pivot_df['Rooftop Solar'] = rooftop_values
+                        
+                        logger.info(f"Added rooftop solar (NEM total): max {pivot_df['Rooftop Solar'].max():.1f}MW, "
+                                   f"avg {pivot_df['Rooftop Solar'].mean():.1f}MW")
+                        
+                elif self.region.endswith('1') and self.region in rooftop_df.columns:
+                    # For individual regions
+                    rooftop_values = rooftop_df.reindex(pivot_df.index, fill_value=0)[self.region]
+                    pivot_df['Rooftop Solar'] = rooftop_values
+                    
+                    logger.info(f"Added rooftop solar: max {pivot_df['Rooftop Solar'].max():.1f}MW, "
+                               f"avg {pivot_df['Rooftop Solar'].mean():.1f}MW")
+                               
+                elif not self.region.endswith('1'):
+                    logger.info(f"Rooftop solar data not available for sub-region {self.region} (only available for main regions ending in '1')")
+                        
+        except Exception as e:
+            logger.error(f"Error adding rooftop solar data: {e}")
+        
         # Define preferred fuel order with transmission at correct positions
         preferred_order = [
             'Transmission Flow',     # NEW: At top of stack (positive values)
             'Solar', 
+            'Rooftop Solar',         # NEW: After regular solar
             'Wind', 
             'Other', 
             'Coal', 
@@ -894,6 +970,7 @@ class EnergyDashboard(param.Parameterized):
             'OCGT': '#ff8c42',        # Orange-red - different gas turbine type
             'Gas other': '#ff9500',   # Pure orange - clearly different from yellow
             'Solar': '#ffd700',       # Gold/bright yellow - sunny color
+            'Rooftop Solar': '#ffff80',  # Lighter yellow - distributed solar
             'Wind': '#00bfff',        # Sky blue - wind/air
             'Water': '#00ff7f',       # Spring green - water/hydro
             'Battery Storage': '#9370db',  # Medium purple - technology
