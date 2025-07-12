@@ -35,6 +35,9 @@ dependencies = [
     "matplotx>=0.3.0",
     "openpyxl>=3.1.0",
     "beautifulsoup4>=4.12.0",
+    # Station analysis search functionality
+    "fuzzywuzzy>=0.18.0",
+    "python-levenshtein>=0.21.0",
 ]
 
 [project.optional-dependencies]

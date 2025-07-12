@@ -1,92 +1,437 @@
 # AEMO Energy Dashboard - Development Notes
 
-## Current Status
+## Current Status ✅ FULLY OPERATIONAL
 
-The dashboard has three main tabs:
-1. **Generation by Fuel** - Working well, shows stacked area chart
-2. **Capacity Utilization** - Working, separate tab as requested
-3. **Average Price Analysis** - Partially working but needs custom pivot table builder
+The dashboard is now fully functional with four main tabs:
 
-## Next Priority: Custom Pivot Table Builder for Price Analysis
+### ✅ **Generation by Fuel Tab**
+- **Status:** Working perfectly
+- **Features:** Interactive stacked area chart showing generation by fuel type over time
+- **Data:** Real-time AEMO generation data with 5-minute intervals
+- **Charts:** Dual chart view (generation stack + price overlay)
 
-### Problem with Current Approach
-The fixed hierarchy approach (`Fuel → Region → DUID`) doesn't work well because:
-- Every DUID is unique, so grouping by `['Fuel', 'Region', 'duid']` creates individual groups
-- Panel's `groupby` parameter and Tabulator.js `groupBy` both fail to create meaningful hierarchies
-- Users want flexibility to analyze data from different perspectives
+### ✅ **Capacity Utilization Tab** 
+- **Status:** Working perfectly - separate tab as requested
+- **Features:** Capacity utilization percentages by fuel type
+- **Data Integrity:** Fixed capacity calculations using SUMMED AEMO nameplate capacities
+- **Issue Resolved:** Previously showed >400% utilization due to individual wind farm phase capacities
 
-### Solution: User-Driven Pivot Table Builder
+### ✅ **Average Price Analysis Tab**
+- **Status:** Fully functional custom pivot table builder
+- **Features:**
+  - ✅ User-driven grouping system (Region, Fuel combinations)
+  - ✅ Region filters (NSW1, QLD1, SA1, TAS1, VIC1) - all checked by default
+  - ✅ Fuel filters (Coal, Gas, Solar, Wind, etc.) - all checked by default  
+  - ✅ Column selection (Gen GWh, Rev $M, Price $/MWh, Util %, Cap MW, Station, Owner) - all checked by default
+  - ✅ Hierarchical table with expandable fuel groups showing individual DUIDs
+  - ✅ Date range controls (Last 7 Days, Last 30 Days, All Data, Custom Range)
+  - ✅ Professional dark theme styling with proper contrast
 
-Replace the rigid "Aggregation Hierarchy" dropdown with flexible controls:
+### 🎯 **Next Priority: Station Analysis Tab**
 
-#### Grouping Controls
+## New Feature: Station Analysis Tab
+
+### Overview
+Add a fourth tab focused on individual station/DUID analysis with detailed performance metrics and time-of-day patterns.
+
+### Core Features
+
+#### 1. **Station Search Interface**
 ```
-┌─ Grouping (select up to 3 levels) ──────────────┐
-│ Group by (in order):                            │
-│ ☑ Fuel        ☐ Region   ☐ Technology          │
+┌─ Station Search ────────────────────────────────┐
+│ Search by Station Name or DUID:                │
+│ [🔍 Type station name or DUID...        ] [Go] │
 │                                                 │
-│ Then by:                                        │
-│ ☐ Fuel        ☑ Region   ☐ Technology          │
-│                                                 │
-│ Then by:                                        │
-│ ☐ Fuel        ☐ Region   ☐ Technology          │
+│ Suggestions:                                    │
+│ • Eraring Power Station (ERARING)              │ 
+│ • Loy Yang A (LOYA1, LOYA2, LOYA3, LOYA4)     │
+│ • Taralga Wind Farm (TARALGA1)                │
 └─────────────────────────────────────────────────┘
 ```
 
-#### Column Selection
+**Requirements:**
+- **Approximate Search:** Fuzzy matching for station names and DUIDs
+- **Auto-suggestions:** Dropdown with matching results as user types
+- **Multiple DUIDs:** Handle stations with multiple units (e.g., Loy Yang A has 4 units)
+- **Search History:** Recent searches for quick access
+
+#### 2. **Time Period Controls**
 ```
-┌─ Display Columns ───────────────────────────────┐
-│ Show in table:                                  │
-│ ☑ Generation (MWh)                              │
-│ ☑ Total Revenue ($)                             │
-│ ☑ Average Price ($/MWh)                         │
-│ ☐ Capacity (MW)                                 │
-│ ☐ Capacity Utilization (%)                     │
+┌─ Time Period Selection ─────────────────────────┐
+│ Date Range:  [2025-06-18] to [2025-07-12]      │
+│ Quick Presets: [Last 7 Days] [Last 30 Days]    │
+│               [Last 3 Months] [All Data]       │
 └─────────────────────────────────────────────────┘
 ```
 
-### Implementation Notes
+**Requirements:** 
+- Reuse existing date selector components from Price Analysis tab
+- Same preset buttons and date picker functionality
 
-#### Available Grouping Dimensions
-- **Fuel** - Primary energy source (Coal, Gas, Solar, Wind, etc.)
-- **Region** - Market region (NSW1, QLD1, SA1, TAS1, VIC1)
-- **Technology** - Technology type (if available in DUID mapping)
+#### 3. **Chart 1: Time Series Analysis**
+```
+┌─ Performance Over Time ─────────────────────────┐
+│                                                 │
+│  Revenue ($M) ┌─────────────────────────────┐   │
+│      150      │ ████████                    │   │
+│      100      │ ████████████████            │   │
+│       50      │ ████████████████████████    │   │
+│        0      └─────────────────────────────┘   │
+│                                                 │
+│  Price ($/MWh)┌─────────────────────────────┐   │
+│      400      │ ▲                           │   │
+│      200      │ ▲  ▲    ▲                   │   │
+│        0      │ ▲  ▲ ▲▲ ▲ ▲▲▲▲▲             │   │
+│               └─────────────────────────────┘   │
+│                                                 │
+│  Generation   ┌─────────────────────────────┐   │
+│  (MWh)   800  │ ████████████████████████    │   │
+│          400  │ ████████████████████████    │   │
+│            0  └─────────────────────────────┘   │
+│                Jun 18    Jul 1     Jul 12      │
+└─────────────────────────────────────────────────┘
+```
 
-**Note:** Owner should be a **display column**, not a grouping dimension, since users can sort on it using Tabulator's built-in sorting.
+**Requirements:**
+- **Triple-panel Chart:** Revenue (top), Price (middle), Generation (bottom)
+- **Interactive:** Linked zooming and panning across all three panels
+- **Hover Tooltips:** Show exact values with timestamp
+- **Time Aggregation:** User selectable (5-min, hourly, daily averages)
 
-#### Excluded Columns
-- **Record Count** - Not needed for user analysis
-- **Date Range** - Not needed for user analysis (date filtering is handled separately)
+#### 4. **Chart 2: Time-of-Day Analysis**
+```
+┌─ Average Performance by Time of Day ────────────┐
+│                                                 │
+│  Avg Values   ┌─────────────────────────────┐   │
+│               │     ████████                │   │
+│               │   ████████████              │   │
+│               │ ████████████████            │   │
+│               └─────────────────────────────┘   │
+│               00:00   06:00   12:00   18:00    │
+│                                                 │
+│ Legend: ■ Generation (MWh)  ■ Revenue ($K)      │
+│         ○ Price ($/MWh)                         │
+└─────────────────────────────────────────────────┘
+```
 
-#### Technical Implementation
-1. **UI Components:**
-   - Checkbox groups for grouping selection (max 3 levels)
-   - Checkbox group for column selection
-   - Apply button to rebuild table
+**Requirements:**
+- **24-Hour View:** X-axis shows hours 00:00 to 23:59
+- **Multiple Metrics:** Generation, Revenue, Price overlaid with different scales
+- **Mean Calculation:** Average values across the entire selected time period
+- **Dual Y-Axis:** Left axis for Generation/Revenue, right axis for Price
 
-2. **Data Processing:**
-   - Dynamically build grouping hierarchy based on user selection
-   - Aggregate data at the selected level
-   - Only include selected columns in output
-   - Use Panel's `groupby` parameter with user-defined hierarchy
+#### 5. **Summary Statistics Table**
+```
+┌─ Station Performance Summary ───────────────────┐
+│ Station: Eraring Power Station (ERARING)       │
+│ Period: 2025-06-18 to 2025-07-12 (23 days)     │
+│                                                 │
+│ Metric                  │ Value      │ Rank    │
+│ ──────────────────────────────────────────────  │
+│ Total Generation (GWh)  │ 1,234.5    │ #3/528  │
+│ Total Revenue ($M)      │ $87.2      │ #5/528  │  
+│ Average Price ($/MWh)   │ $70.65     │ #45/528 │
+│ Capacity Factor (%)     │ 67.8%      │ #12/528 │
+│ Peak Generation (MW)    │ 2,640      │ Max Cap │
+│ Peak Revenue Hour ($K)  │ $1,847     │ 14:30   │
+│ Best Price Received     │ $1,234/MWh │ Jun 23  │
+│ ──────────────────────────────────────────────  │
+│ Total Operating Hours   │ 498.2      │ 90.4%   │ 
+│ Zero Generation Hours   │ 53.8       │ 9.6%    │
+└─────────────────────────────────────────────────┘
+```
 
-3. **Benefits:**
-   - Solves grouping issues (users define meaningful groupings)
-   - Flexible analysis (view data by Fuel, Region, or combination)
-   - Clean interface (only show relevant columns)
-   - Scalable (easy to add new dimensions/columns)
+**Requirements:**
+- **Key Performance Metrics:** Generation, Revenue, Price, Capacity Factor
+- **Ranking:** Position relative to all other DUIDs in same period
+- **Operational Statistics:** Operating hours, peak values, timing
+- **Market Position:** Performance ranking within fuel class
 
-### Files to Modify
-- `src/aemo_dashboard/analysis/price_analysis_ui.py` - Replace hierarchy selector with checkbox controls
-- `src/aemo_dashboard/analysis/price_analysis.py` - Add dynamic grouping method
+## Implementation Plan: Station Analysis Tab
 
-### Example Use Cases
-1. **Fuel Analysis:** Group by Fuel only → See total generation/revenue by fuel type
-2. **Regional Analysis:** Group by Region only → See performance by market region  
-3. **Detailed Analysis:** Group by Fuel → Region → See fuel performance within each region
-4. **Technology Focus:** Group by Technology → Fuel → Compare technologies within fuel types
+### Development Strategy
 
-This approach transforms the Price Analysis tab from a rigid hierarchy viewer into a powerful, user-driven analytics tool.
+#### Phase 1: Core Infrastructure (Days 1-2)
+**Objective:** Set up basic tab structure and data access patterns
+
+**Tasks:**
+1. **Create Module Structure**
+   ```
+   src/aemo_dashboard/station/
+   ├── __init__.py
+   ├── station_analysis.py      # Data processing engine
+   ├── station_analysis_ui.py   # UI components
+   └── station_search.py        # Search functionality
+   ```
+
+2. **Basic Tab Integration**
+   - Add "Station Analysis" tab to main dashboard (`gen_dash.py`)
+   - Import station UI component
+   - Ensure consistent dark theme styling
+
+3. **Data Access Setup**
+   - Extend existing `PriceAnalysisMotor` or create `StationAnalysisMotor`
+   - Reuse integrated generation + price data from existing system
+   - Add DUID lookup functionality
+
+#### Phase 2: Search Interface (Days 2-3)
+**Objective:** Implement fuzzy search with auto-suggestions
+
+**Key Components:**
+1. **Search Engine (`station_search.py`)**
+   ```python
+   from fuzzywuzzy import fuzz
+   import pandas as pd
+   
+   class StationSearchEngine:
+       def __init__(self, gen_info_df):
+           self.gen_info_df = gen_info_df
+           self.search_index = self._build_search_index()
+       
+       def fuzzy_search(self, query, limit=10):
+           # Implement fuzzy matching on station names and DUIDs
+           
+       def get_suggestions(self, partial_query):
+           # Return auto-complete suggestions
+   ```
+
+2. **Search UI Components**
+   - `AutocompleteInput` widget with dropdown suggestions
+   - Recent searches storage (localStorage via Panel)
+   - Search result display with station details
+
+3. **Integration Points**
+   - Connect to existing `gen_info.pkl` data
+   - Use Panel's reactive programming for real-time suggestions
+
+#### Phase 3: Time Series Charts (Days 3-5)
+**Objective:** Create interactive time series visualization
+
+**Technical Approach:**
+1. **Reuse Date Controls**
+   ```python
+   # Import from existing price analysis
+   from ..analysis.price_analysis_ui import create_date_controls
+   
+   # Or extract shared components to:
+   # ..shared.date_controls import DateControlMixin
+   ```
+
+2. **Triple-Panel Chart Architecture**
+   ```python
+   import hvplot.pandas
+   import holoviews as hv
+   from holoviews import opts
+   
+   def create_time_series_chart(data_df, duid):
+       # Revenue panel (top)
+       revenue_chart = data_df.hvplot.area(
+           x='settlementdate', y='revenue_5min',
+           title=f'{duid} - Revenue Over Time',
+           color='#ff7f0e', alpha=0.7
+       )
+       
+       # Price panel (middle) 
+       price_chart = data_df.hvplot.line(
+           x='settlementdate', y='price',
+           title=f'{duid} - Price Over Time',
+           color='#d62728', line_width=2
+       )
+       
+       # Generation panel (bottom)
+       generation_chart = data_df.hvplot.area(
+           x='settlementdate', y='scadavalue',
+           title=f'{duid} - Generation Over Time', 
+           color='#2ca02c', alpha=0.7
+       )
+       
+       # Stack vertically with linked axes
+       return (revenue_chart + price_chart + generation_chart).cols(1)
+   ```
+
+3. **Linked Interactions**
+   - Use HoloViews `streams` for synchronized zooming
+   - Panel's `param.watch` for reactive updates
+   - Bokeh's `SharedToolbar` for unified controls
+
+#### Phase 4: Time-of-Day Analysis (Days 5-6)
+**Objective:** Aggregate and visualize time-of-day patterns
+
+**Data Processing Pipeline:**
+```python
+def calculate_time_of_day_averages(data_df):
+    """Calculate mean values by hour of day across entire period"""
+    
+    # Extract hour from datetime
+    data_df['hour'] = data_df['settlementdate'].dt.hour
+    
+    # Group by hour and calculate means
+    hourly_stats = data_df.groupby('hour').agg({
+        'scadavalue': 'mean',           # Average generation by hour
+        'revenue_5min': 'mean',         # Average revenue by hour  
+        'price': 'mean'                 # Average price by hour
+    }).reset_index()
+    
+    return hourly_stats
+
+def create_time_of_day_chart(hourly_data):
+    """Create dual-axis chart showing time of day patterns"""
+    
+    # Primary axis: Generation and Revenue (similar scales)
+    primary = hourly_data.hvplot.bar(
+        x='hour', y=['scadavalue', 'revenue_5min'],
+        title='Average Performance by Hour of Day',
+        ylabel='Generation (MW) / Revenue ($/5min)',
+        alpha=0.8, width=600, height=400
+    )
+    
+    # Secondary axis: Price (different scale)
+    secondary = hourly_data.hvplot.line(
+        x='hour', y='price',
+        color='red', line_width=3,
+        ylabel='Price ($/MWh)'
+    )
+    
+    # Overlay with dual y-axes
+    return primary * secondary
+```
+
+#### Phase 5: Summary Statistics (Days 6-7)
+**Objective:** Generate comprehensive performance metrics
+
+**Statistics Engine:**
+```python
+class StationStatsCalculator:
+    def __init__(self, station_data, all_stations_data):
+        self.station_data = station_data
+        self.all_stations_data = all_stations_data
+    
+    def calculate_performance_metrics(self):
+        return {
+            'total_generation_gwh': self.station_data['scadavalue'].sum() / 1000,
+            'total_revenue_millions': self.station_data['revenue_5min'].sum() / 1_000_000,
+            'average_price': self._weighted_average_price(),
+            'capacity_factor': self._calculate_capacity_factor(),
+            'ranking_generation': self._get_generation_ranking(),
+            'peak_generation': self.station_data['scadavalue'].max(),
+            'operating_hours': self._calculate_operating_hours(),
+            'zero_generation_hours': self._calculate_zero_hours()
+        }
+    
+    def _get_generation_ranking(self):
+        # Rank this station against all others in same period
+        pass
+```
+
+**UI Implementation:**
+- Use Panel's `Tabulator` for the summary table
+- Apply dark theme styling consistent with other tabs
+- Include ranking badges and performance indicators
+
+#### Phase 6: Integration & Polish (Days 7-8)
+**Objective:** Final integration and user experience refinement
+
+**Integration Tasks:**
+1. **Add to Main Dashboard**
+   ```python
+   # In gen_dash.py
+   from ..station.station_analysis_ui import create_station_analysis_tab
+   
+   station_tab = create_station_analysis_tab()
+   tabs.append(("Station Analysis", station_tab))
+   ```
+
+2. **Consistent Styling**
+   - Apply material template theme
+   - Match color scheme and typography
+   - Ensure responsive layout
+
+3. **Performance Optimization**
+   - Implement data caching for search results
+   - Optimize chart rendering for large datasets
+   - Add loading indicators for slow operations
+
+### Required Dependencies
+
+#### Python Packages (add to pyproject.toml)
+```python
+# Search functionality
+fuzzywuzzy = "^0.18.0"
+python-levenshtein = "^0.23.0"  # Speed up fuzzy matching
+
+# Enhanced visualization (if not already included)
+holoviews = "^1.18.0"
+hvplot = "^0.9.0"
+bokeh = "^3.3.0"
+panel = "^1.3.0"
+
+# NEW: Panel Material-UI (May 2025 release) for professional styling
+panel-material-ui = "^1.0.0"  # Modern Material UI components with enhanced dark theme
+```
+
+#### Latest HoloViz 2024-2025 Updates Applied
+- **Panel Material-UI (May 2025):** New extension providing professional Material UI components
+- **Enhanced Dark Theme:** Improved theme inheritance and dynamic switching capabilities  
+- **hvPlot 0.11:** DuckDB integration and automatic lat/lon conversion features
+- **Panel 1.5.0+:** Latest interactive dashboard capabilities and performance improvements
+
+#### Shared Components to Extract
+```python
+# Create src/aemo_dashboard/shared/date_controls.py
+class DateControlMixin:
+    """Reusable date control components"""
+    
+    def create_date_range_controls(self):
+        # Extract from price_analysis_ui.py
+        pass
+    
+    def create_preset_buttons(self):
+        # Extract preset button logic
+        pass
+
+# Create src/aemo_dashboard/shared/chart_themes.py  
+def apply_dashboard_theme():
+    """Consistent chart styling across all tabs"""
+    hv.opts.defaults(
+        hv.opts.Area(alpha=0.7, tools=['hover']),
+        hv.opts.Line(line_width=2, tools=['hover']),
+        hv.opts.Bars(alpha=0.8, tools=['hover'])
+    )
+```
+
+### File Modification Plan
+
+#### New Files to Create:
+1. `src/aemo_dashboard/station/__init__.py`
+2. `src/aemo_dashboard/station/station_analysis.py`
+3. `src/aemo_dashboard/station/station_analysis_ui.py`
+4. `src/aemo_dashboard/station/station_search.py`
+5. `src/aemo_dashboard/shared/date_controls.py`
+6. `src/aemo_dashboard/shared/chart_themes.py`
+
+#### Files to Modify:
+1. `src/aemo_dashboard/generation/gen_dash.py` - Add new tab
+2. `pyproject.toml` - Add search dependencies
+3. `src/aemo_dashboard/analysis/price_analysis_ui.py` - Extract shared components
+
+### Development Best Practices
+
+#### Code Organization
+- **Separation of Concerns:** UI components separate from data processing
+- **Reusable Components:** Extract common functionality to shared modules  
+- **Consistent APIs:** Follow existing patterns for data loading and chart creation
+
+#### Testing Strategy
+- **Unit Tests:** Test search functionality and statistics calculations
+- **Integration Tests:** Verify tab integration and data flow
+- **Manual Testing:** Verify charts render correctly and interactions work
+
+#### Documentation
+- **Code Comments:** Document complex calculations and data transformations
+- **User Guide:** Add station analysis instructions to dashboard help
+- **Developer Notes:** Update CLAUDE.md with implementation details
+
+This implementation plan provides a structured approach to building the Station Analysis tab while maximizing reuse of existing components and maintaining consistency with the current dashboard architecture.
 
 ## Dashboard Control Commands
 
@@ -101,156 +446,218 @@ cd "/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AE
 
 ### Dashboard URLs
 - Main dashboard: http://localhost:5010
-- Navigate to "Average Price Analysis" tab to see custom pivot table builder
+- All four tabs: Generation by Fuel | Capacity Utilization | Average Price Analysis | Station Analysis
 
 ### Troubleshooting
 - If port 5010 is in use: `lsof -ti:5010 | xargs kill -9`
 - Check logs: `tail -f /Users/davidleitch/Library/Mobile\ Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard/logs/aemo_dashboard.log`
 
-## Custom Pivot Table Builder Implementation (COMPLETED)
+## Recent Achievements ✅
 
-### Final Status: ✅ Major Implementation Complete
+### All Major Issues Resolved
+- ✅ **Column Selector Bug Fixed:** All checkboxes now display as checked by default
+- ✅ **Capacity Data Integrity:** Fixed >400% utilization issue using SUMMED AEMO capacities
+- ✅ **Production Deployment:** Removed hardcoded paths, all imports use relative references
+- ✅ **File Path Configuration:** Dashboard now uses config system for cross-platform compatibility
+- ✅ **Price Analysis Functionality:** Fully working custom pivot table builder with hierarchical display
+- ✅ **Professional UI Design:** Dark theme, proper contrast, intuitive user experience
 
-The Price Analysis tab has been successfully transformed from a rigid hierarchy system into a flexible, user-driven pivot table builder. This implementation addresses the fundamental issue that every DUID creates its own group, making traditional grouping ineffective.
+### Current Status: Ready for Station Tab Development
+The dashboard foundation is solid and all core functionality is working perfectly. 
 
-#### ✅ Completed Features
+## ✅ **Phase 1 Complete: Station Analysis Tab - Basic Infrastructure**
 
-**1. Redesigned User Interface**
-- **Category Selection:** Users select which dimensions to group by (Region, Fuel)
-- **Region Filters:** Checkboxes to select which regions to include (NSW1, QLD1, SA1, TAS1, VIC1)  
-- **Fuel Filters:** Checkboxes to select which fuel types to include (Coal, Gas, Solar, Wind, etc.)
-- **Column Selection:** Choose which data columns to display with shorter titles
-- **Apply Button:** Triggers recalculation with new selections
+### **Implementation Status: OPERATIONAL**
 
-**2. Hierarchical DUID Display**
-- ✅ Individual DUIDs are now properly nested under their parent groups
-- ✅ Users can click on group headers (e.g., "Coal") to expand and see individual DUIDs
-- ✅ Groups start collapsed by default for clean initial view
-- ✅ Removed separate detail table - everything is in one hierarchical table
+The Station Analysis tab has been successfully added to the dashboard with core infrastructure:
 
-**3. Data Filtering System**
-- ✅ Actual data filtering implemented (not just UI filtering)
-- ✅ Region filters correctly limit data to selected regions only
-- ✅ Fuel filters correctly limit data to selected fuel types only
-- ✅ Filtered data maintains proper aggregations and calculations
+#### ✅ **Completed Components:**
 
-**4. Formatting Improvements**
-- ✅ Generation displayed in GWh (converted from MWh ÷ 1000)
-- ✅ Revenue displayed in $millions (converted from dollars ÷ 1,000,000)
-- ✅ Smart decimal rounding: 0 decimal places if >10, otherwise 1 decimal place
-- ✅ Shorter column titles: "Generation (GWh)", "Revenue ($M)", "Avg Price ($/MWh)"
-- ✅ Removed unnecessary `_row_type` column
+**1. Module Structure Created**
+- ✅ `src/aemo_dashboard/station/__init__.py` - Module initialization
+- ✅ `src/aemo_dashboard/station/station_analysis.py` - Data processing engine
+- ✅ `src/aemo_dashboard/station/station_analysis_ui.py` - UI components
+- ✅ `src/aemo_dashboard/station/station_search.py` - Fuzzy search functionality
 
-**5. Technical Architecture**
-- ✅ Flexible grouping system supports any combination of available dimensions
-- ✅ Column mapping system handles UI names vs database column names  
-- ✅ Proper data integration with filtering applied before aggregation
-- ✅ Hierarchical data structure compatible with Panel's Tabulator groupby functionality
+**2. Data Integration Engine**
+- ✅ **StationAnalysisMotor class** - Loads and integrates generation + price + DUID mapping data
+- ✅ **Data pipeline** - Properly handles DataFrame format of gen_info.pkl 
+- ✅ **Region mapping** - Links generation data to regions for price integration
+- ✅ **Revenue calculation** - Computes 5-minute revenue (Generation × Price × time)
 
-#### ⚠️ Known Issues Requiring Future Work
+**3. Search Functionality**
+- ✅ **StationSearchEngine class** - Fuzzy search using fuzzywuzzy
+- ✅ **DataFrame compatibility** - Handles both DataFrame and dictionary DUID mappings
+- ✅ **Auto-suggestions** - Popular stations list for quick access
+- ✅ **Multi-field search** - Searches DUID, station name, and owner fields
 
-**1. Column Selection Logic**
-- **Issue:** Column selection partially works but may not hide all unselected columns consistently
-- **Impact:** Users see more columns than they selected
-- **Priority:** Medium - functional but not polished
+**4. User Interface Components**
+- ✅ **Search interface** - Text input with search button
+- ✅ **Date controls** - Start/end date pickers with preset buttons (Last 7/30 Days, All Data)
+- ✅ **Status display** - Shows data loading status and statistics (528 stations, 5 regions)
+- ✅ **Popular stations** - Quick access to major generators (Eraring, Loy Yang A, etc.)
 
-**2. Date Range Integration**
-- **Issue:** Date filtering works but could be better integrated with the grouping controls
-- **Impact:** Users need to apply date filters separately from grouping changes
-- **Priority:** Low - workaround available
+**5. Dashboard Integration**
+- ✅ **Fourth tab added** - "Station Analysis" appears alongside existing tabs
+- ✅ **Dependencies installed** - fuzzywuzzy and python-levenshtein for search
+- ✅ **Error handling** - Graceful failure with meaningful error messages
+- ✅ **Consistent styling** - Matches existing dark theme and layout
 
-**3. Additional Formatting**
-- **Issue:** Some edge cases in number formatting may need refinement
-- **Impact:** Minor display inconsistencies in very large or very small numbers
-- **Priority:** Low - cosmetic
+#### **Current Functionality:**
+- ✅ Tab loads successfully in dashboard
+- ✅ Status shows "Data loaded successfully | 528 stations available"
+- ✅ Search interface appears with popular stations list
+- ✅ Date controls functional with preset buttons
+- ✅ Ready for user to search stations and begin analysis
 
-#### Technical Implementation Details
+#### **Files Modified:**
+- `src/aemo_dashboard/generation/gen_dash.py` - Added Station Analysis tab import and integration
+- `pyproject.toml` - Added fuzzywuzzy and python-levenshtein dependencies
 
-**Key Files Modified:**
-- `src/aemo_dashboard/analysis/price_analysis_ui.py` - Complete UI redesign
-- `src/aemo_dashboard/analysis/price_analysis.py` - Added filtering and formatting logic
+## ⚠️ **Current Status: Phase 2 - Station Analysis Search Issues**
 
-**Major Changes:**
-1. **UI Redesign:** Replaced 3-level hierarchy selectors with category + filter approach
-2. **Data Filtering:** Added region_filters and fuel_filters parameters throughout data pipeline  
-3. **Hierarchical Display:** Modified `create_hierarchical_data()` to include DUID-level details in main table
-4. **Formatting Pipeline:** Added transformation logic for GWh, $millions, and smart rounding
-5. **Column Mapping:** Implemented mapping between UI column names and database column names
+### **Problem Summary: Search Event Handling**
 
-**User Workflow:**
-1. Select grouping categories (e.g., "Fuel" + "Region")
-2. Choose which regions/fuels to include via filter checkboxes
-3. Select which data columns to display  
-4. Click "Apply Grouping" to rebuild table
-5. Expand/collapse groups to see individual DUIDs
+The Station Analysis tab loads successfully with 2.7M integrated records, but the search functionality has event handling issues:
 
-#### Example Use Cases Now Supported
-- **Fuel Analysis:** Group by Fuel only, filter to specific regions → See fuel performance by region
-- **Regional Focus:** Group by Region, filter to Coal only → See coal performance across regions
-- **Multi-level:** Group by Fuel+Region, filter to NSW1+VIC1 → Detailed breakdown of two key markets
-- **Custom Filtering:** Any combination of region/fuel filters with any grouping structure
+#### **Issues Identified:**
 
-This implementation successfully transforms the Price Analysis tab from a rigid, problematic hierarchy system into a powerful, flexible analytics tool that gives users full control over how they view and analyze the electricity market data.
+**1. Original Button Click Problem**
+- Panel button `on_click` events not firing properly in complex layouts
+- `search_button.on_click(self._perform_search)` was not triggering
+- Common issue with Panel reactive systems in nested components
 
-## Next Development Phase: Enhanced User Experience
+**2. Dropdown Selection Error**
+```
+Error handling station selection: String parameter 'StationAnalysisUI.selected_duid' only takes a string value, not value of <class 'tuple'>.
+```
+- Station selector dropdown passing tuple `(duid, display_name)` instead of just `duid` 
+- Parameter validation error preventing station selection
 
-### Recently Completed ✅
+**3. Chart Display Not Updating**
+- Search mechanism partially working (improved with reactive approach)
+- Charts section not updating after successful station filtering
+- UI component references not properly connected
 
-#### 1. Complete UI Overhaul ✅ COMPLETED
-**Major Achievement:** Successfully transformed the Price Analysis interface from a problematic rigid system into a comprehensive, user-friendly analytics dashboard.
+#### **Progress Made:**
+✅ **Data Integration Working:** 2.7M records successfully loaded and integrated  
+✅ **Search Infrastructure:** StationSearchEngine finds stations correctly  
+✅ **UI Components:** Search interface, date controls, and layout functional  
+🔄 **Event Handling:** Partially fixed with reactive programming approach  
+❌ **Chart Display:** Still not showing after station selection  
 
-**✅ Core Functionality Fixed:**
-- **Column Selection Logic:** All 6 columns now work perfectly (Generation GWh, Revenue $M, Avg Price, Capacity Utilization %, Station Name, Owner)
-- **Capacity Utilization:** Fixed missing column mapping (`'capacity_utilization': 'capacity_utilization_pct'`) - now displays correctly
-- **Station Name & Owner:** Added DUID mapping to readable station names and company ownership data
-- **Unified Update Button:** Replaced fragmented Apply buttons with single "Update Analysis" that handles all filters
+#### **Technical Root Causes:**
 
-**🎨 Professional UI Design:**
-- **Dark Theme Integration:** Table styled with white text on black background matching dashboard theme
-- **Column Headers:** Highlighted background (#404040) with proper contrast
-- **Visual Date Feedback:** Active date preset buttons change color (primary vs light)
-- **Dynamic Table Titles:** Shows "Last 7 Days", "Last 30 Days", "All Data", or "Custom Range" with date info
-- **Increased Table Height:** From 600px to 800px for better data viewing
+**Data Pipeline:** ✅ Working  
+- `StationAnalysisMotor.load_data()` ✅ 3.1M generation records  
+- `StationAnalysisMotor.integrate_data()` ✅ 2.7M integrated records  
+- `StationSearchEngine.fuzzy_search()` ✅ Finds stations correctly  
 
-**🔄 Horizontal Layout Implementation:**
-- **Side-by-Side Sections:** Region | Fuel | Columns arranged horizontally
-- **Compact Design:** Shorter names ("Gen (GWh)", "Rev ($M)", "Price ($/MWh)", "Util (%)")
-- **Checkbox Uncheck All:** Replaced buttons with checkboxes underneath each category header
-- **Proper Vertical Lists:** Each section displays items vertically within its column
+**UI Event System:** 🔄 Partially Fixed  
+- Button click events → **Fixed:** Replaced with reactive Select widget  
+- Parameter validation → **Issue:** Dropdown passing tuple instead of string  
+- Reactive updates → **Issue:** Chart components not updating properly  
 
-**🎛️ Enhanced User Experience:**
-- **Smart Default Selection:** All regions, fuels, and default columns pre-selected
-- **Quick Clear Options:** "Uncheck All" checkboxes for instant category clearing
-- **Organized Controls:** Date range and actions in top row, filters below
-- **Improved Spacing:** Better visual separation between sections
+**Chart Generation:** ❌ Not Working  
+- `_update_station_analysis()` called but charts not displaying  
+- `_create_time_series_charts()` not showing visual output  
+- Panel layout updates not refreshing properly  
 
-### Current Refinements Needed
+#### **Next Steps Required:**
 
-#### 1. Layout Optimization 🎯 IN PROGRESS
-**Current Status:** Horizontal layout working well but needs final polish
-**Next Steps:**
-- Make selection columns more compact/tighter spacing
-- Move table back to right side of selectors (not below)
-- Position table title on same row as status line
-- Optimize space usage for professional dashboard appearance
+**Immediate Fixes Needed:**
+1. **Fix Dropdown Value Error:**
+   ```python
+   # Change from:
+   station_options = [('', 'Select a station...')] + [(station['duid'], station['display_name']) for station in popular_stations]
+   
+   # To:
+   station_options = ['Select a station...'] + [station['duid'] for station in popular_stations]
+   ```
 
-#### 6. Visual Date Filter Feedback 🎨 LOW PRIORITY
-**Requirement:** Date preset buttons (Last 7 Days, Last 30 Days, All Data) should change color when selected.
-**Current Behavior:** Buttons don't show which date range is currently active.
-**Expected Behavior:** Active date range button should be highlighted/different color.
-**Benefit:** Clear visual feedback of current date filter state.
-**Implementation:** Add button state management with active/inactive styling.
+2. **Fix Chart Component Updates:**
+   - Debug why `self.charts_section[0] = new_content` not updating UI
+   - May need to use Panel's `.replace()` or `.clear()` + `.append()` methods
+   - Ensure chart objects are properly created and Panel-compatible
 
-### Implementation Priority Order
-1. **Fix Column Selection Logic** - Core functionality broken
-2. **Add Capacity Utilization Column** - Important missing metric
-3. **Unified Update Button** - Better UX flow
-4. **Add Station Name Column** - User-friendly display
-5. **Add Owner Column** - Additional analysis dimension  
-6. **Date Filter Visual Feedback** - Polish/visual enhancement
+3. **Add Better Logging:**
+   - Log each step of `_update_station_analysis()` process
+   - Verify station data filtering returns records
+   - Confirm chart creation succeeds before UI update
 
-### Technical Notes
-- Column selection fix likely involves Tabulator `hidden_columns` parameter or DataFrame filtering
-- New columns require updates to both UI options and data pipeline
-- Unified button needs to combine date and grouping filter logic
-- Station Name/Owner columns need proper mapping from DUID to gen_info.pkl data
+#### **Current Dashboard Status:**
+- ✅ Main dashboard running on http://localhost:5010
+- ✅ All four tabs: Generation by Fuel | Capacity Utilization | Average Price Analysis | Station Analysis
+- ✅ Station Analysis tab loads with "✅ Data loaded successfully | 528 stations available"
+- ✅ Search dropdown shows popular stations
+- ⚠️ Station selection triggers parameter error
+- ❌ Charts not displaying after station selection
+
+## ✅ **Phase 2 Complete: Station Analysis Charts Working**
+
+### **Major Progress Made:**
+✅ **Dropdown Selection Fixed:** Station selection now works without parameter errors  
+✅ **Chart Display Working:** Charts now appear after station selection  
+✅ **Smart Resampling:** 23.5 days of data → 541 hourly points (6,426 5-min records)  
+✅ **Performance Metrics Fixed:** All metrics calculate successfully  
+✅ **Chart Repetition Eliminated:** Single clean chart display  
+
+### **Current Issues Requiring Fixes:**
+
+#### **1. Dual-Axis Chart Display Problem**
+**Issue:** Time series chart shows only one y-axis (Generation MW) but needs both
+**Expected:** Left y-axis: Generation (MW), Right y-axis: Price ($/MWh)
+**Current:** HoloViews overlay not creating proper dual-axis display
+**Fix Needed:** Properly configure dual y-axis with `.opts(yaxis='right')` for price series
+
+#### **2. Time-of-Day Chart Inconsistency**  
+**Issue:** Time-of-day chart should mirror time series chart with dual-axis
+**Current:** Only shows generation bars + price line, but missing dual y-axis labels
+**Expected:** Same two series (Generation + Price) with same dual y-axis configuration
+**Fix Needed:** Apply same dual-axis pattern to time-of-day chart
+
+#### **3. Date Selection Controls Not Functional**
+**Issue:** Date pickers and preset buttons don't trigger data refresh
+**Current:** Always shows full 30-day default period regardless of selection
+**Expected:** Clicking "Last 7 Days" should reload analysis for past week only
+**Fix Needed:** Connect date controls to reactive parameters and trigger `_update_station_analysis()`
+
+#### **4. Preset Button Visual Feedback Missing**
+**Issue:** Preset buttons (Last 7 Days, Last 30 Days, All Data) don't show selection state  
+**Expected:** Selected button should have different color/style to indicate active choice
+**Fix Needed:** Button group with selection state management
+
+### **Technical Root Causes:**
+
+**Dual-Axis Implementation:**
+Current HoloViews overlay pattern not working properly:
+```python
+overlay = generation_line * price_line.opts(yaxis='right')
+```
+**Solution:** Use proper Bokeh dual-axis configuration or Panel/HoloViews layout approach
+
+**Date Control Binding:**
+Date picker widgets created but not connected to reactive parameters:
+```python
+start_picker = pn.widgets.DatePicker(value=start_date)  # Not connected
+end_picker = pn.widgets.DatePicker(value=end_date)      # Not connected  
+```
+**Solution:** Connect with `param.watch()` and trigger analysis updates
+
+**Button State Management:**
+Buttons created without selection state tracking:
+```python
+pn.widgets.Button(name="Last 7 Days")  # No state management
+```
+**Solution:** Use `RadioButtonGroup` or implement custom button state logic
+
+### **Next Phase: UI Control Integration**
+
+**Priority Tasks:**
+1. Fix dual-axis chart display (HoloViews configuration)
+2. Implement working date range controls with reactive updates
+3. Add preset button selection state and functionality  
+4. Apply same dual-axis pattern to time-of-day chart
+5. Test complete user workflow: station selection → date change → chart updates
+
+**Current Status:** Charts display but controls need integration
