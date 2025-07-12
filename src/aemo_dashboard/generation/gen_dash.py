@@ -143,6 +143,7 @@ class EnergyDashboard(param.Parameterized):
         super().__init__(**params)
         self.gen_info_df = None
         self.gen_output_df = None
+        self.transmission_df = None  # Add transmission data
         self.duid_to_fuel = {}
         self.duid_to_region = {}
         self.last_update = None
@@ -159,6 +160,7 @@ class EnergyDashboard(param.Parameterized):
         # Create the initial plot panes with proper initialization
         self.plot_pane = None
         self.utilization_pane = None
+        self.transmission_pane = None
         self.main_content = None
         self.update_time_display = None
         # Track unknown DUIDs for session reporting
@@ -172,12 +174,13 @@ class EnergyDashboard(param.Parameterized):
             # Create fresh plots for initialization
             gen_plot = self.create_plot()
             util_plot = self.create_utilization_plot()
+            transmission_plot = self.create_transmission_plot()
             
             # Create panes with explicit sizing
             self.plot_pane = pn.pane.HoloViews(
                 gen_plot,
                 sizing_mode='stretch_width',
-                height=600,
+                height=600,  # Back to normal height
                 margin=(5, 5)
             )
             
@@ -188,15 +191,24 @@ class EnergyDashboard(param.Parameterized):
                 margin=(5, 5)
             )
             
+            self.transmission_pane = pn.pane.HoloViews(
+                transmission_plot,
+                sizing_mode='stretch_width',
+                height=400,
+                margin=(5, 5)
+            )
+            
             # Set initial visibility
             self.plot_pane.visible = True
             self.utilization_pane.visible = True
+            self.transmission_pane.visible = True
             
         except Exception as e:
             logger.error(f"Error initializing panes: {e}")
             # Create fallback empty panes
             self.plot_pane = pn.pane.HTML("Loading generation chart...", height=600)
             self.utilization_pane = pn.pane.HTML("Loading utilization chart...", height=500)
+            self.transmission_pane = pn.pane.HTML("Loading transmission chart...", height=400)
         
     def load_reference_data(self):
         """Load DUID to fuel/region mapping from gen_info.pkl"""
@@ -570,9 +582,127 @@ class EnergyDashboard(param.Parameterized):
             traceback.print_exc()
             return pd.DataFrame()
 
+    def load_transmission_data(self):
+        """Load and process transmission flow data from parquet file"""
+        try:
+            transmission_file = config.transmission_output_file
+            
+            if not os.path.exists(transmission_file):
+                logger.warning(f"Transmission data file not found at {transmission_file}")
+                self.transmission_df = pd.DataFrame()
+                return
+            
+            # Calculate time window - same as generation data
+            end_time = datetime.now()
+            start_time = end_time - timedelta(hours=self.hours)
+            
+            # Load transmission data
+            df = pd.read_parquet(transmission_file)
+            logger.info(f"Loaded transmission data shape: {df.shape}")
+            
+            # Ensure datetime column
+            if not pd.api.types.is_datetime64_any_dtype(df['settlementdate']):
+                df['settlementdate'] = pd.to_datetime(df['settlementdate'])
+            
+            # Filter to time window
+            df = df[df['settlementdate'] >= start_time]
+            logger.info(f"Transmission data shape after time filtering: {df.shape}")
+            
+            # Store transmission data
+            self.transmission_df = df
+            logger.info(f"Loaded {len(df)} transmission records for last {self.hours} hours")
+            logger.info(f"Available interconnectors: {df['interconnectorid'].unique()}")
+            
+        except Exception as e:
+            logger.error(f"Error loading transmission data: {e}")
+            self.transmission_df = pd.DataFrame()
+
+    def calculate_regional_transmission_flows(self):
+        """Calculate net transmission flows for the selected region"""
+        if self.transmission_df is None or self.transmission_df.empty or self.region == 'NEM':
+            return pd.DataFrame(), pd.DataFrame()
+        
+        try:
+            df = self.transmission_df.copy()
+            
+            # Define interconnector mapping for each region
+            interconnector_mapping = {
+                'NSW1': {
+                    'NSW1-QLD1': 'from_nsw',      # Positive = export to QLD
+                    'VIC1-NSW1': 'to_nsw',        # Positive = import from VIC  
+                    'N-Q-MNSP1': 'from_nsw'       # DirectLink: Positive = export to QLD
+                },
+                'QLD1': {
+                    'NSW1-QLD1': 'to_qld',        # Positive = import from NSW
+                    'N-Q-MNSP1': 'to_qld'         # DirectLink: Positive = import from NSW
+                },
+                'VIC1': {
+                    'VIC1-NSW1': 'from_vic',      # Positive = export to NSW
+                    'V-SA': 'from_vic',           # Positive = export to SA
+                    'V-S-MNSP1': 'from_vic',      # Murraylink: Positive = export to SA
+                    'T-V-MNSP1': 'to_vic'         # Basslink: Positive = import from TAS
+                },
+                'SA1': {
+                    'V-SA': 'to_sa',              # Positive = import from VIC
+                    'V-S-MNSP1': 'to_sa'          # Murraylink: Positive = import from VIC
+                },
+                'TAS1': {
+                    'T-V-MNSP1': 'from_tas'       # Basslink: Positive = export to VIC
+                }
+            }
+            
+            region_interconnectors = interconnector_mapping.get(self.region, {})
+            if not region_interconnectors:
+                logger.warning(f"No interconnectors defined for region {self.region}")
+                return pd.DataFrame(), pd.DataFrame()
+            
+            # Filter transmission data for this region's interconnectors
+            region_transmission = df[df['interconnectorid'].isin(region_interconnectors.keys())].copy()
+            
+            if region_transmission.empty:
+                logger.warning(f"No transmission data found for {self.region}")
+                return pd.DataFrame(), pd.DataFrame()
+            
+            # Apply flow direction corrections based on region perspective
+            def correct_flow_direction(row):
+                interconnector = row['interconnectorid']
+                flow_type = region_interconnectors[interconnector]
+                flow = row['meteredmwflow']
+                
+                # Correct sign based on region perspective
+                if flow_type.startswith('to_'):
+                    # This interconnector brings power TO our region (import)
+                    return flow  # Positive = import
+                else:
+                    # This interconnector takes power FROM our region (export)  
+                    return -flow  # Negative = export
+            
+            region_transmission['regional_flow'] = region_transmission.apply(correct_flow_direction, axis=1)
+            
+            # Aggregate net flows by time (sum all interconnectors for this region)
+            net_flows = region_transmission.groupby('settlementdate')['regional_flow'].sum().reset_index()
+            net_flows.columns = ['settlementdate', 'net_transmission_mw']
+            
+            # Create individual line data for the third chart
+            line_data = region_transmission.pivot(
+                index='settlementdate', 
+                columns='interconnectorid', 
+                values='regional_flow'
+            ).fillna(0).reset_index()
+            
+            logger.info(f"Calculated transmission flows for {self.region}: "
+                       f"{len(net_flows)} time points, "
+                       f"{len(region_interconnectors)} interconnectors")
+            
+            return net_flows, line_data
+            
+        except Exception as e:
+            logger.error(f"Error calculating transmission flows: {e}")
+            return pd.DataFrame(), pd.DataFrame()
+
     
     def process_data_for_region(self):
-        """Process generation data for selected region"""
+        """Process generation data for selected region and add transmission flows"""
         if self.gen_output_df is None or self.gen_output_df.empty:
             return pd.DataFrame()
         
@@ -595,9 +725,44 @@ class EnergyDashboard(param.Parameterized):
         pivot_df = result.pivot(index='settlementdate', columns='fuel', values='scadavalue')
         pivot_df = pivot_df.fillna(0)
         
-        # Define preferred fuel order (Battery Storage first as it can be negative)
+        # Add transmission flows if available and not NEM region
+        if self.region != 'NEM':
+            try:
+                # Load transmission data if not already loaded
+                if self.transmission_df is None:
+                    self.load_transmission_data()
+                
+                # Calculate transmission flows for this region
+                net_flows, _ = self.calculate_regional_transmission_flows()
+                
+                if not net_flows.empty:
+                    # Convert to same time index as generation data
+                    net_flows['settlementdate'] = pd.to_datetime(net_flows['settlementdate'])
+                    net_flows.set_index('settlementdate', inplace=True)
+                    
+                    # Align with generation data timeframe
+                    common_index = pivot_df.index.intersection(net_flows.index)
+                    if len(common_index) > 0:
+                        # Split transmission into imports (positive) and exports (negative)
+                        transmission_values = net_flows.reindex(pivot_df.index, fill_value=0)['net_transmission_mw']
+                        
+                        # Add transmission imports (positive values only) - goes to top of stack
+                        pivot_df['Transmission Flow'] = transmission_values.where(transmission_values > 0, 0)
+                        
+                        # Add transmission exports (negative values only) - goes below battery
+                        pivot_df['Transmission Exports'] = transmission_values.where(transmission_values < 0, 0)
+                        
+                        logger.info(f"Added transmission flows: Imports max {pivot_df['Transmission Flow'].max():.1f}MW, "
+                                   f"Exports min {pivot_df['Transmission Exports'].min():.1f}MW")
+                    else:
+                        logger.warning("No overlapping time data between generation and transmission")
+                        
+            except Exception as e:
+                logger.error(f"Error adding transmission flows: {e}")
+        
+        # Define preferred fuel order with transmission at correct positions
         preferred_order = [
-            'Battery Storage',  # First - can be negative
+            'Transmission Flow',     # NEW: At top of stack (positive values)
             'Solar', 
             'Wind', 
             'Other', 
@@ -605,7 +770,9 @@ class EnergyDashboard(param.Parameterized):
             'CCGT', 
             'Gas other', 
             'OCGT', 
-            'Water'
+            'Water',
+            'Battery Storage',       # Above zero line (can be negative for charging)
+            'Transmission Exports'   # NEW: Below battery (negative values)
         ]
         
         # Reorder columns based on preferred order, only including columns that exist
@@ -731,7 +898,10 @@ class EnergyDashboard(param.Parameterized):
             'Water': '#00ff7f',       # Spring green - water/hydro
             'Battery Storage': '#9370db',  # Medium purple - technology
             'Biomass': '#8b4513',     # Saddle brown - organic/wood
-            'Other': '#ff69b4'        # Hot pink - catch-all category
+            'Other': '#ff69b4',       # Hot pink - catch-all category
+            'Transmission Flow': '#00ced1',      # Dark turquoise - both imports and exports
+            'Transmission Imports': '#00ced1',   # Dark turquoise - imports (inflow)  
+            'Transmission Exports': '#00ced1'    # Same teal color for exports
         }
         return fuel_colors
     
@@ -771,28 +941,35 @@ class EnergyDashboard(param.Parameterized):
                     fontsize=14
                 )
             
-            # Create stacked area plot with special handling for negative battery values
+            # Create stacked area plot with special handling for negative values (battery & transmission exports)
             plot_data = data[fuel_types].copy().reset_index()
             
             # Check if Battery Storage exists and has negative values
             battery_col = 'Battery Storage'
+            transmission_exports_col = 'Transmission Exports'
             has_battery = battery_col in plot_data.columns
+            has_transmission_exports = transmission_exports_col in plot_data.columns
             
-            if has_battery and (plot_data[battery_col] < 0).any():
-                # Split battery data for proper color handling
-                battery_data = plot_data[battery_col].copy()
-                
-                # Create separate datasets for positive and negative battery values
+            # Determine if we need special negative value handling
+            has_negative_values = (
+                (has_battery and (plot_data[battery_col] < 0).any()) or
+                (has_transmission_exports and (plot_data[transmission_exports_col] < 0).any())
+            )
+            
+            if has_negative_values:
+                # Prepare data for main positive stack (exclude transmission exports from main plot)
+                positive_fuel_types = [f for f in fuel_types if f != transmission_exports_col]
                 plot_data_positive = plot_data.copy()
-                plot_data_positive[battery_col] = battery_data.where(battery_data >= 0, 0)  # Only positive values
                 
-                plot_data_negative = plot_data[['settlementdate', battery_col]].copy()
-                plot_data_negative[battery_col] = battery_data.where(battery_data < 0, 0)   # Only negative values
+                # Handle battery storage negative values
+                if has_battery:
+                    battery_data = plot_data[battery_col].copy()
+                    plot_data_positive[battery_col] = battery_data.where(battery_data >= 0, 0)  # Only positive values
                 
-                # Create the main stacked area plot (without negative battery values)
+                # Create the main stacked area plot (positive values only, no transmission exports)
                 main_plot = plot_data_positive.hvplot.area(
                     x='settlementdate',
-                    y=fuel_types,
+                    y=positive_fuel_types,
                     stacked=True,
                     width=900,
                     height=300,  # Reduced height to make room for price chart
@@ -801,28 +978,48 @@ class EnergyDashboard(param.Parameterized):
                     grid=True,
                     legend='right',
                     bgcolor='black',
-                    color=[fuel_colors.get(fuel, '#6272a4') for fuel in fuel_types],
+                    color=[fuel_colors.get(fuel, '#6272a4') for fuel in positive_fuel_types],
                     alpha=0.8,
                     hover=True,
                     hover_tooltips=[('Fuel Type', '$name')]
                 )
                 
-                # Create the negative battery area plot
-                battery_color = fuel_colors.get('Battery Storage', '#9370db')
-                negative_plot = plot_data_negative.hvplot.area(
-                    x='settlementdate',
-                    y=[battery_col],
-                    width=900,
-                    height=300,  # Match main plot height
-                    color=battery_color,
-                    alpha=0.8,
-                    hover=True,
-                    hover_tooltips=[('Fuel Type', battery_col)],
-                    legend=False  # Don't show legend for negative part
-                )
+                # Create negative values as a single stacked area plot
+                negative_columns = []
+                plot_data_negative = plot_data[['settlementdate']].copy()
+                negative_colors = []
                 
-                # Combine both plots
-                area_plot = (main_plot * negative_plot).opts(
+                # Add battery negative values if needed
+                if has_battery and (plot_data[battery_col] < 0).any():
+                    plot_data_negative[battery_col] = plot_data[battery_col].where(plot_data[battery_col] < 0, 0)
+                    negative_columns.append(battery_col)
+                    negative_colors.append(fuel_colors.get('Battery Storage', '#9370db'))
+                
+                # Add transmission exports negative values if needed
+                if has_transmission_exports and (plot_data[transmission_exports_col] < 0).any():
+                    plot_data_negative[transmission_exports_col] = plot_data[transmission_exports_col].where(plot_data[transmission_exports_col] < 0, 0)
+                    negative_columns.append(transmission_exports_col)
+                    negative_colors.append(fuel_colors.get('Transmission Flow', '#00ced1'))
+                
+                # Create the negative stacked area plot if we have negative values
+                if negative_columns:
+                    negative_area_plot = plot_data_negative.hvplot.area(
+                        x='settlementdate',
+                        y=negative_columns,
+                        stacked=True,  # This ensures proper stacking
+                        width=900,
+                        height=300,
+                        color=negative_colors,
+                        alpha=0.8,
+                        hover=True,
+                        hover_tooltips=[('Fuel Type', '$name')],
+                        legend=False
+                    )
+                    area_plot = main_plot * negative_area_plot
+                else:
+                    area_plot = main_plot
+                
+                area_plot = area_plot.opts(
                     title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
                     show_grid=True,
                     bgcolor='black',
@@ -830,10 +1027,11 @@ class EnergyDashboard(param.Parameterized):
                 )
                 
             else:
-                # No negative battery values, use simple stacked area with attribution in title
+                # No negative values - exclude transmission exports from main plot (they should always be negative)
+                positive_fuel_types = [f for f in fuel_types if f != transmission_exports_col]
                 area_plot = plot_data.hvplot.area(
                     x='settlementdate',
-                    y=fuel_types,
+                    y=positive_fuel_types,
                     stacked=True,
                     width=900,
                     height=300,  # Reduced height to make room for price chart
@@ -843,7 +1041,7 @@ class EnergyDashboard(param.Parameterized):
                     grid=True,
                     legend='right',
                     bgcolor='black',
-                    color=[fuel_colors.get(fuel, '#6272a4') for fuel in fuel_types],
+                    color=[fuel_colors.get(fuel, '#6272a4') for fuel in positive_fuel_types],
                     alpha=0.8,
                     hover=True,
                     hover_tooltips=[('Fuel Type', '$name')]
@@ -880,7 +1078,7 @@ class EnergyDashboard(param.Parameterized):
                 bgcolor='black'
             )
             
-            # Stack the plots vertically using Layout
+            # Stack the plots vertically using Layout (just generation + price)
             # The plots will share the same x-axis range automatically
             combined_layout = (area_plot + price_plot).cols(1).opts(
                 shared_axes=True,  # This ensures x-axes are linked
@@ -901,9 +1099,204 @@ class EnergyDashboard(param.Parameterized):
                 fontsize=12
             )
     
-    
+    def create_transmission_plot(self):
+        """Create transmission flow line chart showing individual interconnector flows"""
+        try:
+            # Skip transmission chart for NEM (no specific region)
+            if self.region == 'NEM':
+                return hv.Text(0.5, 0.5, 'Transmission flows not available for NEM view\nSelect a specific region').opts(
+                    xlim=(0, 1),
+                    ylim=(0, 1),
+                    bgcolor='black',
+                    width=900,
+                    height=300,
+                    color='white',
+                    fontsize=14
+                )
+            
+            # Load transmission data if needed
+            if self.transmission_df is None:
+                self.load_transmission_data()
+            
+            # Calculate individual line flows
+            _, line_data = self.calculate_regional_transmission_flows()
+            
+            if line_data.empty:
+                return hv.Text(0.5, 0.5, f'No transmission data available for {self.region}').opts(
+                    xlim=(0, 1),
+                    ylim=(0, 1),
+                    bgcolor='black',
+                    width=900,
+                    height=300,
+                    color='white',
+                    fontsize=14
+                )
+            
+            # Create line chart for each interconnector with distinct colors
+            line_plots = []
+            interconnector_colors = {
+                'NSW1-QLD1': '#ff3333',      # Bright red
+                'VIC1-NSW1': '#00ff66',      # Bright green 
+                'V-SA': '#3366ff',           # Bright blue
+                'V-S-MNSP1': '#ff9900',      # Orange
+                'T-V-MNSP1': '#ffff00',      # Yellow
+                'N-Q-MNSP1': '#ff00ff'       # Magenta
+            }
+            
+            # Get interconnector columns (exclude settlementdate)
+            interconnector_cols = [col for col in line_data.columns if col != 'settlementdate']
+            
+            if interconnector_cols:
+                for interconnector in interconnector_cols:
+                    if interconnector in line_data.columns:
+                        color = interconnector_colors.get(interconnector, '#ffffff')
+                        line_plot = line_data.hvplot.line(
+                            x='settlementdate',
+                            y=interconnector,
+                            width=900,
+                            height=300,
+                            color=color,
+                            line_width=2,
+                            label=interconnector,
+                            hover=True,
+                            alpha=0.8
+                        )
+                        line_plots.append(line_plot)
+                
+                if line_plots:
+                    # Combine all line plots
+                    combined_plot = line_plots[0]
+                    for plot in line_plots[1:]:
+                        combined_plot = combined_plot * plot
+                    
+                    # Style the combined plot
+                    styled_plot = combined_plot.opts(
+                        title=f'Individual Transmission Flows - {self.region} (MW)',
+                        ylabel='Flow (MW)',
+                        xlabel='Time',
+                        show_legend=True,
+                        bgcolor='black',
+                        show_grid=True,
+                        hooks=[apply_datetime_formatter]
+                    )
+                    
+                    return styled_plot
+            
+            # Fallback empty plot
+            return hv.Text(0.5, 0.5, f'No transmission lines connected to {self.region}').opts(
+                xlim=(0, 1),
+                ylim=(0, 1),
+                bgcolor='black',
+                width=900,
+                height=300,
+                color='white',
+                fontsize=14
+            )
+            
+        except Exception as e:
+            logger.error(f"Error creating transmission plot: {e}")
+            return hv.Text(0.5, 0.5, 'Error loading transmission data').opts(
+                xlim=(0, 1),
+                ylim=(0, 1),
+                bgcolor='black',
+                width=900,
+                height=300,
+                color='white',
+                fontsize=12
+            )
 
-    
+    def create_transmission_chart_inline(self):
+        """Create transmission flow line chart for inline use in Generation Stack tab"""
+        try:
+            # Skip transmission chart for NEM (no specific region)
+            if self.region == 'NEM':
+                return hv.Text(0.5, 0.5, 'Transmission flows not available for NEM view').opts(
+                    xlim=(0, 1),
+                    ylim=(0, 1),
+                    bgcolor='black',
+                    width=900,
+                    height=300,
+                    color='white',
+                    fontsize=12
+                )
+            
+            # Load transmission data if needed
+            if self.transmission_df is None:
+                self.load_transmission_data()
+            
+            # Calculate individual line flows
+            _, line_data = self.calculate_regional_transmission_flows()
+            
+            if line_data.empty:
+                return hv.Text(0.5, 0.5, f'No transmission data for {self.region}').opts(
+                    xlim=(0, 1),
+                    ylim=(0, 1),
+                    bgcolor='black',
+                    width=900,
+                    height=300,
+                    color='white',
+                    fontsize=12
+                )
+            
+            # Create line chart for each interconnector with distinct colors
+            interconnector_colors = {
+                'NSW1-QLD1': '#ff3333',      # Bright red
+                'VIC1-NSW1': '#00ff66',      # Bright green 
+                'V-SA': '#3366ff',           # Bright blue
+                'V-S-MNSP1': '#ff9900',      # Orange
+                'T-V-MNSP1': '#ffff00',      # Yellow
+                'N-Q-MNSP1': '#ff00ff'       # Magenta
+            }
+            
+            # Get interconnector columns (exclude settlementdate)
+            interconnector_cols = [col for col in line_data.columns if col != 'settlementdate']
+            
+            if interconnector_cols:
+                # Create a single line plot with all interconnectors
+                line_plot = line_data.hvplot.line(
+                    x='settlementdate',
+                    y=interconnector_cols,
+                    width=900,
+                    height=300,  # Same height as price chart
+                    color=[interconnector_colors.get(col, '#ffffff') for col in interconnector_cols],
+                    line_width=2,
+                    hover=True,
+                    alpha=0.8,
+                    ylabel='Flow (MW)',
+                    xlabel='Time',
+                    grid=True,
+                    bgcolor='black',
+                    title=f'Individual Transmission Flows - {self.region} (MW)'
+                ).opts(
+                    hooks=[apply_datetime_formatter],
+                    show_legend=True
+                )
+                
+                return line_plot
+            
+            # Fallback for no interconnectors
+            return hv.Text(0.5, 0.5, f'No transmission lines for {self.region}').opts(
+                xlim=(0, 1),
+                ylim=(0, 1),
+                bgcolor='black',
+                width=900,
+                height=300,
+                color='white',
+                fontsize=12
+            )
+            
+        except Exception as e:
+            logger.error(f"Error creating inline transmission chart: {e}")
+            return hv.Text(0.5, 0.5, 'Error loading transmission data').opts(
+                xlim=(0, 1),
+                ylim=(0, 1),
+                bgcolor='black',
+                width=900,
+                height=300,
+                color='white',
+                fontsize=12
+            )
+
     
     def create_utilization_plot(self):
         """Create capacity utilization line chart with proper document handling"""
@@ -979,13 +1372,14 @@ class EnergyDashboard(param.Parameterized):
             )
     
     def update_plot(self):
-        """Update both plots with fresh data and proper error handling"""
+        """Update all plots with fresh data and proper error handling"""
         try:
             logger.info("Starting plot update...")
             
             # Create new plots
             new_generation_plot = self.create_plot()
             new_utilization_plot = self.create_utilization_plot()
+            new_transmission_plot = self.create_transmission_plot()
             
             # Safely update the panes
             if self.plot_pane is not None:
@@ -993,6 +1387,9 @@ class EnergyDashboard(param.Parameterized):
             
             if self.utilization_pane is not None:
                 self.utilization_pane.object = new_utilization_plot
+            
+            if self.transmission_pane is not None:
+                self.transmission_pane.object = new_transmission_plot
             
             # Update the time display
             if self.update_time_display is not None:
@@ -1105,13 +1502,18 @@ class EnergyDashboard(param.Parameterized):
             # Create subtabs for charts
             chart_subtabs = pn.Tabs(
                 ("Generation Stack", pn.Column(
-                    "#### Generation by Fuel Type",
+                    "#### Generation by Fuel Type + Price",
                     self.plot_pane,
                     sizing_mode='stretch_width'
                 )),
                 ("Capacity Utilization", pn.Column(
                     "#### Capacity Utilization by Fuel",
                     self.utilization_pane,
+                    sizing_mode='stretch_width'
+                )),
+                ("Transmission Lines", pn.Column(
+                    "#### Individual Transmission Line Flows",
+                    self.transmission_pane,
                     sizing_mode='stretch_width'
                 )),
                 dynamic=True,

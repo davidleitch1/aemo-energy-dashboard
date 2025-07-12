@@ -1,242 +1,284 @@
 # AEMO Energy Dashboard
 
-Real-time Australian Energy Market (AEMO) electricity price and generation dashboard with automated data collection, visualization, and alert system.
+Comprehensive Australian Energy Market (AEMO) electricity analysis platform with real-time data collection, multi-tab visualization, and advanced station analysis capabilities.
 
-## Features
+## 🎯 **Dashboard Overview**
 
-- **Real-time Price Monitoring**: Downloads AEMO spot prices every 4 minutes
-- **Generation Dashboard**: Interactive visualization of electricity generation by fuel type
-- **Smart DUID Management**: Tracks unknown generation units with exception list
-- **Email Alerts**: Automated notifications for new unknown DUIDs and price thresholds
-- **SMS Alerts**: Optional Twilio integration for critical price alerts
-- **Data Persistence**: Efficient parquet file storage for historical data
-- **Modern UI**: Dark-themed Panel dashboards with interactive charts
+**"Nem Analysis"** - A professional energy market analysis platform featuring:
 
-## Quick Start
+- **4 Main Analysis Tabs**: Generation by Fuel, Average Price Analysis, Station Analysis, plus planned extensions
+- **Real-time Data Integration**: 5-minute AEMO generation and price data with 2.7M+ integrated records
+- **Advanced Station Analysis**: Individual unit or whole station aggregation with dual-axis charts
+- **Professional UI**: Material Design dark theme with interactive visualizations
+
+## ✨ **Core Features**
+
+### **🔥 Generation by Fuel Analysis**
+- **Interactive Stacked Charts**: Real-time generation by fuel type (Coal, Gas, Solar, Wind, etc.)
+- **Capacity Utilization**: Percentage utilization by fuel type with AEMO-verified capacity data
+- **Regional Analysis**: Filter by NEM regions (NSW1, QLD1, SA1, TAS1, VIC1, or whole NEM)
+- **Dual Layout**: Region selector on left, chart subtabs on right
+
+### **💰 Average Price Analysis** 
+- **Custom Pivot Builder**: User-driven grouping by Region and Fuel combinations
+- **Hierarchical Tables**: Expandable fuel groups showing individual generation units (DUIDs)
+- **Multi-Column Analysis**: Generation (GWh), Revenue ($M), Price ($/MWh), Utilization (%), Capacity (MW)
+- **Flexible Filtering**: Date ranges, region selection, fuel type filtering
+- **Professional Tabulator**: Dark theme with sorting and expandable rows
+
+### **🏭 Station Analysis - Advanced Features**
+- **Station vs DUID Toggle**: Analyze whole power stations or individual generating units
+- **Smart Station Discovery**: Automatic grouping using DUID naming patterns (ER01,ER02,ER03,ER04 → "Eraring")
+- **Multi-Unit Aggregation**: Combines data from all units (e.g., Eraring 4×720MW = 2,880MW total)
+- **Dual-Axis Charts**: Generation (MW) on left axis, Price ($/MWh) on right axis
+- **Time Series Analysis**: Smart hourly resampling for optimal performance
+- **Time-of-Day Patterns**: 24-hour performance profiles with dual-axis visualization
+- **Performance Metrics**: Revenue, capacity factor, operating hours, peak values
+- **Fuzzy Search**: Find stations by name or DUID with auto-suggestions
+
+### **📊 Data & Performance**
+- **Real-time Updates**: Auto-refresh every 4.5 minutes
+- **Efficient Storage**: Parquet files for historical data with optimal compression
+- **Smart Resampling**: Automatic data aggregation for optimal chart performance
+- **Robust Integration**: Links generation, price, and station metadata across 528 DUIDs
+
+## 🚀 **Quick Start**
 
 ### Prerequisites
-
 - Python 3.10 or higher
 - [uv package manager](https://github.com/astral-sh/uv)
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone and setup**
    ```bash
-   git clone https://github.com/yourusername/aemo-energy-dashboard.git
+   git clone https://github.com/davidleitch1/aemo-energy-dashboard.git
    cd aemo-energy-dashboard
-   ```
-
-2. **Set up the environment**
-   ```bash
    uv sync
    ```
 
-3. **Configure environment variables**
+2. **Configure environment**
    ```bash
    cp .env.sample .env
-   # Edit .env with your email credentials and preferences
+   # Edit .env with your email credentials and data paths
    ```
 
-4. **Test email configuration**
+3. **Start the dashboard**
    ```bash
-   uv run python scripts/test_email.py
+   cd src
+   uv run python -m aemo_dashboard.generation.gen_dash
    ```
 
-### Configuration
+4. **Access dashboard**
+   ```
+   http://localhost:5010
+   ```
 
-Edit the `.env` file with your settings:
+## 📋 **Dashboard Tabs**
 
-#### Data File Locations
-The system supports two modes:
+### **Tab 1: Generation by Fuel**
+- **Purpose**: Real-time generation mix analysis by fuel type
+- **Layout**: Region selector (left) + Chart subtabs (right)
+- **Subtabs**: Generation Stack, Capacity Utilization
+- **Data**: 5-minute SCADA generation data
 
-**Production Mode (Default)**: Uses existing data in iCloud directories
+### **Tab 2: Average Price Analysis**  
+- **Purpose**: Custom pivot table analysis of generation and revenue
+- **Features**: Hierarchical grouping, multi-column selection, date filtering
+- **Use Cases**: Fuel type comparison, regional analysis, revenue insights
+
+### **Tab 3: Station Analysis**
+- **Purpose**: Individual power station performance analysis
+- **Modes**: Station aggregation (multiple DUIDs) or individual unit analysis
+- **Charts**: Time series (dual-axis), Time-of-day patterns, Summary statistics
+- **Examples**: Eraring (4 units, 2,880MW) vs ER01 (single unit, 720MW)
+
+### **Tab 4+: Planned Extensions**
+- **Transmission Tab**: Interconnector flow analysis
+- **Comparison Tab**: Side-by-side station/region comparison
+- **Summary Tab**: High-level dashboard with key trends
+
+## 🛠 **Configuration**
+
+### Data File Paths
 ```bash
-DATA_DIR=/Users/yourusername/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot
-GEN_INFO_FILE=/path/to/existing/gen_info.pkl
-GEN_OUTPUT_FILE=/path/to/existing/gen_output.parquet
-SPOT_HIST_FILE=/path/to/existing/spot_hist.parquet
+# Main data directory
+DATA_DIR=/path/to/your/aemo/data
+
+# Required data files
+GEN_INFO_FILE=/path/to/gen_info.pkl       # DUID mapping (528 stations)
+GEN_OUTPUT_FILE=/path/to/gen_output.parquet  # Generation time series
+SPOT_HIST_FILE=/path/to/spot_hist.parquet    # Price time series
 ```
 
-**Development Mode**: Uses local project data
+### Email Alert System
 ```bash
-# Comment out the above paths and use:
-# DATA_DIR=./data
-# (Other files will default to data/ directory)
-```
-
-#### Email and SMS Configuration
-
-```bash
-# Email alerts (required for DUID notifications)
+# Email configuration for DUID alerts
 ALERT_EMAIL=your-email@icloud.com
 ALERT_PASSWORD=your-app-specific-password
 SMTP_SERVER=smtp.mail.me.com
 SMTP_PORT=587
 
-# Optional: SMS alerts for price thresholds
-TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_PHONE_NUMBER=your-twilio-number
-MY_PHONE_NUMBER=your-phone-number
+# Alert behavior
+ENABLE_EMAIL_ALERTS=true
+ALERT_COOLDOWN_HOURS=24
+```
 
-# Dashboard settings
+### Dashboard Settings
+```bash
+# Dashboard configuration
 DEFAULT_REGION=NEM
-DASHBOARD_PORT=5008
+DASHBOARD_PORT=5010
 UPDATE_INTERVAL_MINUTES=4.5
+LOG_LEVEL=INFO
 ```
 
-## Usage
-
-### Start the Generation Dashboard
-
-```bash
-uv run aemo-gen-dashboard
-```
-
-Access at: http://localhost:5008
-
-### Run Spot Price Updater
-
-```bash
-uv run aemo-spot-update
-```
-
-### Start Spot Price Dashboard
-
-```bash
-uv run aemo-spot-display
-```
-
-### Manage DUID Exceptions
-
-```bash
-# List current exceptions
-uv run aemo-manage-duids list
-
-# Add a DUID to exception list
-uv run aemo-manage-duids add NEWDUID1
-
-# Remove from exception list  
-uv run aemo-manage-duids remove OLDDUID1
-
-# Clear all exceptions
-uv run aemo-manage-duids clear
-```
-
-## Project Structure
+## 📁 **Project Structure**
 
 ```
 aemo-energy-dashboard/
 ├── src/aemo_dashboard/
-│   ├── spot_prices/          # Price monitoring and dashboard
-│   │   ├── update_spot.py    # Automated price data collection
-│   │   └── display_spot.py   # Price visualization dashboard
-│   ├── generation/           # Generation monitoring and dashboard
-│   │   └── gen_dash.py       # Generation dashboard with DUID management
-│   └── shared/               # Common utilities
-│       ├── config.py         # Centralized configuration
-│       ├── logging_config.py # Unified logging
-│       └── email_alerts.py   # Email notification system
-├── scripts/                  # Utility scripts
-│   ├── manage_duid_exceptions.py
-│   └── test_email.py
-├── data/                     # Data files (gitignored)
-├── logs/                     # Log files (gitignored)
-├── .env.sample              # Configuration template
-└── pyproject.toml           # uv project configuration
+│   ├── generation/              # Main dashboard and generation analysis
+│   │   └── gen_dash.py         # Primary dashboard application
+│   ├── analysis/               # Price analysis components
+│   │   └── price_analysis_ui.py # Custom pivot table builder
+│   ├── station/                # Station analysis module
+│   │   ├── station_analysis.py    # Data processing engine
+│   │   ├── station_analysis_ui.py # UI components
+│   │   └── station_search.py      # Fuzzy search functionality
+│   ├── spot_prices/            # Price monitoring
+│   │   ├── update_spot.py      # Price data collection
+│   │   └── display_spot.py     # Price dashboard
+│   └── shared/                 # Common utilities
+│       ├── config.py           # Configuration management
+│       ├── logging_config.py   # Unified logging
+│       └── email_alerts.py     # Alert system
+├── data/                       # Data files (gitignored)
+├── logs/                       # Application logs
+└── pyproject.toml             # Dependencies and project config
 ```
 
-## Data Sources
+## 🔧 **Advanced Usage**
 
-- **AEMO NEM Web**: Real-time dispatch data for prices and generation
-- **Generation Info**: Static DUID-to-fuel mapping (gen_info.pkl)
-- **Historical Data**: Parquet files for efficient time series storage
+### Station vs DUID Analysis
 
-## Email Alert System
+**Station Mode** (Multi-unit aggregation):
+```python
+# Example: Eraring Power Station
+- DUIDs: ER01, ER02, ER03, ER04
+- Total Capacity: 4 × 720MW = 2,880MW
+- Analysis: Combined generation, revenue, and performance
+```
 
-### DUID Alerts
-- Automatically detects new unknown generation units (DUIDs)
-- Sends detailed email with generation levels and timestamps
-- Smart rate limiting (24-hour cooldown by default)
-- Exception list to reduce noise from known unimportant DUIDs
+**DUID Mode** (Individual unit):
+```python
+# Example: Eraring Unit 1
+- DUID: ER01
+- Capacity: 720MW
+- Analysis: Single unit performance and economics
+```
 
-### Price Alerts (Optional)
-- SMS notifications via Twilio for extreme price events
-- Configurable thresholds for high/low/extreme prices
-- Recovery notifications when prices return to normal
+### Search Functionality
+- **Fuzzy Matching**: Type "erag" to find "Eraring"
+- **DUID Search**: Direct lookup by unit identifier
+- **Popular Stations**: Quick access to major generators
+- **Auto-suggestions**: Real-time dropdown with matching results
 
-## Dashboard Features
+### Chart Interactions
+- **Dual-Axis**: Generation (MW) and Price ($/MWh) on same chart
+- **Zoom & Pan**: Interactive chart navigation
+- **Hover Tooltips**: Detailed data on mouse hover
+- **Legend Toggle**: Show/hide data series
+- **Date Controls**: Last 7/30 days, custom ranges
 
-### Generation Dashboard
-- **Fuel Type Visualization**: Stacked area charts showing generation by fuel
-- **Capacity Utilization**: Line charts showing % utilization by fuel type
-- **Region Selection**: Filter by NEM region (NSW1, QLD1, SA1, TAS1, VIC1)
-- **Real-time Updates**: Auto-refresh every 4.5 minutes
-- **Responsive Design**: Material Design theme with dark mode
+## 📈 **Data Sources & Integration**
 
-### Spot Price Dashboard  
-- **Real-time Prices**: 5-minute settlement price updates
-- **Price History**: Smoothed charts with exponential weighted moving averages
-- **Multi-region**: Support for all NEM regions
-- **Alert Integration**: Visual indicators for price threshold breaches
+### AEMO NEM Web
+- **Dispatch Data**: 5-minute generation and price data
+- **Market Data**: Regional reference prices (RRP)
+- **Station Metadata**: DUID mappings, capacities, fuel types
 
-## Development
+### Data Pipeline
+1. **Collection**: Automated download from AEMO every 5 minutes
+2. **Processing**: Data cleaning, validation, and integration
+3. **Storage**: Efficient parquet format for time series data
+4. **Analysis**: Real-time aggregation and visualization
 
-### Running Tests
+### Performance Metrics
+- **Data Volume**: 2.7M+ integrated generation+price records
+- **Stations**: 528 DUIDs across 420+ power stations
+- **Update Frequency**: 5-minute real-time data with 4.5-minute refresh
+- **Response Time**: Sub-second chart updates with smart caching
+
+## 🎨 **User Interface**
+
+### Design System
+- **Theme**: Material Design dark theme
+- **Typography**: Professional contrast with white titles
+- **Layout**: Responsive design with left controls + right charts
+- **Interactions**: Smooth transitions and real-time updates
+
+### Accessibility
+- **Color Coding**: Distinct colors for different data series
+- **Tooltips**: Detailed information on hover
+- **Navigation**: Intuitive tab structure and controls
+- **Performance**: Optimized for large datasets
+
+## 🔍 **Troubleshooting**
+
+### Dashboard Issues
 ```bash
-uv run pytest
+# Check if dashboard is running
+lsof -i:5010
+
+# Restart dashboard
+pkill -f "python -m aemo_dashboard"
+cd src && uv run python -m aemo_dashboard.generation.gen_dash
+
+# Check logs
+tail -f logs/aemo_dashboard.log
 ```
 
-### Code Formatting
-```bash
-uv run black src/
-uv run isort src/
-```
+### Data Issues
+- **Missing stations**: Check gen_info.pkl has latest DUID mappings
+- **No price data**: Verify spot_hist.parquet file exists and is current
+- **Empty charts**: Ensure date range has available data
 
-### Type Checking
-```bash
-uv run mypy src/
-```
+### Performance
+- **Slow loading**: Check data file sizes and available memory
+- **Chart lag**: Reduce date range or enable smart resampling
+- **Search issues**: Verify fuzzy search dependencies (fuzzywuzzy)
 
-## Troubleshooting
+## 🎯 **Planned Features**
 
-### Email Setup for iCloud
-1. Go to https://appleid.apple.com
-2. Sign in and navigate to "Sign-In and Security"
-3. Select "App-Specific Passwords"
-4. Generate password for "AEMO Dashboard"
-5. Use the 16-character password in your .env file
+### Generation Tab Enhancements
+- **Rooftop Solar**: 30-minute distributed generation data
+- **Transmission Flows**: Interconnector flows as virtual "fuel" type
 
-### Common Issues
+### New Tabs
+- **Transmission Analysis**: Dedicated interconnector flow visualization
+- **Station Comparison**: Side-by-side performance analysis
+- **Market Summary**: High-level trends and key metrics
 
-**No email received:**
-- Check spam folder
-- Verify app-specific password
-- Run `uv run python scripts/test_email.py`
+### Data Sources
+- **DISPATCHINTERCONNECTORRES**: 5-minute transmission flow data
+- **30-minute Rooftop Solar**: AEMO distributed generation
+- **Forecast Accuracy**: Generation vs forecast analysis
 
-**Dashboard not loading:**
-- Check port 5008 is not in use
-- Verify data files exist in data/ directory
-- Check logs/ directory for error messages
-
-**Missing DUIDs:**
-- Update gen_info.pkl with latest AEMO generation information
-- Use DUID management commands to add exceptions
-
-## Contributing
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch
-3. Make changes with tests
-4. Submit a pull request
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open Pull Request
 
-## License
+## 📄 **License**
 
 MIT License - see LICENSE file for details.
 
-## Support
+## 📧 **Support**
 
-- **Issues**: https://github.com/yourusername/aemo-energy-dashboard/issues
-- **Documentation**: See docs/ directory
-- **Email**: your-email@domain.com
+- **Issues**: [GitHub Issues](https://github.com/davidleitch1/aemo-energy-dashboard/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/davidleitch1/aemo-energy-dashboard/discussions)
+- **Documentation**: See CLAUDE.md for development notes
