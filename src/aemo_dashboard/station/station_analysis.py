@@ -181,13 +181,13 @@ class StationAnalysisMotor:
             logger.error(f"Error integrating data: {e}")
             return False
     
-    def filter_station_data(self, duid: str, start_date: Optional[datetime] = None, 
+    def filter_station_data(self, duid_or_duids: Union[str, List[str]], start_date: Optional[datetime] = None, 
                            end_date: Optional[datetime] = None) -> bool:
         """
-        Filter data for a specific station/DUID and date range.
+        Filter data for a specific station/DUID(s) and date range.
         
         Args:
-            duid: The DUID to filter for
+            duid_or_duids: Single DUID string or list of DUIDs for station aggregation
             start_date: Start date for filtering (optional)
             end_date: End date for filtering (optional)
             
@@ -199,8 +199,16 @@ class StationAnalysisMotor:
                 logger.error("No integrated data available. Run integrate_data() first.")
                 return False
             
-            # Filter by DUID (use lowercase column name from generation data)
-            station_filter = self.integrated_data['duid'] == duid
+            # Handle both single DUID and multiple DUIDs for station aggregation
+            if isinstance(duid_or_duids, str):
+                duids = [duid_or_duids]
+                filter_description = duid_or_duids
+            else:
+                duids = duid_or_duids
+                filter_description = f"station with {len(duids)} units: {', '.join(duids)}"
+            
+            # Filter by DUID(s) (use lowercase column name from generation data)
+            station_filter = self.integrated_data['duid'].isin(duids)
             
             # Apply date filters if provided
             if start_date:
@@ -211,10 +219,10 @@ class StationAnalysisMotor:
             self.station_data = self.integrated_data[station_filter].copy()
             
             if len(self.station_data) == 0:
-                logger.warning(f"No data found for DUID: {duid}")
+                logger.warning(f"No data found for {filter_description}")
                 return False
             
-            logger.info(f"Filtered {len(self.station_data):,} records for {duid}")
+            logger.info(f"Filtered {len(self.station_data):,} records for {filter_description}")
             return True
             
         except Exception as e:

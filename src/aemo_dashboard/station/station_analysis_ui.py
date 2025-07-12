@@ -24,9 +24,11 @@ class StationAnalysisUI(param.Parameterized):
     
     # Parameters for reactive UI
     selected_duid = param.String(default='', doc="Currently selected DUID")
+    selected_station_duids = param.List(default=[], doc="List of DUIDs for station mode")
     search_query = param.String(default='', doc="Current search query")
     start_date = param.Date(default=None, doc="Analysis start date")
     end_date = param.Date(default=None, doc="Analysis end date")
+    analysis_mode = param.String(default='duid', doc="Analysis mode: 'duid' or 'station'")
     
     def __init__(self):
         super().__init__()
@@ -117,10 +119,21 @@ class StationAnalysisUI(param.Parameterized):
     def _create_search_section(self):
         """Create the station search interface"""
         try:
-            # Get popular stations for initial suggestions
-            popular_stations = self.search_engine.get_popular_stations(limit=50)
-            station_options = ['Select a station...'] + [f"{station['display_name']} ({station['duid']})" for station in popular_stations]
-            self.station_duids = [''] + [station['duid'] for station in popular_stations]  # Keep DUID mapping
+            # Mode toggle - Station vs DUID analysis
+            self.mode_toggle = pn.widgets.RadioButtonGroup(
+                name="Analysis Mode:",
+                options=["Individual Units (DUID)", "Whole Stations"],
+                value="Individual Units (DUID)",
+                button_type="primary",
+                button_style="outline",
+                width=280
+            )
+            self.mode_toggle.param.watch(self._on_mode_change, 'value')
+            
+            # Get popular stations for initial suggestions (DUID mode by default)
+            popular_stations = self.search_engine.get_popular_stations(limit=50, mode=self.analysis_mode)
+            station_options = ['Select a station...'] + [f"{station['display_name']}" for station in popular_stations]
+            self.station_duids = [''] + [station.get('duid', station.get('duids', [''])[0]) for station in popular_stations]  # Keep DUID mapping
             
             # Station selector dropdown - this will automatically trigger search
             self.station_selector = pn.widgets.Select(
@@ -155,6 +168,8 @@ class StationAnalysisUI(param.Parameterized):
             
             search_section = pn.Column(
                 "### Station Search",
+                self.mode_toggle,
+                "#### Select Station/Unit:",
                 self.station_selector,
                 self.search_input,
                 popular_section,
@@ -253,14 +268,25 @@ class StationAnalysisUI(param.Parameterized):
         try:
             selected_display = event.new
             if selected_display and selected_display != 'Select a station...':
-                # Find the corresponding DUID from the selection index
+                # Find the corresponding DUID(s) from the selection index
                 selected_index = self.station_selector.options.index(selected_display)
-                selected_duid = self.station_duids[selected_index]
+                selection_data = self.station_duids[selected_index]
                 
-                if selected_duid:
-                    self.selected_duid = selected_duid
-                    logger.info(f"Station selected from dropdown: {selected_display} -> {selected_duid}")
-                    self._update_station_analysis()
+                if self.analysis_mode == 'station' and isinstance(selection_data, list):
+                    # Station mode: selection_data is a list of DUIDs
+                    self.selected_station_duids = selection_data
+                    self.selected_duid = ''  # Clear single DUID
+                    logger.info(f"Station selected: {selected_display} -> {len(selection_data)} units: {selection_data}")
+                elif isinstance(selection_data, str) and selection_data:
+                    # DUID mode: selection_data is a single DUID
+                    self.selected_duid = selection_data
+                    self.selected_station_duids = []  # Clear station DUIDs
+                    logger.info(f"DUID selected: {selected_display} -> {selection_data}")
+                else:
+                    logger.warning(f"Invalid selection data: {selection_data}")
+                    return
+                
+                self._update_station_analysis()
         except Exception as e:
             logger.error(f"Error handling station selection: {e}")
     
@@ -308,8 +334,8 @@ class StationAnalysisUI(param.Parameterized):
                 self.start_date = new_start_date
                 logger.info(f"Start date changed to: {new_start_date}")
                 
-                # Update analysis if we have a selected station
-                if self.selected_duid:
+                # Update analysis if we have a selected station or DUID
+                if self.selected_duid or self.selected_station_duids:
                     self._update_station_analysis()
                     
         except Exception as e:
@@ -323,8 +349,8 @@ class StationAnalysisUI(param.Parameterized):
                 self.end_date = new_end_date
                 logger.info(f"End date changed to: {new_end_date}")
                 
-                # Update analysis if we have a selected station
-                if self.selected_duid:
+                # Update analysis if we have a selected station or DUID
+                if self.selected_duid or self.selected_station_duids:
                     self._update_station_analysis()
                     
         except Exception as e:
@@ -359,12 +385,52 @@ class StationAnalysisUI(param.Parameterized):
             
             logger.info(f"Date range updated to: {start_date} to {end_date}")
             
-            # Update analysis if we have a selected station
-            if self.selected_duid:
+            # Update analysis if we have a selected station or DUID
+            if self.selected_duid or self.selected_station_duids:
                 self._update_station_analysis()
                 
         except Exception as e:
             logger.error(f"Error handling preset change: {e}")
+    
+    def _on_mode_change(self, event):
+        """Handle analysis mode change (Station vs DUID)"""
+        try:
+            mode_display = event.new
+            if mode_display == "Individual Units (DUID)":
+                self.analysis_mode = 'duid'
+            else:
+                self.analysis_mode = 'station'
+            
+            logger.info(f"Analysis mode changed to: {self.analysis_mode}")
+            
+            # Update the station selector options based on new mode
+            self._refresh_station_options()
+            
+        except Exception as e:
+            logger.error(f"Error handling mode change: {e}")
+    
+    def _refresh_station_options(self):
+        """Refresh station selector options based on current analysis mode"""
+        try:
+            # Get popular stations for the current mode
+            popular_stations = self.search_engine.get_popular_stations(limit=50, mode=self.analysis_mode)
+            
+            if self.analysis_mode == 'station':
+                station_options = ['Select a station...'] + [f"{station['display_name']}" for station in popular_stations]
+                self.station_duids = [''] + [station.get('duids', []) for station in popular_stations]  # Keep DUID list mapping
+            else:
+                station_options = ['Select a station...'] + [f"{station['display_name']}" for station in popular_stations]
+                self.station_duids = [''] + [station['duid'] for station in popular_stations]  # Keep single DUID mapping
+            
+            # Update the selector
+            if hasattr(self, 'station_selector') and self.station_selector:
+                self.station_selector.options = station_options
+                self.station_selector.value = 'Select a station...'
+            
+            logger.info(f"Refreshed station options for {self.analysis_mode} mode: {len(station_options)-1} options")
+            
+        except Exception as e:
+            logger.error(f"Error refreshing station options: {e}")
     
     def _show_search_feedback(self, message: str):
         """Show search feedback to user"""
@@ -387,19 +453,26 @@ class StationAnalysisUI(param.Parameterized):
     def _update_station_analysis(self):
         """Update analysis charts and tables for the selected station"""
         try:
-            if not self.selected_duid:
-                logger.warning("No DUID selected for analysis")
+            # Determine what to analyze based on mode
+            if self.analysis_mode == 'station' and self.selected_station_duids:
+                filter_target = self.selected_station_duids
+                display_name = f"Station with {len(self.selected_station_duids)} units"
+            elif self.selected_duid:
+                filter_target = self.selected_duid
+                display_name = self.selected_duid
+            else:
+                logger.warning("No station or DUID selected for analysis")
                 return
             
-            logger.info(f"Starting station analysis for DUID: {self.selected_duid}")
+            logger.info(f"Starting analysis for {display_name} in {self.analysis_mode} mode")
             
-            # Filter data for the selected station
+            # Filter data for the selected station/DUID(s)
             start_dt = datetime.combine(self.start_date, datetime.min.time()) if self.start_date else None
             end_dt = datetime.combine(self.end_date, datetime.max.time()) if self.end_date else None
             
-            logger.info(f"Filtering station data for {self.selected_duid} from {start_dt} to {end_dt}")
+            logger.info(f"Filtering data from {start_dt} to {end_dt}")
             
-            if self.motor.filter_station_data(self.selected_duid, start_dt, end_dt):
+            if self.motor.filter_station_data(filter_target, start_dt, end_dt):
                 
                 logger.info(f"Successfully filtered {len(self.motor.station_data)} records for {self.selected_duid}")
                 
@@ -425,10 +498,19 @@ class StationAnalysisUI(param.Parameterized):
                 
                 # Update the charts section using proper Panel pattern
                 if hasattr(self, 'charts_section') and self.charts_section:
-                    station_info = self.search_engine.get_station_info(self.selected_duid)
-                    station_name = station_info.get('station_name', self.selected_duid)
+                    # Get appropriate display name based on mode
+                    if self.analysis_mode == 'station' and self.selected_station_duids:
+                        # For station mode, use the first DUID to get station name
+                        station_info = self.search_engine.get_station_info(self.selected_station_duids[0])
+                        station_name = station_info.get('station_name', 'Unknown Station')
+                        display_title = f"{station_name} (Station: {len(self.selected_station_duids)} units)"
+                    else:
+                        # For DUID mode
+                        station_info = self.search_engine.get_station_info(self.selected_duid)
+                        station_name = station_info.get('station_name', self.selected_duid)
+                        display_title = f"{station_name} ({self.selected_duid})"
                     
-                    logger.info(f"Updating charts section for {station_name}")
+                    logger.info(f"Updating charts section for {display_title}")
                     
                     # Create subtabs for different chart types
                     chart_subtabs = pn.Tabs(
@@ -452,7 +534,7 @@ class StationAnalysisUI(param.Parameterized):
                     )
                     
                     new_content = pn.Column(
-                        f"## {station_name} ({self.selected_duid})",
+                        f"## {display_title}",
                         chart_subtabs,
                         sizing_mode='stretch_width'
                     )
