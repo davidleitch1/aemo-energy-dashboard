@@ -94,9 +94,15 @@ class StationAnalysisUI(param.Parameterized):
         date_section = self._create_date_controls()
         self.charts_section = self._create_charts_section()
         
-        # Layout the components
+        # Create title with white text
+        title = pn.pane.HTML(
+            "<h1 style='color: white; margin: 10px 0 5px 0; text-align: center;'>Station Analysis</h1>",
+            sizing_mode='stretch_width'
+        )
+        
+        # Layout the components (no footer needed on this tab)
         main_layout = pn.Column(
-            "## Station Analysis",
+            title,
             self.status_text,
             pn.Row(
                 pn.Column(search_section, date_section, width=300),
@@ -644,14 +650,15 @@ class StationAnalysisUI(param.Parameterized):
             # Create DataFrame for tabulator
             summary_df = pd.DataFrame(summary_data, columns=['Metric', 'Value'])
             
-            # Create tabulator widget
+            # Create tabulator widget without index column
             summary_table = pn.widgets.Tabulator(
                 summary_df,
                 pagination='remote',
                 page_size=10,
                 sizing_mode='stretch_width',
                 height=300,
-                theme='midnight'  # Dark theme
+                theme='midnight',  # Dark theme
+                show_index=False  # Remove index column
             )
             
             return summary_table

@@ -996,7 +996,7 @@ class EnergyDashboard(param.Parameterized):
             
             # Update the time display
             if self.update_time_display is not None:
-                self.update_time_display.object = f"<div style='text-align: center; color: #4a9da8; font-size: 16px; margin: 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')}</div>"
+                self.update_time_display.object = f"<div style='text-align: center; color: white; font-size: 16px; margin: 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>"
             
             logger.info("Plot update completed successfully")
             
@@ -1136,13 +1136,13 @@ class EnergyDashboard(param.Parameterized):
         try:
             # Dashboard title with update time
             title = pn.pane.HTML(
-                "<h1 style='color: #4a9da8; margin: 10px 0 5px 0; text-align: center;'>Nem Analysis</h1>",
+                "<h1 style='color: white; margin: 10px 0 5px 0; text-align: center;'>Nem Analysis</h1>",
                 sizing_mode='stretch_width'
             )
             
             # Update time display
             self.update_time_display = pn.pane.HTML(
-                f"<div style='text-align: center; color: #4a9da8; font-size: 16px; margin: 0 0 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>",
+                f"<div style='text-align: center; color: white; font-size: 16px; margin: 0 0 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>",
                 sizing_mode='stretch_width'
             )
             
