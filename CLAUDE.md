@@ -260,11 +260,11 @@ The dashboard is now a comprehensive energy market analysis platform with four m
 
 1. **✅ FIXED: Rooftop Solar Data** - Removed resampling, now displays correctly
 
-2. **❌ Transmission Line Chart Not Showing Full Week:**
-   - Problem: When "Last 7 Days" is selected, transmission chart still shows limited data
-   - Possible cause: Hardcoded time filter somewhere in transmission plot code
-   - Generation chart works correctly, but transmission chart doesn't respect time range
-   - Need to investigate `create_transmission_plot()` method
+2. **✅ FIXED: Transmission Line Chart Not Showing Full Week:**
+   - Problem: When "Last 7 Days" is selected, transmission chart still showed limited data
+   - Root cause: Transmission data was cached and not reloaded when time range changed
+   - Solution: Clear `self.transmission_df` and `self.rooftop_df` cache when time range changes
+   - Fixed in `on_time_range_change()` and `on_date_change()` methods
 
 3. **RadioButtonGroup Visual State:**
    - All buttons appear highlighted instead of just the selected one

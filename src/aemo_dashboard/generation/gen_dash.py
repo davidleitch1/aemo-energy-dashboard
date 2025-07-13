@@ -1346,6 +1346,17 @@ class EnergyDashboard(param.Parameterized):
                 self.transmission_df['interconnectorid'].isin(region_interconnectors.keys())
             ].copy()
             
+            # Debug logging
+            logger.info(f"=== Transmission Plot Debug for {self.region} ===")
+            logger.info(f"Total transmission records: {len(self.transmission_df)}")
+            logger.info(f"Region interconnectors: {list(region_interconnectors.keys())}")
+            logger.info(f"Filtered transmission records: {len(region_transmission)}")
+            if not region_transmission.empty:
+                logger.info(f"Date range: {region_transmission['settlementdate'].min()} to {region_transmission['settlementdate'].max()}")
+                logger.info(f"Unique interconnectors in data: {region_transmission['interconnectorid'].unique()}")
+                logger.info(f"Sample data (first 5 rows):")
+                logger.info(region_transmission[['settlementdate', 'interconnectorid', 'meteredmwflow', 'exportlimit', 'importlimit']].head())
+            
             if region_transmission.empty:
                 return hv.Text(0.5, 0.5, f'No transmission data for {self.region}').opts(
                     xlim=(0, 1),
@@ -1402,6 +1413,14 @@ class EnergyDashboard(param.Parameterized):
                 lambda row: pd.Series(process_flow_and_limits(row)), axis=1
             )
             
+            # Debug processed data
+            logger.info(f"=== After Processing ===")
+            logger.info(f"Processed data shape: {region_transmission.shape}")
+            if not region_transmission.empty:
+                logger.info(f"Regional flow range: {region_transmission['regional_flow'].min():.1f} to {region_transmission['regional_flow'].max():.1f}")
+                logger.info(f"Sample processed data (first 5 rows):")
+                logger.info(region_transmission[['settlementdate', 'interconnectorid', 'regional_flow', 'applicable_limit']].head())
+            
             # Create visualizations for each interconnector separately
             plot_elements = []
             
@@ -1420,7 +1439,11 @@ class EnergyDashboard(param.Parameterized):
                 ic_data = region_transmission[region_transmission['interconnectorid'] == interconnector].copy()
                 
                 if ic_data.empty:
+                    logger.info(f"No data for interconnector {interconnector}")
                     continue
+                
+                logger.info(f"=== Creating plot for {interconnector} ===")
+                logger.info(f"Data points: {len(ic_data)}")
                 
                 # Sort by time
                 ic_data = ic_data.sort_values('settlementdate')
@@ -1713,12 +1736,18 @@ class EnergyDashboard(param.Parameterized):
         logger.info(f"Time range changed to: {self.time_range}")
         # Update start/end dates based on preset selection
         self._update_date_range_from_preset()
+        # Clear cached data so it reloads with new time range
+        self.transmission_df = None
+        self.rooftop_df = None
         self.update_plot()
     
     @param.depends('start_date', 'end_date', watch=True)
     def on_date_change(self):
         """Called when custom date range changes"""
         logger.info(f"Date range changed to: {self.start_date} - {self.end_date}")
+        # Clear cached data so it reloads with new date range
+        self.transmission_df = None
+        self.rooftop_df = None
         self.update_plot()
     
     def _update_date_range_from_preset(self):

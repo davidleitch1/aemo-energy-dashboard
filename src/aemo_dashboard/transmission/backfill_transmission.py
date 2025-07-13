@@ -95,11 +95,26 @@ class TransmissionHistoricalBackfill:
             # No existing data, need everything
             missing_dates = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D')
         else:
-            # Find gaps in existing data
-            existing_dates = set(self.existing_transmission_data['settlementdate'].dt.date.unique())
-            all_dates = set(pd.date_range(start=start_date.date(), end=end_date.date(), freq='D').date)
-            missing_dates = sorted(all_dates - existing_dates)
-            missing_dates = pd.to_datetime(missing_dates)
+            # Find gaps and incomplete data
+            # Expected records per day: 6 main interconnectors × 288 intervals = 1728
+            # But we'll be conservative and check for days with less than 1000 records
+            MIN_RECORDS_PER_DAY = 1000
+            
+            # Count records per day
+            daily_counts = self.existing_transmission_data.groupby(
+                self.existing_transmission_data['settlementdate'].dt.date
+            ).size()
+            
+            all_dates = pd.date_range(start=start_date.date(), end=end_date.date(), freq='D').date
+            missing_dates = []
+            
+            for date in all_dates:
+                if date not in daily_counts or daily_counts[date] < MIN_RECORDS_PER_DAY:
+                    missing_dates.append(date)
+                    if date in daily_counts:
+                        logger.info(f"Date {date} has only {daily_counts[date]} records (incomplete)")
+            
+            missing_dates = pd.to_datetime(sorted(missing_dates))
         
         logger.info(f"Need to download transmission data for {len(missing_dates)} days")
         return missing_dates

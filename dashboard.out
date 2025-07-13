@@ -1,0 +1,1159 @@
+2025-07-14 07:25:43,738 - aemo_dashboard - INFO - Logging configured: level=INFO, file=/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard/logs/aemo_dashboard.log
+INFO:bokeh.server.server:Starting Bokeh server version 3.7.3 (running on Tornado 6.5.1)
+INFO:bokeh.server.tornado:User authentication hooks NOT provided (default user enabled)
+2025-07-14 07:25:44,109 - aemo_dashboard.__main__ - INFO - Loaded 528 DUID mappings
+2025-07-14 07:25:44,110 - aemo_dashboard.__main__ - INFO - Fuel types: ['Solar' 'Water' 'Battery Storage' 'Gas other' 'Wind' 'OCGT' 'Other'
+ 'Coal' 'Biomass' 'CCGT']
+2025-07-14 07:25:44,250 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:25:44,250 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:25:44,250 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:25:44,255 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,261 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,266 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,272 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,277 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,282 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,288 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,293 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,298 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.1 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,303 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,308 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,313 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,318 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,324 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,329 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,334 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,339 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,345 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,350 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,355 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,361 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,366 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,371 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,376 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,381 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,386 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,391 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,397 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,402 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,407 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,412 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,418 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,423 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,428 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,433 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,438 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,443 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,448 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,453 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,458 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,464 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.5 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,469 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,474 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,479 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,484 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,489 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,494 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,500 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:44,526 - aemo_dashboard.__main__ - WARNING - Dropped 18144 records (10.2%) due to unknown DUIDs
+2025-07-14 07:25:44,527 - aemo_dashboard.__main__ - INFO - Loaded 159892 generation records for Last 24 Hours
+2025-07-14 07:25:44,537 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-13 - 2025-07-14: 159892 records
+2025-07-14 07:25:44,549 - aemo_dashboard.__main__ - INFO - Loaded rooftop solar data shape: (4397, 11)
+2025-07-14 07:25:44,550 - aemo_dashboard.__main__ - INFO - Rooftop solar data filtered to 2025-07-13 - 2025-07-14
+2025-07-14 07:25:44,550 - aemo_dashboard.__main__ - INFO - Rooftop solar data shape after time filtering: (371, 11)
+2025-07-14 07:25:44,550 - aemo_dashboard.__main__ - INFO - Loaded 371 rooftop solar records for Last 24 Hours
+2025-07-14 07:25:44,550 - aemo_dashboard.__main__ - INFO - Available regions: ['NSW1', 'QLD1', 'QLDC', 'QLDN', 'QLDS', 'SA1', 'TAS1', 'TASN', 'TASS', 'VIC1']
+2025-07-14 07:25:44,551 - aemo_dashboard.__main__ - INFO - Added rooftop solar (NEM total): max 8280.0MW, avg 1578.1MW
+2025-07-14 07:25:44,582 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Battery Storage']
+2025-07-14 07:25:44,582 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#9370db']
+2025-07-14 07:25:44,582 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: N/A
+2025-07-14 07:25:44,582 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -997.16679
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Price data shape: (40490, 2)
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:25:44,587 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:44,588 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-13 - 2025-07-14
+2025-07-14 07:25:44,588 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (1885, 3)
+2025-07-14 07:25:44,588 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (377, 3)
+2025-07-14 07:25:44,588 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:25:44,589 - aemo_dashboard.__main__ - INFO - Loaded 378 price records for Last 24 Hours
+2025-07-14 07:25:44,589 - aemo_dashboard.__main__ - INFO - Price range: $-17.79 to $185.01
+2025-07-14 07:25:44,590 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-13 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:44,594 - aemo_dashboard.__main__ - INFO - Plot updated for NEM, Last 24 Hours
+2025-07-14 07:25:44,611 - aemo_dashboard.__main__ - INFO - Fuel capacities for NEM: {'Battery Storage': 8054.71, 'Biomass': 457.71, 'CCGT': 2852.9, 'Coal': 21255.0, 'Gas other': 1895.68, 'OCGT': 8027.46, 'Other': 152.22, 'Solar': 11384.51, 'Water': 8020.64, 'Wind': 17602.39}
+2025-07-14 07:25:44,613 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -150.93 MW, Capacity: 8054.71 MW, Utilization: -1.87%
+2025-07-14 07:25:44,613 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 25.19 MW, Capacity: 457.71 MW, Utilization: 5.50%
+2025-07-14 07:25:44,613 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 113.72 MW, Capacity: 2852.90 MW, Utilization: 3.99%
+2025-07-14 07:25:44,613 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 15501.85 MW, Capacity: 21255.00 MW, Utilization: 72.93%
+2025-07-14 07:25:44,613 - aemo_dashboard.__main__ - INFO - Fuel: Gas other, Generation: 70.03 MW, Capacity: 1895.68 MW, Utilization: 3.69%
+2025-07-14 07:25:44,676 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 5.504341395206572, 3.9862715131970967, 72.93274495412844, 3.694030638082377]
+2025-07-14 07:25:44,678 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (378, 10)
+2025-07-14 07:25:44,678 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 15.415802927728, 'Biomass': 6.917253282646217, 'CCGT': 31.86205685442883, 'Coal': 81.86924163726182, 'Gas other': 44.676105144328154, 'OCGT': 8.077326078236453, 'Other': 27.197477335435554, 'Solar': 45.94522736595602, 'Water': 31.76715009026711, 'Wind': 47.9742808561792}
+2025-07-14 07:25:44,883 - aemo_dashboard.__main__ - INFO - Creating price analysis tab...
+2025-07-14 07:25:44,883 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price Analysis Motor initialized
+2025-07-14 07:25:44,884 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Loading data into calculation motor...
+2025-07-14 07:25:44,884 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loading generation data...
+2025-07-14 07:25:44,961 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loaded 3,321,028 generation records
+2025-07-14 07:25:44,961 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loading price data...
+2025-07-14 07:25:44,963 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loaded 40,490 price records
+2025-07-14 07:25:44,963 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loading DUID mapping...
+2025-07-14 07:25:44,963 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Loaded 528 DUID mappings
+2025-07-14 07:25:44,963 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - === Data Inspection ===
+2025-07-14 07:25:44,963 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Generation columns: ['settlementdate', 'duid', 'scadavalue']
+2025-07-14 07:25:44,968 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Generation date range: 2025-06-18 21:50:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Unique DUIDs in generation: 471
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price data shape: (40490, 2)
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price columns: ['REGIONID', 'RRP']
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price date range: 2025-06-15 18:35:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - DUID mapping columns: ['Region', 'Site Name', 'Owner', 'DUID', 'Capacity(MW)', 'Storage(MWh)', 'Fuel']
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Standardizing column names...
+2025-07-14 07:25:45,050 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Generation columns: ['settlementdate', 'duid', 'scadavalue'] -> ['settlementdate', 'duid', 'scadavalue']
+2025-07-14 07:25:45,051 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price data: Reset datetime index to column
+2025-07-14 07:25:45,051 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price columns: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:45,051 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Column standardization completed
+2025-07-14 07:25:45,051 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Starting data integration...
+2025-07-14 07:25:45,051 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Joining generation data with DUID mapping...
+2025-07-14 07:25:45,412 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - WARNING - Found 48 DUIDs without mapping: ['KERNGSP1' 'RT_SA6' 'ULPBESS1' 'RT_SA5' 'RT_VIC7' 'RT_NSW6' 'SNOWYP'
+ 'TEMPB1' 'RT_SA2' 'RT_TAS1']...
+2025-07-14 07:25:45,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Generation+DUID data shape: (3321028, 10)
+2025-07-14 07:25:45,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price data already in correct format
+2025-07-14 07:25:45,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price data columns: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:45,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Price data shape: (40490, 3)
+2025-07-14 07:25:45,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Joining with price data...
+2025-07-14 07:25:45,860 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Integrated data shape: (2941345, 13)
+2025-07-14 07:25:45,860 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Calculating 5-minute revenues...
+2025-07-14 07:25:45,873 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Data overlap period: 2025-06-18 21:50:00 to 2025-07-14 07:25:00 (25 days)
+2025-07-14 07:25:45,873 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Records in overlap period: 2,941,345
+2025-07-14 07:25:45,890 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Data successfully loaded and integrated
+2025-07-14 07:25:45,966 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Improved grouping controls created successfully
+2025-07-14 07:25:45,967 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Column controls created successfully
+2025-07-14 07:25:45,972 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Date controls created for range: 2025-06-18 to 2025-07-14
+2025-07-14 07:25:45,979 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Calculating aggregations for grouping: ['Fuel']
+2025-07-14 07:25:45,979 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Selected display columns: ['generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh']
+2025-07-14 07:25:45,980 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Calculating aggregated prices for hierarchy: ['Fuel']
+2025-07-14 07:25:46,415 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Calculated aggregations for 10 groups
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Data sorted by hierarchy: ['Fuel']
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Available columns: ['record_count', 'generation_mwh', 'capacity_utilization_pct', 'capacity_mw', 'average_price_per_mwh', 'Fuel', 'total_generation_sum', 'total_revenue_dollars', 'start_date', 'end_date']
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Valid selected columns: ['generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh']
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Display columns: ['Fuel', 'generation_mwh', 'total_revenue_dollars', 'average_price_per_mwh']
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Creating hierarchical data for hierarchy: ['Fuel']
+2025-07-14 07:25:46,442 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Applying filters - Regions: None, Fuels: None
+2025-07-14 07:25:47,148 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Calculated DUID details for 423 individual DUIDs
+2025-07-14 07:25:47,394 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Created hierarchical data with 423 DUID rows
+2025-07-14 07:25:47,394 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis - INFO - Hierarchical display columns: ['Fuel', 'duid', 'station_name', 'owner', 'generation_gwh', 'revenue_millions', 'avg_price']
+2025-07-14 07:25:47,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Displaying columns: ['Fuel', 'duid']
+2025-07-14 07:25:47,413 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Available hierarchical columns: ['Fuel', 'duid', 'station_name', 'owner', 'generation_gwh', 'revenue_millions', 'avg_price']
+2025-07-14 07:25:47,472 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Table updated with hierarchical data (aggregated totals + individual DUIDs)
+2025-07-14 07:25:47,479 - aemo_dashboard.src.aemo_dashboard.analysis.price_analysis_ui - INFO - Price Analysis UI initialized
+2025-07-14 07:25:47,490 - aemo_dashboard.__main__ - INFO - Price analysis tab created successfully
+2025-07-14 07:25:47,490 - aemo_dashboard.__main__ - INFO - Creating station analysis tab...
+2025-07-14 07:25:47,490 - aemo_dashboard.src.aemo_dashboard.station.station_analysis_ui - INFO - Creating Station Analysis tab...
+2025-07-14 07:25:47,491 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Station Analysis Motor initialized
+2025-07-14 07:25:47,491 - aemo_dashboard.src.aemo_dashboard.station.station_analysis_ui - INFO - Loading data into station analysis motor...
+2025-07-14 07:25:47,491 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loading generation data...
+2025-07-14 07:25:47,572 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loaded 3,321,028 generation records
+2025-07-14 07:25:47,572 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loading price data...
+2025-07-14 07:25:47,574 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loaded 40,490 price records
+2025-07-14 07:25:47,574 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loading DUID mapping...
+2025-07-14 07:25:47,574 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Loaded 528 DUID mappings
+2025-07-14 07:25:47,574 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Standardizing column names...
+2025-07-14 07:25:47,574 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Generation columns: ['settlementdate', 'duid', 'scadavalue'] -> ['settlementdate', 'duid', 'scadavalue']
+2025-07-14 07:25:47,575 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Price data: Reset datetime index to column
+2025-07-14 07:25:47,575 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Price columns: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:47,575 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Column standardization completed
+2025-07-14 07:25:47,575 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Starting data integration...
+2025-07-14 07:25:47,575 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Joining generation data with DUID mapping...
+2025-07-14 07:25:47,945 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Generation+DUID data shape: (3321028, 12)
+2025-07-14 07:25:48,033 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - WARNING - Found 48 DUIDs without mapping: ['KERNGSP1' 'RT_SA6' 'ULPBESS1' 'RT_SA5' 'RT_VIC7' 'RT_NSW6' 'SNOWYP'
+ 'TEMPB1' 'RT_SA2' 'RT_TAS1']...
+2025-07-14 07:25:48,033 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Joining with price data...
+2025-07-14 07:25:48,500 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Integrated data shape: (2941345, 15)
+2025-07-14 07:25:48,508 - aemo_dashboard.src.aemo_dashboard.station.station_analysis - INFO - Data integration completed. 2,941,345 records available
+2025-07-14 07:25:48,547 - aemo_dashboard.src.aemo_dashboard.station.station_search - INFO - Built station index with 61 aggregated stations
+2025-07-14 07:25:48,547 - aemo_dashboard.src.aemo_dashboard.station.station_search - INFO - Search engine initialized with 528 DUIDs and 61 stations
+2025-07-14 07:25:48,547 - aemo_dashboard.src.aemo_dashboard.station.station_analysis_ui - INFO - Station analysis components initialized successfully
+2025-07-14 07:25:48,547 - aemo_dashboard.src.aemo_dashboard.station.station_analysis_ui - INFO - Station Analysis UI initialized
+2025-07-14 07:25:48,554 - aemo_dashboard.src.aemo_dashboard.station.station_analysis_ui - INFO - Station Analysis tab created successfully
+2025-07-14 07:25:48,554 - aemo_dashboard.__main__ - INFO - Station analysis tab created successfully
+2025-07-14 07:25:48,555 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:25:48,650 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:25:48,650 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:25:48,650 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:25:48,655 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,661 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,666 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,671 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,676 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,681 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,687 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,692 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,697 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.1 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,702 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,707 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,713 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,718 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,723 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,728 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,733 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,739 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,744 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,749 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,754 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,760 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,765 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,770 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,775 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,780 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,785 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,790 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,796 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,801 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,806 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,812 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,817 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,822 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,828 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,833 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,838 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,843 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,849 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,855 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,860 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,866 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.5 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,872 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,878 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,884 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,890 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,896 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,902 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,908 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:48,938 - aemo_dashboard.__main__ - WARNING - Dropped 18144 records (10.2%) due to unknown DUIDs
+2025-07-14 07:25:48,939 - aemo_dashboard.__main__ - INFO - Loaded 159892 generation records for Last 24 Hours
+2025-07-14 07:25:48,950 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-13 - 2025-07-14: 159892 records
+2025-07-14 07:25:48,960 - aemo_dashboard.__main__ - INFO - Added rooftop solar (NEM total): max 8280.0MW, avg 1578.1MW
+2025-07-14 07:25:48,989 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Battery Storage']
+2025-07-14 07:25:48,989 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#9370db']
+2025-07-14 07:25:48,989 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: N/A
+2025-07-14 07:25:48,989 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -997.16679
+2025-07-14 07:25:48,994 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:25:48,994 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:25:48,994 - aemo_dashboard.__main__ - INFO - Price data shape: (40490, 2)
+2025-07-14 07:25:48,994 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:25:48,995 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:25:48,995 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:48,995 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-13 - 2025-07-14
+2025-07-14 07:25:48,996 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (1885, 3)
+2025-07-14 07:25:48,996 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (377, 3)
+2025-07-14 07:25:48,996 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:25:48,997 - aemo_dashboard.__main__ - INFO - Loaded 378 price records for Last 24 Hours
+2025-07-14 07:25:48,997 - aemo_dashboard.__main__ - INFO - Price range: $-17.79 to $185.01
+2025-07-14 07:25:48,997 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-13 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:49,001 - aemo_dashboard.__main__ - INFO - Plot updated for NEM, Last 24 Hours
+2025-07-14 07:25:49,019 - aemo_dashboard.__main__ - INFO - Fuel capacities for NEM: {'Battery Storage': 8054.71, 'Biomass': 457.71, 'CCGT': 2852.9, 'Coal': 21255.0, 'Gas other': 1895.68, 'OCGT': 8027.46, 'Other': 152.22, 'Solar': 11384.51, 'Water': 8020.64, 'Wind': 17602.39}
+2025-07-14 07:25:49,021 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -150.93 MW, Capacity: 8054.71 MW, Utilization: -1.87%
+2025-07-14 07:25:49,021 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 25.19 MW, Capacity: 457.71 MW, Utilization: 5.50%
+2025-07-14 07:25:49,021 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 113.72 MW, Capacity: 2852.90 MW, Utilization: 3.99%
+2025-07-14 07:25:49,021 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 15501.85 MW, Capacity: 21255.00 MW, Utilization: 72.93%
+2025-07-14 07:25:49,021 - aemo_dashboard.__main__ - INFO - Fuel: Gas other, Generation: 70.03 MW, Capacity: 1895.68 MW, Utilization: 3.69%
+2025-07-14 07:25:49,086 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 5.504341395206572, 3.9862715131970967, 72.93274495412844, 3.694030638082377]
+2025-07-14 07:25:49,087 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (378, 10)
+2025-07-14 07:25:49,087 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 15.415802927728, 'Biomass': 6.917253282646217, 'CCGT': 31.86205685442883, 'Coal': 81.86924163726182, 'Gas other': 44.676105144328154, 'OCGT': 8.077326078236453, 'Other': 27.197477335435554, 'Solar': 45.94522736595602, 'Water': 31.76715009026711, 'Wind': 47.9742808561792}
+2025-07-14 07:25:49,108 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+WARNING:bokeh.core.validation.check:W-1005 (FIXED_SIZING_MODE): 'fixed' sizing mode requires width and height to be set: Column(id='p1013', ...)
+2025-07-14 07:25:49,421 - tornado.access - INFO - 200 GET / (::1) 5316.45ms
+2025-07-14 07:25:49,474 - tornado.access - INFO - 101 GET /ws (::1) 0.30ms
+INFO:bokeh.server.views.ws:WebSocket connection opened
+INFO:bokeh.server.views.ws:ServerConnection created
+2025-07-14 07:25:49,612 - aemo_dashboard.__main__ - INFO - Auto-update started
+2025-07-14 07:25:55,802 - aemo_dashboard.__main__ - INFO - Region changed to: NSW1
+2025-07-14 07:25:55,802 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:25:55,895 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:25:55,895 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:25:55,895 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:25:55,901 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,906 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,911 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,916 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,921 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,926 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,931 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,936 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,941 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.1 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,945 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,950 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,955 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,960 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,965 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,970 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,975 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,980 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,985 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,990 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:55,995 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,000 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,005 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,010 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,015 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,019 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,024 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,029 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,034 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,039 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,044 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,049 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,054 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,059 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,064 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,069 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,074 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,079 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,084 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,089 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,094 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,099 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.5 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,104 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,109 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,114 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,119 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,124 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,129 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,134 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:56,160 - aemo_dashboard.__main__ - WARNING - Dropped 18144 records (10.2%) due to unknown DUIDs
+2025-07-14 07:25:56,161 - aemo_dashboard.__main__ - INFO - Loaded 159892 generation records for Last 24 Hours
+2025-07-14 07:25:56,175 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-13 - 2025-07-14: 40068 records
+2025-07-14 07:25:56,180 - aemo_dashboard.__main__ - INFO - Loaded transmission data shape: (4644, 7)
+2025-07-14 07:25:56,180 - aemo_dashboard.__main__ - INFO - Transmission data filtered to 2025-07-13 - 2025-07-14
+2025-07-14 07:25:56,180 - aemo_dashboard.__main__ - INFO - Transmission data shape after time filtering: (2268, 7)
+2025-07-14 07:25:56,180 - aemo_dashboard.__main__ - INFO - Loaded 2268 transmission records for Last 24 Hours
+2025-07-14 07:25:56,180 - aemo_dashboard.__main__ - INFO - Available interconnectors: ['V-S-MNSP1' 'N-Q-MNSP1' 'VIC1-NSW1' 'V-SA' 'NSW1-QLD1' 'T-V-MNSP1']
+2025-07-14 07:25:56,187 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 378 time points, 3 interconnectors
+2025-07-14 07:25:56,187 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:25:56,188 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3261.7MW, avg 565.9MW
+2025-07-14 07:25:56,216 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:25:56,216 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:25:56,216 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:25:56,216 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -384.5177
+2025-07-14 07:25:56,223 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:25:56,223 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:25:56,223 - aemo_dashboard.__main__ - INFO - Price data shape: (40490, 2)
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-13 - 2025-07-14
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (1885, 3)
+2025-07-14 07:25:56,224 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (377, 3)
+2025-07-14 07:25:56,225 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:25:56,225 - aemo_dashboard.__main__ - INFO - Loaded 378 price records for Last 24 Hours
+2025-07-14 07:25:56,226 - aemo_dashboard.__main__ - INFO - Price range: $-17.79 to $185.01
+2025-07-14 07:25:56,226 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-13 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:56,230 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 24 Hours
+2025-07-14 07:25:56,248 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:25:56,249 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -54.42 MW, Capacity: 2310.87 MW, Utilization: -2.35%
+2025-07-14 07:25:56,249 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: -0.71 MW, Capacity: 245.32 MW, Utilization: -0.29%
+2025-07-14 07:25:56,249 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:25:56,249 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6966.79 MW, Capacity: 8305.00 MW, Utilization: 83.89%
+2025-07-14 07:25:56,249 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:25:56,308 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 0.0, 0.0, 83.88665948223962, 0.0]
+2025-07-14 07:25:56,309 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (378, 9)
+2025-07-14 07:25:56,309 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 4.3457361813142015, 'CCGT': 0.0, 'Coal': 88.42648862131246, 'OCGT': 11.673942364604914, 'Other': 0.0, 'Solar': 47.92845362185742, 'Water': 27.23961392824638, 'Wind': 61.00989030731364}
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Total transmission records: 2268
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 1134
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-13 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['N-Q-MNSP1' 'VIC1-NSW1' 'NSW1-QLD1']
+2025-07-14 07:25:56,326 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:25:56,327 - aemo_dashboard.__main__ - INFO -           settlementdate interconnectorid  ...  exportlimit  importlimit
+2377 2025-07-13 00:00:00        N-Q-MNSP1  ...    -26.40000    -28.40000
+2378 2025-07-13 00:00:00        VIC1-NSW1  ...   1206.64679   -167.69068
+2380 2025-07-13 00:00:00        NSW1-QLD1  ...    557.96339  -1078.00000
+2382 2025-07-13 00:05:00        N-Q-MNSP1  ...    -24.10000    -26.10000
+2385 2025-07-13 00:05:00        VIC1-NSW1  ...   1149.01819     -0.66952
+
+[5 rows x 5 columns]
+2025-07-14 07:25:56,408 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:25:56,408 - aemo_dashboard.__main__ - INFO - Processed data shape: (1134, 9)
+2025-07-14 07:25:56,408 - aemo_dashboard.__main__ - INFO - Regional flow range: -597.6 to 1334.9
+2025-07-14 07:25:56,408 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:25:56,409 - aemo_dashboard.__main__ - INFO -           settlementdate interconnectorid  regional_flow  applicable_limit
+2377 2025-07-13 00:00:00        N-Q-MNSP1       26.70000         -28.40000
+2378 2025-07-13 00:00:00        VIC1-NSW1     1238.77271        1206.64679
+2380 2025-07-13 00:00:00        NSW1-QLD1      -62.29990        -557.96339
+2382 2025-07-13 00:05:00        N-Q-MNSP1       25.70000         -26.10000
+2385 2025-07-13 00:05:00        VIC1-NSW1     1167.94104        1149.01819
+2025-07-14 07:25:56,412 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:25:56,412 - aemo_dashboard.__main__ - INFO - Data points: 378
+2025-07-14 07:25:56,412 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=110.4MW, avg limit=765.6MW
+2025-07-14 07:25:56,425 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:25:56,425 - aemo_dashboard.__main__ - INFO - Data points: 378
+2025-07-14 07:25:56,425 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=777.7MW, avg limit=842.5MW
+2025-07-14 07:25:56,438 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:25:56,439 - aemo_dashboard.__main__ - INFO - Data points: 378
+2025-07-14 07:25:56,439 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-11.2MW, avg limit=46.0MW
+2025-07-14 07:25:56,688 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:25:58,360 - aemo_dashboard.__main__ - INFO - Time range changed to: Last 7 Days
+2025-07-14 07:25:58,361 - aemo_dashboard.__main__ - INFO - Date range changed to: 2025-07-07 - 2025-07-14
+2025-07-14 07:25:58,361 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:25:58,490 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:25:58,490 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:25:58,490 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:25:58,517 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,544 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,571 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,598 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,625 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,652 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,679 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,707 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,733 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.1 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,760 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,787 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,814 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,841 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,868 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,895 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,923 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,950 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:58,977 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,004 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,031 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,057 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,084 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,111 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,138 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,165 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,191 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,218 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,245 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,272 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,299 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,326 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,354 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,381 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,408 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,435 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,462 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,489 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,517 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,544 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,571 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,598 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.5 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,624 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,653 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,680 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,707 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,735 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,763 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,790 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:25:59,931 - aemo_dashboard.__main__ - WARNING - Dropped 101040 records (10.2%) due to unknown DUIDs
+2025-07-14 07:25:59,932 - aemo_dashboard.__main__ - INFO - Loaded 890098 generation records for Last 7 Days
+2025-07-14 07:25:59,991 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223129 records
+2025-07-14 07:26:00,006 - aemo_dashboard.__main__ - INFO - Loaded transmission data shape: (4644, 7)
+2025-07-14 07:26:00,006 - aemo_dashboard.__main__ - INFO - Transmission data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:00,006 - aemo_dashboard.__main__ - INFO - Transmission data shape after time filtering: (4644, 7)
+2025-07-14 07:26:00,006 - aemo_dashboard.__main__ - INFO - Loaded 4644 transmission records for Last 7 Days
+2025-07-14 07:26:00,007 - aemo_dashboard.__main__ - INFO - Available interconnectors: ['VIC1-NSW1' 'V-S-MNSP1' 'T-V-MNSP1' 'NSW1-QLD1' 'N-Q-MNSP1' 'V-SA']
+2025-07-14 07:26:00,016 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:26:00,017 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:26:00,019 - aemo_dashboard.__main__ - INFO - Loaded rooftop solar data shape: (4397, 11)
+2025-07-14 07:26:00,019 - aemo_dashboard.__main__ - INFO - Rooftop solar data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:00,019 - aemo_dashboard.__main__ - INFO - Rooftop solar data shape after time filtering: (2099, 11)
+2025-07-14 07:26:00,019 - aemo_dashboard.__main__ - INFO - Loaded 2099 rooftop solar records for Last 7 Days
+2025-07-14 07:26:00,019 - aemo_dashboard.__main__ - INFO - Available regions: ['NSW1', 'QLD1', 'QLDC', 'QLDN', 'QLDS', 'SA1', 'TAS1', 'TASN', 'TASS', 'VIC1']
+2025-07-14 07:26:00,020 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 688.3MW
+2025-07-14 07:26:00,054 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:26:00,054 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:26:00,054 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:26:00,054 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Price data shape: (40490, 2)
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:26:00,062 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:26:00,063 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:00,063 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10510, 3)
+2025-07-14 07:26:00,063 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2102, 3)
+2025-07-14 07:26:00,063 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:26:00,064 - aemo_dashboard.__main__ - INFO - Loaded 2106 price records for Last 7 Days
+2025-07-14 07:26:00,065 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:26:00,065 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:26:00,069 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:26:00,140 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:26:00,147 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:26:00,147 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:26:00,147 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:26:00,147 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:26:00,147 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:26:00,471 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:26:00,474 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2105, 9)
+2025-07-14 07:26:00,474 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:26:00,493 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:26:00,493 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:26:00,494 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:26:00,621 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:26:00,621 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:26:00,621 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:26:00,621 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:26:00,621 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:26:00,624 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:26:00,624 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:00,625 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:26:00,645 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:26:00,645 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:00,645 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:26:00,665 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:26:00,665 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:00,666 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:26:00,954 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:26:00,955 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:26:01,077 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:26:01,077 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:26:01,077 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:26:01,105 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,132 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,159 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,185 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,213 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,240 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,268 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,296 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,323 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.1 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,349 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,376 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,404 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,430 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,457 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,484 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,512 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,540 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,568 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,595 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,623 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,650 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,678 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,704 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,731 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,757 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,784 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,810 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,837 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,865 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,893 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,920 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,948 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:01,975 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,003 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,031 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,058 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,086 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,113 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,141 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,169 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,196 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.5 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,223 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,250 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,278 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,305 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,332 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,359 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,386 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:25:00 [EXCEPTION LIST]
+2025-07-14 07:26:02,528 - aemo_dashboard.__main__ - WARNING - Dropped 101040 records (10.2%) due to unknown DUIDs
+2025-07-14 07:26:02,531 - aemo_dashboard.__main__ - INFO - Loaded 890098 generation records for Last 7 Days
+2025-07-14 07:26:02,593 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223129 records
+2025-07-14 07:26:02,609 - aemo_dashboard.__main__ - INFO - Loaded transmission data shape: (4644, 7)
+2025-07-14 07:26:02,609 - aemo_dashboard.__main__ - INFO - Transmission data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:02,609 - aemo_dashboard.__main__ - INFO - Transmission data shape after time filtering: (4644, 7)
+2025-07-14 07:26:02,609 - aemo_dashboard.__main__ - INFO - Loaded 4644 transmission records for Last 7 Days
+2025-07-14 07:26:02,610 - aemo_dashboard.__main__ - INFO - Available interconnectors: ['VIC1-NSW1' 'V-S-MNSP1' 'T-V-MNSP1' 'NSW1-QLD1' 'N-Q-MNSP1' 'V-SA']
+2025-07-14 07:26:02,620 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:26:02,621 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:26:02,622 - aemo_dashboard.__main__ - INFO - Loaded rooftop solar data shape: (4397, 11)
+2025-07-14 07:26:02,623 - aemo_dashboard.__main__ - INFO - Rooftop solar data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:02,623 - aemo_dashboard.__main__ - INFO - Rooftop solar data shape after time filtering: (2099, 11)
+2025-07-14 07:26:02,623 - aemo_dashboard.__main__ - INFO - Loaded 2099 rooftop solar records for Last 7 Days
+2025-07-14 07:26:02,623 - aemo_dashboard.__main__ - INFO - Available regions: ['NSW1', 'QLD1', 'QLDC', 'QLDN', 'QLDS', 'SA1', 'TAS1', 'TASN', 'TASS', 'VIC1']
+2025-07-14 07:26:02,624 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 688.3MW
+2025-07-14 07:26:02,661 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:26:02,661 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:26:02,661 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:26:02,661 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Price data shape: (40490, 2)
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:26:02,669 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:26:02,670 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:26:02,670 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10510, 3)
+2025-07-14 07:26:02,670 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2102, 3)
+2025-07-14 07:26:02,670 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:26:02,671 - aemo_dashboard.__main__ - INFO - Loaded 2106 price records for Last 7 Days
+2025-07-14 07:26:02,671 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:26:02,672 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:25:00
+2025-07-14 07:26:02,676 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:26:02,748 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:26:02,754 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:26:02,754 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:26:02,754 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:26:02,754 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:26:02,755 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:26:03,081 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:26:03,083 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2105, 9)
+2025-07-14 07:26:03,083 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:26:03,104 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:26:03,233 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:26:03,233 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:26:03,234 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:26:03,234 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:26:03,234 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:26:03,238 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:26:03,238 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:03,238 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:26:03,258 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:26:03,258 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:03,258 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:26:03,279 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:26:03,279 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:26:03,279 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:26:03,565 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:26:03,566 - root - WARNING - Dropping a patch because it contains a previously known reference (id='p2159'). Most of the time this is harmless and usually a result of updating a model on one side of a communications channel while it was being removed on the other end.
+2025-07-14 07:26:03,567 - root - WARNING - Dropping a patch because it contains a previously known reference (id='p1857'). Most of the time this is harmless and usually a result of updating a model on one side of a communications channel while it was being removed on the other end.
+2025-07-14 07:26:03,567 - root - WARNING - Dropping a patch because it contains a previously known reference (id='p2092'). Most of the time this is harmless and usually a result of updating a model on one side of a communications channel while it was being removed on the other end.
+2025-07-14 07:30:19,613 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:30:19,746 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:30:19,746 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:30:19,746 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:30:19,773 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,800 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,827 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,854 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,881 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,908 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,935 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,962 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:19,987 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.2 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,013 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,039 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,065 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.3 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,091 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,117 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,143 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,170 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,196 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,222 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,249 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,275 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,301 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,327 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,353 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,380 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,406 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,433 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,463 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,495 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,523 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,549 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,576 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,603 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,630 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,657 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,684 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,710 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,737 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,763 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,790 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,816 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,842 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.6 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,868 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,895 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.8 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,921 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,947 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:20,973 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:21,000 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:21,025 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:30:00 [EXCEPTION LIST]
+2025-07-14 07:30:21,162 - aemo_dashboard.__main__ - WARNING - Dropped 101088 records (10.2%) due to unknown DUIDs
+2025-07-14 07:30:21,165 - aemo_dashboard.__main__ - INFO - Loaded 890521 generation records for Last 7 Days
+2025-07-14 07:30:21,223 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223235 records
+2025-07-14 07:30:21,246 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:30:21,247 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:30:21,248 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 688.0MW
+2025-07-14 07:30:21,282 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:30:21,282 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:30:21,282 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:30:21,282 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:30:21,289 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:30:21,290 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:30:21,290 - aemo_dashboard.__main__ - INFO - Price data shape: (40495, 2)
+2025-07-14 07:30:21,290 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:30:21,290 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:30:21,290 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:30:21,291 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:30:21,291 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10515, 3)
+2025-07-14 07:30:21,291 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2103, 3)
+2025-07-14 07:30:21,291 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:30:21,292 - aemo_dashboard.__main__ - INFO - Loaded 2107 price records for Last 7 Days
+2025-07-14 07:30:21,292 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:30:21,293 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:30:00
+2025-07-14 07:30:21,297 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:30:21,368 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:30:21,375 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:30:21,375 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:30:21,375 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:30:21,375 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:30:21,375 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:30:21,734 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:30:21,737 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2106, 9)
+2025-07-14 07:30:21,737 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:30:21,757 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:30:21,836 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:30:21,836 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:30:21,836 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:30:21,836 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:30:21,836 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:30:21,839 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:30:21,839 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:30:21,839 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:30:21,858 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:30:21,858 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:30:21,859 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:30:21,878 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:30:21,878 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:30:21,878 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:30:22,258 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:30:22,259 - aemo_dashboard.__main__ - INFO - Auto-update completed
+2025-07-14 07:34:52,260 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:34:52,410 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:34:52,410 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:34:52,410 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:34:52,437 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,464 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,491 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,517 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,543 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,569 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,596 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,622 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,648 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.3 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,674 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,700 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,726 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 44.8 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,752 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,778 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,804 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,832 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,859 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,886 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,913 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,940 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,967 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:52,994 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,020 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,046 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,072 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,097 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,123 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,150 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,176 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,202 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,229 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,255 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,282 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,308 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,334 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,361 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,387 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,414 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,440 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,467 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,493 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.2 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,519 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,546 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 0.2 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,573 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,599 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,627 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,654 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,681 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:35:00 [EXCEPTION LIST]
+2025-07-14 07:34:53,823 - aemo_dashboard.__main__ - WARNING - Dropped 101136 records (10.2%) due to unknown DUIDs
+2025-07-14 07:34:53,829 - aemo_dashboard.__main__ - INFO - Loaded 890944 generation records for Last 7 Days
+2025-07-14 07:34:53,896 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223341 records
+2025-07-14 07:34:53,918 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:34:53,919 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:34:53,921 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 687.7MW
+2025-07-14 07:34:53,953 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:34:53,953 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:34:53,953 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:34:53,953 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:34:53,961 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:34:53,961 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:34:53,961 - aemo_dashboard.__main__ - INFO - Price data shape: (40500, 2)
+2025-07-14 07:34:53,962 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:34:53,962 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:34:53,962 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:34:53,962 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:34:53,962 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10520, 3)
+2025-07-14 07:34:53,963 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2104, 3)
+2025-07-14 07:34:53,963 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:34:53,964 - aemo_dashboard.__main__ - INFO - Loaded 2108 price records for Last 7 Days
+2025-07-14 07:34:53,964 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:34:53,964 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:35:00
+2025-07-14 07:34:53,968 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:34:54,037 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:34:54,044 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:34:54,044 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:34:54,044 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:34:54,044 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:34:54,044 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:34:54,406 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:34:54,408 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2107, 9)
+2025-07-14 07:34:54,408 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:34:54,427 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:34:54,427 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:34:54,427 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:34:54,427 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:34:54,428 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:34:54,428 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:34:54,428 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:34:54,428 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:34:54,507 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:34:54,507 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:34:54,507 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:34:54,507 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:34:54,507 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:34:54,510 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:34:54,510 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:34:54,510 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:34:54,530 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:34:54,530 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:34:54,530 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:34:54,549 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:34:54,549 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:34:54,549 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:34:54,928 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:34:54,928 - aemo_dashboard.__main__ - INFO - Auto-update completed
+2025-07-14 07:39:24,930 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:39:25,076 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:39:25,076 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:39:25,076 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:39:25,102 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,128 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,155 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,181 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,207 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,233 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,260 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.1 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,286 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,312 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.6 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,338 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,364 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,390 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 41.4 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,417 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,443 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,470 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,496 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,522 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,549 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,575 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,601 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,628 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,654 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,680 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,706 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,732 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,758 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,784 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,810 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,836 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,863 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,889 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,916 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,942 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,969 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:25,995 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,021 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,048 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,074 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,101 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,127 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,153 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 42.9 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,179 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,207 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 1.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,233 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,260 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,287 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,314 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,340 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:40:00 [EXCEPTION LIST]
+2025-07-14 07:39:26,474 - aemo_dashboard.__main__ - WARNING - Dropped 101184 records (10.2%) due to unknown DUIDs
+2025-07-14 07:39:26,478 - aemo_dashboard.__main__ - INFO - Loaded 891367 generation records for Last 7 Days
+2025-07-14 07:39:26,538 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223447 records
+2025-07-14 07:39:26,559 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:39:26,560 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:39:26,561 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 687.3MW
+2025-07-14 07:39:26,593 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:39:26,593 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:39:26,593 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:39:26,593 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:39:26,601 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:39:26,601 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:39:26,601 - aemo_dashboard.__main__ - INFO - Price data shape: (40505, 2)
+2025-07-14 07:39:26,601 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:39:26,602 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:39:26,602 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:39:26,603 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:39:26,603 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10525, 3)
+2025-07-14 07:39:26,603 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2105, 3)
+2025-07-14 07:39:26,603 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:39:26,604 - aemo_dashboard.__main__ - INFO - Loaded 2109 price records for Last 7 Days
+2025-07-14 07:39:26,604 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:39:26,604 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:40:00
+2025-07-14 07:39:26,608 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:39:26,676 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:39:26,682 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:39:26,682 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:39:26,682 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:39:26,682 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:39:26,682 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:39:27,045 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:39:27,048 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2108, 9)
+2025-07-14 07:39:27,048 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:39:27,067 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:39:27,068 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:39:27,146 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:39:27,146 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:39:27,146 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:39:27,146 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:39:27,147 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:39:27,149 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:39:27,149 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:39:27,150 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:39:27,169 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:39:27,169 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:39:27,169 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:39:27,188 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:39:27,188 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:39:27,188 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:39:27,565 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:39:27,565 - aemo_dashboard.__main__ - INFO - Auto-update completed
+2025-07-14 07:43:57,566 - aemo_dashboard.__main__ - INFO - Starting plot update...
+2025-07-14 07:43:57,708 - aemo_dashboard.__main__ - WARNING - 🚨 Found 48 unknown DUIDs not in gen_info.pkl:
+2025-07-14 07:43:57,708 - aemo_dashboard.__main__ - WARNING -    - 0 are NEW (will trigger email if enabled)
+2025-07-14 07:43:57,708 - aemo_dashboard.__main__ - WARNING -    - 48 are in exception list (no email)
+2025-07-14 07:43:57,734 - aemo_dashboard.__main__ - WARNING -   - CUSF1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,761 - aemo_dashboard.__main__ - WARNING -   - DG_NSW1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,787 - aemo_dashboard.__main__ - WARNING -   - DG_QLD1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,813 - aemo_dashboard.__main__ - WARNING -   - DG_SA1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,840 - aemo_dashboard.__main__ - WARNING -   - DG_TAS1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,866 - aemo_dashboard.__main__ - WARNING -   - DG_VIC1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,892 - aemo_dashboard.__main__ - WARNING -   - KERNGSP1: 0.2 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,919 - aemo_dashboard.__main__ - WARNING -   - MANNUMB1: -0.3 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,945 - aemo_dashboard.__main__ - WARNING -   - MLSP1: 0.8 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,971 - aemo_dashboard.__main__ - WARNING -   - MREHA1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:57,998 - aemo_dashboard.__main__ - WARNING -   - MREHA2: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,025 - aemo_dashboard.__main__ - WARNING -   - PIONEER: 42.8 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,052 - aemo_dashboard.__main__ - WARNING -   - PUMP1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,078 - aemo_dashboard.__main__ - WARNING -   - PUMP2: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,105 - aemo_dashboard.__main__ - WARNING -   - RT_NSW1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,132 - aemo_dashboard.__main__ - WARNING -   - RT_NSW2: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,159 - aemo_dashboard.__main__ - WARNING -   - RT_NSW3: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,185 - aemo_dashboard.__main__ - WARNING -   - RT_NSW4: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,212 - aemo_dashboard.__main__ - WARNING -   - RT_NSW5: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,238 - aemo_dashboard.__main__ - WARNING -   - RT_NSW6: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,264 - aemo_dashboard.__main__ - WARNING -   - RT_QLD1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,290 - aemo_dashboard.__main__ - WARNING -   - RT_SA1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,316 - aemo_dashboard.__main__ - WARNING -   - RT_SA2: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,342 - aemo_dashboard.__main__ - WARNING -   - RT_SA3: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,368 - aemo_dashboard.__main__ - WARNING -   - RT_SA4: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,393 - aemo_dashboard.__main__ - WARNING -   - RT_SA5: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,419 - aemo_dashboard.__main__ - WARNING -   - RT_SA6: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,446 - aemo_dashboard.__main__ - WARNING -   - RT_TAS1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,472 - aemo_dashboard.__main__ - WARNING -   - RT_VIC1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,499 - aemo_dashboard.__main__ - WARNING -   - RT_VIC10: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,525 - aemo_dashboard.__main__ - WARNING -   - RT_VIC11: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,552 - aemo_dashboard.__main__ - WARNING -   - RT_VIC12: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,578 - aemo_dashboard.__main__ - WARNING -   - RT_VIC2: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,604 - aemo_dashboard.__main__ - WARNING -   - RT_VIC3: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,631 - aemo_dashboard.__main__ - WARNING -   - RT_VIC4: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,657 - aemo_dashboard.__main__ - WARNING -   - RT_VIC5: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,683 - aemo_dashboard.__main__ - WARNING -   - RT_VIC6: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,710 - aemo_dashboard.__main__ - WARNING -   - RT_VIC7: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,737 - aemo_dashboard.__main__ - WARNING -   - RT_VIC8: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,764 - aemo_dashboard.__main__ - WARNING -   - RT_VIC9: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,791 - aemo_dashboard.__main__ - WARNING -   - SHOAL1: 43.1 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,818 - aemo_dashboard.__main__ - WARNING -   - SHPUMP: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,845 - aemo_dashboard.__main__ - WARNING -   - SNOWSTH1: 1.9 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,871 - aemo_dashboard.__main__ - WARNING -   - SNOWYP: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,898 - aemo_dashboard.__main__ - WARNING -   - TEMPB1: 0.3 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,925 - aemo_dashboard.__main__ - WARNING -   - ULPBESS1: -0.6 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,952 - aemo_dashboard.__main__ - WARNING -   - WAMBOWF1: 5.2 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:58,978 - aemo_dashboard.__main__ - WARNING -   - WNSF1: 0.0 MW at 2025-07-14 07:45:00 [EXCEPTION LIST]
+2025-07-14 07:43:59,115 - aemo_dashboard.__main__ - WARNING - Dropped 101232 records (10.2%) due to unknown DUIDs
+2025-07-14 07:43:59,118 - aemo_dashboard.__main__ - INFO - Loaded 891790 generation records for Last 7 Days
+2025-07-14 07:43:59,179 - aemo_dashboard.__main__ - INFO - Filtered generation data to 2025-07-07 - 2025-07-14: 223553 records
+2025-07-14 07:43:59,201 - aemo_dashboard.__main__ - INFO - Calculated transmission flows for NSW1: 774 time points, 3 interconnectors
+2025-07-14 07:43:59,202 - aemo_dashboard.__main__ - INFO - Added transmission flows: Imports max 1956.3MW, Exports min -864.0MW
+2025-07-14 07:43:59,203 - aemo_dashboard.__main__ - INFO - Added rooftop solar: max 3490.4MW, avg 687.0MW
+2025-07-14 07:43:59,234 - aemo_dashboard.__main__ - INFO - Negative columns order: ['Transmission Exports', 'Battery Storage']
+2025-07-14 07:43:59,234 - aemo_dashboard.__main__ - INFO - Negative colors order: ['#ffb6c1', '#9370db']
+2025-07-14 07:43:59,234 - aemo_dashboard.__main__ - INFO - Negative data - Transmission min: -863.9974199999999
+2025-07-14 07:43:59,234 - aemo_dashboard.__main__ - INFO - Negative data - Battery min: -671.94781
+2025-07-14 07:43:59,243 - aemo_dashboard.__main__ - INFO - Price data columns: ['REGIONID', 'RRP']
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Price data index: SETTLEMENTDATE
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Price data shape: (40510, 2)
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Price data dtypes:
+REGIONID     object
+RRP         float64
+dtype: object
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Reset index - SETTLEMENTDATE is now a column
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Columns after reset_index: ['SETTLEMENTDATE', 'REGIONID', 'RRP']
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Price data filtered to 2025-07-07 - 2025-07-14
+2025-07-14 07:43:59,244 - aemo_dashboard.__main__ - INFO - Price data shape after time filtering: (10530, 3)
+2025-07-14 07:43:59,245 - aemo_dashboard.__main__ - INFO - Price data shape after region filtering: (2106, 3)
+2025-07-14 07:43:59,245 - aemo_dashboard.__main__ - INFO - Available regions in data: ['NSW1']
+2025-07-14 07:43:59,246 - aemo_dashboard.__main__ - INFO - Loaded 2110 price records for Last 7 Days
+2025-07-14 07:43:59,246 - aemo_dashboard.__main__ - INFO - Price range: $-28.83 to $658.17
+2025-07-14 07:43:59,246 - aemo_dashboard.__main__ - INFO - Time range: 2025-07-07 00:00:00 to 2025-07-14 07:45:00
+2025-07-14 07:43:59,250 - aemo_dashboard.__main__ - INFO - Plot updated for NSW1, Last 7 Days
+2025-07-14 07:43:59,316 - aemo_dashboard.__main__ - INFO - Fuel capacities for NSW1: {'Battery Storage': 2310.87, 'Biomass': 245.32000000000002, 'CCGT': 400.0, 'Coal': 8305.0, 'Gas other': 133.06, 'OCGT': 2703.2, 'Other': 22.23, 'Solar': 5226.6, 'Water': 2669.9700000000003, 'Wind': 3790.59}
+2025-07-14 07:43:59,323 - aemo_dashboard.__main__ - INFO - Fuel: Battery Storage, Generation: -6.52 MW, Capacity: 2310.87 MW, Utilization: -0.28%
+2025-07-14 07:43:59,323 - aemo_dashboard.__main__ - INFO - Fuel: Biomass, Generation: 6.34 MW, Capacity: 245.32 MW, Utilization: 2.58%
+2025-07-14 07:43:59,323 - aemo_dashboard.__main__ - INFO - Fuel: CCGT, Generation: 0.00 MW, Capacity: 400.00 MW, Utilization: 0.00%
+2025-07-14 07:43:59,323 - aemo_dashboard.__main__ - INFO - Fuel: Coal, Generation: 6466.94 MW, Capacity: 8305.00 MW, Utilization: 77.87%
+2025-07-14 07:43:59,323 - aemo_dashboard.__main__ - INFO - Fuel: OCGT, Generation: 0.00 MW, Capacity: 2703.20 MW, Utilization: 0.00%
+2025-07-14 07:43:59,689 - aemo_dashboard.__main__ - INFO - Sample utilization values: [0.0, 2.582781672917007, 0.0, 77.86797338952438, 0.0]
+2025-07-14 07:43:59,691 - aemo_dashboard.__main__ - INFO - Final pivot data shape: (2109, 9)
+2025-07-14 07:43:59,692 - aemo_dashboard.__main__ - INFO - Final pivot max values: {'Battery Storage': 21.770970673382752, 'Biomass': 21.528143241480514, 'CCGT': 100.0, 'Coal': 93.62025009030705, 'OCGT': 36.29772269902338, 'Other': 0.0, 'Solar': 53.186736406076605, 'Water': 70.98630246781798, 'Wind': 67.25438000416821}
+2025-07-14 07:43:59,710 - aemo_dashboard.__main__ - INFO - === Transmission Plot Debug for NSW1 ===
+2025-07-14 07:43:59,710 - aemo_dashboard.__main__ - INFO - Total transmission records: 4644
+2025-07-14 07:43:59,710 - aemo_dashboard.__main__ - INFO - Region interconnectors: ['NSW1-QLD1', 'VIC1-NSW1', 'N-Q-MNSP1']
+2025-07-14 07:43:59,710 - aemo_dashboard.__main__ - INFO - Filtered transmission records: 2322
+2025-07-14 07:43:59,710 - aemo_dashboard.__main__ - INFO - Date range: 2025-07-09 19:25:00 to 2025-07-14 07:25:00
+2025-07-14 07:43:59,711 - aemo_dashboard.__main__ - INFO - Unique interconnectors in data: ['VIC1-NSW1' 'NSW1-QLD1' 'N-Q-MNSP1']
+2025-07-14 07:43:59,711 - aemo_dashboard.__main__ - INFO - Sample data (first 5 rows):
+2025-07-14 07:43:59,711 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  meteredmwflow  exportlimit  importlimit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983    645.69983    645.69988
+3 2025-07-09 19:25:00        NSW1-QLD1     -447.80011    767.24861  -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1        0.90000     33.41412    -79.10000
+6 2025-07-10 12:00:00        NSW1-QLD1     -866.20007    819.54285   -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875    -20.33687   -232.30832
+2025-07-14 07:43:59,789 - aemo_dashboard.__main__ - INFO - === After Processing ===
+2025-07-14 07:43:59,789 - aemo_dashboard.__main__ - INFO - Processed data shape: (2322, 9)
+2025-07-14 07:43:59,790 - aemo_dashboard.__main__ - INFO - Regional flow range: -925.6 to 1334.9
+2025-07-14 07:43:59,790 - aemo_dashboard.__main__ - INFO - Sample processed data (first 5 rows):
+2025-07-14 07:43:59,790 - aemo_dashboard.__main__ - INFO -        settlementdate interconnectorid  regional_flow  applicable_limit
+0 2025-07-09 19:25:00        VIC1-NSW1      745.69983         645.69983
+3 2025-07-09 19:25:00        NSW1-QLD1      447.80011       -1057.40485
+4 2025-07-09 19:25:00        N-Q-MNSP1       -0.90000         -33.41412
+6 2025-07-10 12:00:00        NSW1-QLD1      866.20007        -815.73198
+9 2025-07-10 12:00:00        VIC1-NSW1      -66.21875         232.30832
+2025-07-14 07:43:59,792 - aemo_dashboard.__main__ - INFO - === Creating plot for NSW1-QLD1 ===
+2025-07-14 07:43:59,793 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:43:59,793 - aemo_dashboard.__main__ - INFO - Interconnector NSW1-QLD1: avg flow=360.0MW, avg limit=890.8MW
+2025-07-14 07:43:59,812 - aemo_dashboard.__main__ - INFO - === Creating plot for VIC1-NSW1 ===
+2025-07-14 07:43:59,812 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:43:59,812 - aemo_dashboard.__main__ - INFO - Interconnector VIC1-NSW1: avg flow=276.4MW, avg limit=761.9MW
+2025-07-14 07:43:59,831 - aemo_dashboard.__main__ - INFO - === Creating plot for N-Q-MNSP1 ===
+2025-07-14 07:43:59,831 - aemo_dashboard.__main__ - INFO - Data points: 774
+2025-07-14 07:43:59,831 - aemo_dashboard.__main__ - INFO - Interconnector N-Q-MNSP1: avg flow=-7.8MW, avg limit=68.6MW
+2025-07-14 07:44:00,217 - aemo_dashboard.__main__ - INFO - Plot update completed successfully
+2025-07-14 07:44:00,217 - aemo_dashboard.__main__ - INFO - Auto-update completed
