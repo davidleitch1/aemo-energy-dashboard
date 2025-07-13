@@ -138,6 +138,22 @@ class EnergyDashboard(param.Parameterized):
         doc="Select region to display"
     )
     
+    time_range = param.Selector(
+        default='Last 24 Hours',
+        objects=['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Data'],
+        doc="Select time range to display"
+    )
+    
+    start_date = param.Date(
+        default=datetime.now().date() - timedelta(days=1),
+        doc="Start date for custom range"
+    )
+    
+    end_date = param.Date(
+        default=datetime.now().date(),
+        doc="End date for custom range"
+    )
+    
     
     def __init__(self, **params):
         super().__init__(**params)
@@ -498,10 +514,6 @@ class EnergyDashboard(param.Parameterized):
                 logger.error(f"Price data file not found at {price_file}")
                 return pd.DataFrame()
             
-            # Calculate time window - same as generation data (24 hours)
-            end_time = datetime.now()
-            start_time = end_time - timedelta(hours=self.hours)
-            
             # Load parquet file
             df = pd.read_parquet(price_file)
             
@@ -531,8 +543,17 @@ class EnergyDashboard(param.Parameterized):
             if not pd.api.types.is_datetime64_any_dtype(df['SETTLEMENTDATE']):
                 df['SETTLEMENTDATE'] = pd.to_datetime(df['SETTLEMENTDATE'])
             
-            # Filter to time window
-            df = df[df['SETTLEMENTDATE'] >= start_time]
+            # Apply time range filtering based on user selection
+            start_datetime, end_datetime = self._get_effective_date_range()
+            if start_datetime is not None:
+                df = df[(df['SETTLEMENTDATE'] >= start_datetime) & (df['SETTLEMENTDATE'] <= end_datetime)]
+                logger.info(f"Price data filtered to {start_datetime.date()} - {end_datetime.date()}")
+            else:
+                # For "All Data", use a reasonable fallback (last 3 months to avoid performance issues)
+                fallback_start = datetime.now() - timedelta(days=90)
+                df = df[df['SETTLEMENTDATE'] >= fallback_start]
+                logger.info(f"Using fallback time filter for 'All Data': last 90 days")
+            
             logger.info(f"Price data shape after time filtering: {df.shape}")
             
             # Filter by region
@@ -559,14 +580,22 @@ class EnergyDashboard(param.Parameterized):
                 # Set time as index for easier resampling/interpolation
                 clean_df.set_index('settlementdate', inplace=True)
                 
-                # Resample to 5-minute intervals and interpolate missing values
-                clean_df = clean_df.resample('5min').mean()
+                # Apply resampling based on time range selection
+                should_resample, resample_freq = self._should_resample_data()
+                if should_resample and resample_freq:
+                    # Resample to match generation data frequency
+                    clean_df = clean_df.resample(resample_freq).mean()
+                    logger.info(f"Resampled price data to {resample_freq} intervals")
+                else:
+                    # Resample to 5-minute intervals and interpolate missing values
+                    clean_df = clean_df.resample('5min').mean()
+                
                 clean_df['RRP'] = clean_df['RRP'].interpolate(method='linear')
                 
                 # Reset index to get settlementdate back as column
                 clean_df = clean_df.reset_index()
                 
-                logger.info(f"Loaded {len(clean_df)} price records for last {self.hours} hours")
+                logger.info(f"Loaded {len(clean_df)} price records for {self.time_range}")
                 if not clean_df.empty:
                     logger.info(f"Price range: ${clean_df['RRP'].min():.2f} to ${clean_df['RRP'].max():.2f}")
                     logger.info(f"Time range: {clean_df['settlementdate'].min()} to {clean_df['settlementdate'].max()}")
@@ -593,10 +622,6 @@ class EnergyDashboard(param.Parameterized):
                 self.transmission_df = pd.DataFrame()
                 return
             
-            # Calculate time window - same as generation data
-            end_time = datetime.now()
-            start_time = end_time - timedelta(hours=self.hours)
-            
             # Load transmission data
             df = pd.read_parquet(transmission_file)
             logger.info(f"Loaded transmission data shape: {df.shape}")
@@ -605,13 +630,22 @@ class EnergyDashboard(param.Parameterized):
             if not pd.api.types.is_datetime64_any_dtype(df['settlementdate']):
                 df['settlementdate'] = pd.to_datetime(df['settlementdate'])
             
-            # Filter to time window
-            df = df[df['settlementdate'] >= start_time]
+            # Apply time range filtering based on user selection
+            start_datetime, end_datetime = self._get_effective_date_range()
+            if start_datetime is not None:
+                df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
+                logger.info(f"Transmission data filtered to {start_datetime.date()} - {end_datetime.date()}")
+            else:
+                # For "All Data", use a reasonable fallback
+                fallback_start = datetime.now() - timedelta(days=90)
+                df = df[df['settlementdate'] >= fallback_start]
+                logger.info(f"Using fallback time filter for transmission data: last 90 days")
+            
             logger.info(f"Transmission data shape after time filtering: {df.shape}")
             
             # Store transmission data
             self.transmission_df = df
-            logger.info(f"Loaded {len(df)} transmission records for last {self.hours} hours")
+            logger.info(f"Loaded {len(df)} transmission records for {self.time_range}")
             logger.info(f"Available interconnectors: {df['interconnectorid'].unique()}")
             
         except Exception as e:
@@ -628,10 +662,6 @@ class EnergyDashboard(param.Parameterized):
                 self.rooftop_df = pd.DataFrame()
                 return
             
-            # Calculate time window - same as generation data
-            end_time = datetime.now()
-            start_time = end_time - timedelta(hours=self.hours)
-            
             # Load rooftop solar data
             df = pd.read_parquet(rooftop_file)
             logger.info(f"Loaded rooftop solar data shape: {df.shape}")
@@ -640,13 +670,22 @@ class EnergyDashboard(param.Parameterized):
             if not pd.api.types.is_datetime64_any_dtype(df['settlementdate']):
                 df['settlementdate'] = pd.to_datetime(df['settlementdate'])
             
-            # Filter to time window
-            df = df[df['settlementdate'] >= start_time]
+            # Apply time range filtering based on user selection
+            start_datetime, end_datetime = self._get_effective_date_range()
+            if start_datetime is not None:
+                df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
+                logger.info(f"Rooftop solar data filtered to {start_datetime.date()} - {end_datetime.date()}")
+            else:
+                # For "All Data", use a reasonable fallback
+                fallback_start = datetime.now() - timedelta(days=90)
+                df = df[df['settlementdate'] >= fallback_start]
+                logger.info(f"Using fallback time filter for rooftop solar data: last 90 days")
+            
             logger.info(f"Rooftop solar data shape after time filtering: {df.shape}")
             
             # Store rooftop solar data
             self.rooftop_df = df
-            logger.info(f"Loaded {len(df)} rooftop solar records for last {self.hours} hours")
+            logger.info(f"Loaded {len(df)} rooftop solar records for {self.time_range}")
             logger.info(f"Available regions: {[col for col in df.columns if col != 'settlementdate']}")
             
         except Exception as e:
@@ -751,11 +790,28 @@ class EnergyDashboard(param.Parameterized):
         # Group by time and fuel type
         df['settlementdate'] = pd.to_datetime(df['settlementdate'])
         
-        # Aggregate by 5-minute intervals and fuel type
-        result = df.groupby([
-            pd.Grouper(key='settlementdate', freq='5min'),
-            'fuel'
-        ])['scadavalue'].sum().reset_index()
+        # Apply time range filtering
+        start_datetime, end_datetime = self._get_effective_date_range()
+        if start_datetime is not None:
+            df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
+            logger.info(f"Filtered generation data to {start_datetime.date()} - {end_datetime.date()}: {len(df)} records")
+        
+        # Determine resampling needs
+        should_resample, resample_freq = self._should_resample_data()
+        
+        if should_resample:
+            # Resample data to reduce granularity for longer periods
+            result = df.groupby([
+                pd.Grouper(key='settlementdate', freq=resample_freq),
+                'fuel'
+            ])['scadavalue'].mean().reset_index()  # Use mean for resampling
+            logger.info(f"Resampled generation data to {resample_freq} intervals")
+        else:
+            # Keep 5-minute intervals
+            result = df.groupby([
+                pd.Grouper(key='settlementdate', freq='5min'),
+                'fuel'
+            ])['scadavalue'].sum().reset_index()
         
         # Pivot to get fuel types as columns
         pivot_df = result.pivot(index='settlementdate', columns='fuel', values='scadavalue')
@@ -877,11 +933,26 @@ class EnergyDashboard(param.Parameterized):
         # Group generation by time and fuel type
         df['settlementdate'] = pd.to_datetime(df['settlementdate'])
         
-        # Aggregate generation by 5-minute intervals and fuel type
-        generation = df.groupby([
-            pd.Grouper(key='settlementdate', freq='5min'),
-            'fuel'
-        ])['scadavalue'].sum().reset_index()
+        # Apply time range filtering
+        start_datetime, end_datetime = self._get_effective_date_range()
+        if start_datetime is not None:
+            df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
+        
+        # Determine resampling needs
+        should_resample, resample_freq = self._should_resample_data()
+        
+        if should_resample:
+            # Aggregate generation with resampling
+            generation = df.groupby([
+                pd.Grouper(key='settlementdate', freq=resample_freq),
+                'fuel'
+            ])['scadavalue'].mean().reset_index()  # Use mean for resampling
+        else:
+            # Aggregate generation by 5-minute intervals and fuel type
+            generation = df.groupby([
+                pd.Grouper(key='settlementdate', freq='5min'),
+                'fuel'
+            ])['scadavalue'].sum().reset_index()
         
         # Get capacity data by fuel type for the region
         capacity_df = self.gen_info_df.copy()
@@ -1130,8 +1201,9 @@ class EnergyDashboard(param.Parameterized):
                 else:
                     area_plot = main_plot
                 
+                time_range_display = self._get_time_range_display()
                 area_plot = area_plot.opts(
-                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
+                    title=f'Generation by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                     show_grid=False,
                     bgcolor='black',
                     xaxis=None  # Hide x-axis since price chart will show it
@@ -1140,13 +1212,14 @@ class EnergyDashboard(param.Parameterized):
             else:
                 # No negative values - exclude transmission exports from main plot (they should always be negative)
                 positive_fuel_types = [f for f in fuel_types if f != transmission_exports_col]
+                time_range_display = self._get_time_range_display()
                 area_plot = plot_data.hvplot.area(
                     x='settlementdate',
                     y=positive_fuel_types,
                     stacked=True,
                     width=900,
                     height=300,  # Reduced height to make room for price chart
-                    title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
+                    title=f'Generation by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                     ylabel='Generation (MW)',
                     xlabel='',  # Remove x-label since it will be on the price chart
                     grid=True,
@@ -1467,13 +1540,14 @@ class EnergyDashboard(param.Parameterized):
             
             # Combine all elements
             if plot_elements:
+                time_range_display = self._get_time_range_display()
                 combined_plot = hv.Overlay(plot_elements + [zero_line]).opts(
                     width=900,
                     height=400,  # Increased height to accommodate multiple lines
                     bgcolor='black',
                     ylabel='Flow (MW)',
                     xlabel='Time',
-                    title=f'Transmission Flows with Limits by Interconnector - {self.region} (MW)',
+                    title=f'Transmission Flows with Limits - {self.region} ({time_range_display})',
                     show_grid=False,
                     legend_position='right',
                     hooks=[apply_datetime_formatter]
@@ -1541,12 +1615,13 @@ class EnergyDashboard(param.Parameterized):
                 )
             
             # Create line plot for capacity utilization with different Y dimension name
+            time_range_display = self._get_time_range_display()
             line_plot = plot_data.hvplot.line(
                 x='settlementdate',
                 y=fuel_types,
                 width=900,
                 height=400,
-                title=f'Capacity Utilization by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
+                title=f'Capacity Utilization by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                 ylabel='Capacity Utilization (%)',
                 xlabel='Time',
                 grid=False,
@@ -1645,6 +1720,88 @@ class EnergyDashboard(param.Parameterized):
         logger.info(f"Region changed to: {self.region}")
         self.update_plot()
     
+    @param.depends('time_range', watch=True)
+    def on_time_range_change(self):
+        """Called when time range parameter changes"""
+        logger.info(f"Time range changed to: {self.time_range}")
+        # Update start/end dates based on preset selection
+        self._update_date_range_from_preset()
+        self.update_plot()
+    
+    @param.depends('start_date', 'end_date', watch=True)
+    def on_date_change(self):
+        """Called when custom date range changes"""
+        logger.info(f"Date range changed to: {self.start_date} - {self.end_date}")
+        self.update_plot()
+    
+    def _update_date_range_from_preset(self):
+        """Update start_date and end_date based on time_range preset"""
+        end_date = datetime.now().date()
+        
+        if self.time_range == 'Last 24 Hours':
+            start_date = end_date - timedelta(days=1)
+        elif self.time_range == 'Last 7 Days':
+            start_date = end_date - timedelta(days=7)
+        elif self.time_range == 'Last 30 Days':
+            start_date = end_date - timedelta(days=30)
+        elif self.time_range == 'All Data':
+            start_date = datetime(2024, 1, 1).date()  # Approximate earliest data
+        else:
+            # Keep current custom dates
+            return
+        
+        # Update the date parameters
+        self.start_date = start_date
+        self.end_date = end_date
+    
+    def _get_effective_date_range(self):
+        """Get the effective start and end datetime for data filtering"""
+        if self.time_range == 'All Data':
+            # For all data, use None to indicate no date filtering
+            return None, None
+        else:
+            # Convert dates to datetime for filtering
+            start_datetime = datetime.combine(self.start_date, datetime.min.time())
+            end_datetime = datetime.combine(self.end_date, datetime.max.time())
+            return start_datetime, end_datetime
+    
+    def _should_resample_data(self):
+        """Determine if data should be resampled based on time range"""
+        if self.time_range == 'Last 24 Hours':
+            return False, None  # Keep 5-minute resolution
+        elif self.time_range == 'Last 7 Days':
+            return True, '30min'  # Resample to 30-minute
+        elif self.time_range in ['Last 30 Days', 'All Data']:
+            return True, '1h'  # Resample to hourly
+        else:
+            # For custom ranges, decide based on duration
+            duration = (self.end_date - self.start_date).days
+            if duration <= 1:
+                return False, None
+            elif duration <= 7:
+                return True, '30min'
+            else:
+                return True, '1h'
+    
+    def _get_time_range_display(self):
+        """Get formatted time range string for chart titles"""
+        if self.time_range == 'Last 24 Hours':
+            return "Last 24 Hours"
+        elif self.time_range == 'Last 7 Days':
+            return "Last 7 Days"  
+        elif self.time_range == 'Last 30 Days':
+            return "Last 30 Days"
+        elif self.time_range == 'All Data':
+            return "All Available Data"
+        else:
+            # Custom date range
+            if self.start_date and self.end_date:
+                if self.start_date == self.end_date:
+                    return f"{self.start_date.strftime('%Y-%m-%d')}"
+                else:
+                    return f"{self.start_date.strftime('%Y-%m-%d')} to {self.end_date.strftime('%Y-%m-%d')}"
+            return "Custom Range"
+    
     
     def test_vol_price(self):
         """Test method to verify vol_price functionality"""
@@ -1690,6 +1847,29 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
+            # Time range selector
+            time_range_selector = pn.Param(
+                self,
+                parameters=['time_range'],
+                widgets={'time_range': pn.widgets.RadioButtonGroup},
+                name="Time Range",
+                width=280,
+                margin=(10, 0)
+            )
+            
+            # Custom date range pickers
+            date_selectors = pn.Param(
+                self,
+                parameters=['start_date', 'end_date'],
+                widgets={
+                    'start_date': pn.widgets.DatePicker,
+                    'end_date': pn.widgets.DatePicker
+                },
+                name="Custom Date Range",
+                width=280,
+                margin=(10, 0)
+            )
+            
             # Create left-side control panel
             control_panel = pn.Column(
                 "### Generation by Fuel Controls",
@@ -1703,6 +1883,17 @@ class EnergyDashboard(param.Parameterized):
                 - **TAS1:** Tasmania
                 - **VIC1:** Victoria
                 """),
+                "---",
+                time_range_selector,
+                pn.pane.Markdown("""
+                **Time Range Options:**
+                - **24 Hours:** 5-minute resolution
+                - **7 Days:** 30-minute averages
+                - **30 Days:** Hourly averages
+                - **All Data:** Hourly averages
+                """),
+                date_selectors,
+                pn.pane.Markdown("*Custom dates override preset selection*"),
                 width=300,
                 sizing_mode='fixed'
             )
