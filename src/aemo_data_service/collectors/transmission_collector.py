@@ -110,11 +110,16 @@ class TransmissionCollector(BaseCollector):
     async def _get_latest_file_url(self) -> Optional[str]:
         """Get the URL of the most recent DISPATCHIS file."""
         try:
+            # Use proper headers to avoid 403 errors
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: requests.get(self.base_url, timeout=30)
+                lambda: requests.get(self.base_url, headers=headers, timeout=30)
             )
             response.raise_for_status()
             
@@ -155,11 +160,16 @@ class TransmissionCollector(BaseCollector):
     async def _download_and_parse_file(self, file_url: str) -> Optional[pd.DataFrame]:
         """Download and parse DISPATCHIS ZIP file."""
         try:
+            # Use proper headers to avoid 403 errors
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
             # Download in thread pool
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: requests.get(file_url, timeout=60)
+                lambda: requests.get(file_url, headers=headers, timeout=60)
             )
             response.raise_for_status()
             

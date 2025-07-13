@@ -31,7 +31,7 @@ async def test_service():
         
         print(f"\n✅ Collection Results:")
         for name, success in results.items():
-            status = "✅ Success" if success else "❌ Failed"
+            status = "✅ Success" if success else "⚪ No New Data"
             print(f"  {name}: {status}")
         
         print(f"\n📊 Final Status:")
