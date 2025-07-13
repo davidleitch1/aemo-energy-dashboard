@@ -71,9 +71,61 @@ This data is updated every 5 minutes and is publicly accessible.
 
 ### **Retrieving the Data**
 
-You can download the dispatch data files from AEMO's NEMWeb portal. The files are available in ZIP format and contain CSV files with the relevant data. The filenames typically follow this pattern:()
+You can download the dispatch data files from AEMO's NEMWeb portal. The files have a nested ZIP structure:
 
-PUBLIC_DISPATCHIS_YYYYMMDDHHMM_*.ZIP
+#### **Archive Structure and URL Formation**
+
+**Base URL:** `https://www.nemweb.com.au/REPORTS/ARCHIVE/DispatchIS_Reports/`
+
+**Daily Archive Files:**
+- Format: `PUBLIC_DISPATCHIS_YYYYMMDD.zip`
+- Example: `PUBLIC_DISPATCHIS_20250708.zip`
+- Contains: 288 nested ZIP files (one per 5-minute interval)
+
+**Nested 5-Minute Files (inside daily ZIP):**
+- Format: `PUBLIC_DISPATCHIS_YYYYMMDDHHMM_*.zip`
+- Example: `PUBLIC_DISPATCHIS_202507081205_0000000471017670.zip`
+- Contains: One CSV file with the same name but `.CSV` extension
+
+**Complete URL Example:**
+```
+https://www.nemweb.com.au/REPORTS/ARCHIVE/DispatchIS_Reports/PUBLIC_DISPATCHIS_20250708.zip
+```
+
+#### **Data Extraction Process**
+
+1. **Download Daily ZIP:**
+   ```python
+   url = "https://www.nemweb.com.au/REPORTS/ARCHIVE/DispatchIS_Reports/PUBLIC_DISPATCHIS_20250708.zip"
+   headers = {'User-Agent': 'AEMO Dashboard Data Collector'}  # Required!
+   response = requests.get(url, headers=headers)
+   ```
+
+2. **Extract Nested Structure:**
+   ```python
+   with zipfile.ZipFile(BytesIO(response.content)) as daily_zip:
+       # Lists 288 5-minute ZIP files
+       nested_zips = [f for f in daily_zip.namelist() if f.endswith('.zip')]
+       
+       # Process each 5-minute ZIP
+       for nested_zip_name in nested_zips:
+           with daily_zip.open(nested_zip_name) as nested_file:
+               with zipfile.ZipFile(nested_file) as minute_zip:
+                   # Get the CSV file
+                   csv_files = [f for f in minute_zip.namelist() if f.endswith('.CSV')]
+                   with minute_zip.open(csv_files[0]) as csv_file:
+                       # Parse CSV content
+   ```
+
+3. **CSV Format:**
+   - Lines starting with `D,DISPATCH,INTERCONNECTORRES` contain transmission data
+   - Field positions: settlementdate(4), interconnectorid(6), meteredmwflow(9), etc.
+
+**Important Notes:**
+- User-Agent header is REQUIRED or you'll get 403 Forbidden
+- Archive contains ~12 months of historical data
+- Each daily file is ~5-6MB compressed
+- Processing all 288 intervals gives complete daily coverage
 
 ### **Automating Data Retrieval**
 
@@ -190,11 +242,96 @@ The dashboard is now a comprehensive energy market analysis platform with four m
 - **Data Integration:** 2.7M+ integrated generation+price records
 - **Performance:** Optimized with smart data filtering and chart rendering
 
-## 🎯 **Planned Dashboard Extensions**
+## 🚧 **IN PROGRESS: Time Range Selector for Generation by Fuel Tab**
+
+### **⚠️ Implementation Status: Partially Working with Issues**
+
+**Solution:** Added time range selection but data resampling is causing display problems.
+
+**Features Implemented:**
+- ✅ Quick select buttons: Last 24 Hours, Last 7 Days, Last 30 Days, All Data  
+- ✅ Custom date range pickers for precise control
+- ✅ Smart data resampling: REMOVED - all data now stays at 5-minute resolution
+- ✅ Updated chart titles to show selected time period
+- ✅ Applied time filtering to all data sources (generation, price, transmission, rooftop solar)
+- ⚠️ RadioButtonGroup styling: Using `button_style='outline'` but visual selection still not working properly
+
+### **🐛 Current Issues (After Removing Resampling):**
+
+1. **✅ FIXED: Rooftop Solar Data** - Removed resampling, now displays correctly
+
+2. **❌ Transmission Line Chart Not Showing Full Week:**
+   - Problem: When "Last 7 Days" is selected, transmission chart still shows limited data
+   - Possible cause: Hardcoded time filter somewhere in transmission plot code
+   - Generation chart works correctly, but transmission chart doesn't respect time range
+   - Need to investigate `create_transmission_plot()` method
+
+3. **RadioButtonGroup Visual State:**
+   - All buttons appear highlighted instead of just the selected one
+   - Using `button_style='outline'` like Station Analysis but still not working
+   - May be a Panel/Bokeh CSS conflict
+
+4. **X-axis Labels:**
+   - Context-aware datetime formatter implemented but may need adjustment
+   - Should show appropriate units (hours for day view, days for week view)
+
+5. **Performance Concerns:**
+   - With no resampling, 7-day and 30-day views have many data points
+   - May cause sluggish chart interaction
+   - Consider client-side decimation or server-side aggregation in future
+
+## 🎯 **Next Development Priority: Data Diagnostics and Health Monitoring**
+
+### **Current Task: Data Validity Diagnostics System**
+
+**Problem:** Dashboard performance issues when data coverage is inconsistent across different parquet files, especially transmission data gaps.
+
+**✅ Solution Implemented:**
+
+### **Data Validity Check System**
+Created comprehensive diagnostics system at `src/aemo_dashboard/diagnostics/data_validity_check.py`:
+
+**Features:**
+- ✅ **DataValidityChecker class**: Comprehensive analysis of all parquet files
+- ✅ **Coverage Analysis**: Identifies data gaps and overlapping periods
+- ✅ **Health Recommendations**: Actionable suggestions for data issues
+- ✅ **Formatted Reports**: Human-readable status summaries
+- ✅ **Command Line Interface**: Can be run independently for troubleshooting
+
+**Data Sources Checked:**
+- Generation data (gen_output.parquet) - records, date range, DUID mapping
+- Price data (spot_hist.parquet) - records, regions, price ranges  
+- Transmission data (transmission_flows.parquet) - interconnectors, flow ranges
+- Rooftop solar data (rooftop_solar.parquet) - regional coverage
+
+**Usage:**
+```bash
+# Command line check
+cd src && uv run python -m aemo_dashboard.diagnostics.data_validity_check
+
+# Programmatic usage  
+from aemo_dashboard.diagnostics import DataValidityChecker
+checker = DataValidityChecker()
+results = checker.run_complete_check()
+```
+
+### **🔄 Planned: Dashboard Health Button**
+**Next Implementation Phase:**
+- Add "System Health" button to dashboard header or footer
+- Button opens modal/popup with live data validity report
+- Include refresh capability and link to data collection tools
+- Visual indicators: ✅ Healthy / ⚠️ Issues / ❌ Critical
+
+**Integration Points:**
+- Link to transmission backfill tools when gaps detected
+- Show data coverage periods for time range selector
+- Display collection status and last update times
+
+## 🎯 **Future Dashboard Extensions**
 
 ### **Generation by Fuel Tab Enhancements**
-- **Rooftop Solar Integration:** Add 30-minute rooftop solar data source to complement existing generation data
-- **Transmission Flows:** Integrate interconnector flows as virtual "fuel" type (positive=inflow, negative=outflow)
+- **Rooftop Solar Integration:** ✅ COMPLETED - Add 30-minute rooftop solar data source to complement existing generation data
+- **Transmission Flows:** ✅ COMPLETED - Integrate interconnector flows as virtual "fuel" type (positive=inflow, negative=outflow)
 
 ### **New Tabs Required**
 1. **Transmission Tab:** Dedicated analysis of interconnector flows between regions

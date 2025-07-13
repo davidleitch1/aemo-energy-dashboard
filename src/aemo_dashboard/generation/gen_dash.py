@@ -34,6 +34,16 @@ logger = get_logger(__name__)
 # Configure Panel and HoloViews BEFORE extension loading
 pn.config.theme = 'dark'
 pn.extension('tabulator', template='material')
+
+# Custom CSS to ensure x-axis labels are visible
+pn.config.raw_css.append("""
+.bk-axis-label {
+    font-size: 12px !important;
+}
+.bk-tick-label {
+    font-size: 11px !important;
+}
+""")
 hv.extension('bokeh')
 
 # Logging is set up in imports
@@ -165,7 +175,7 @@ class EnergyDashboard(param.Parameterized):
         self.duid_to_region = {}
         self.last_update = None
         self.update_task = None
-        self.hours = 48  # 48 hours to include July 12 daytime rooftop data
+        # Hours will be determined dynamically based on time_range selection
         self._plot_objects = {}  # Cache for plot objects
         
         # Initialize email alert manager
@@ -463,9 +473,11 @@ class EnergyDashboard(param.Parameterized):
         """Enhanced version that checks for unknown DUIDs and sends alerts"""
         try:
             if os.path.exists(GEN_OUTPUT_FILE):
-                # Calculate time window - fixed 24 hours
-                end_time = datetime.now()
-                start_time = end_time - timedelta(hours=self.hours)
+                # Calculate time window based on selected time range
+                start_time, end_time = self._get_effective_date_range()
+                if start_time is None:
+                    end_time = datetime.now()
+                    start_time = end_time - timedelta(days=90)  # Fallback for "All Data"
                 
                 # Load parquet file
                 df = pd.read_parquet(GEN_OUTPUT_FILE)
@@ -495,7 +507,7 @@ class EnergyDashboard(param.Parameterized):
                     logger.warning(f"Dropped {dropped_count} records ({dropped_count/original_count*100:.1f}%) due to unknown DUIDs")
                 
                 self.gen_output_df = df
-                logger.info(f"Loaded {len(df)} generation records for last {self.hours} hours")
+                logger.info(f"Loaded {len(df)} generation records for {self.time_range}")
                 
             else:
                 logger.error(f"gen_output.parquet not found at {GEN_OUTPUT_FILE}")
@@ -580,16 +592,8 @@ class EnergyDashboard(param.Parameterized):
                 # Set time as index for easier resampling/interpolation
                 clean_df.set_index('settlementdate', inplace=True)
                 
-                # Apply resampling based on time range selection
-                should_resample, resample_freq = self._should_resample_data()
-                if should_resample and resample_freq:
-                    # Resample to match generation data frequency
-                    clean_df = clean_df.resample(resample_freq).mean()
-                    logger.info(f"Resampled price data to {resample_freq} intervals")
-                else:
-                    # Resample to 5-minute intervals and interpolate missing values
-                    clean_df = clean_df.resample('5min').mean()
-                
+                # Always resample to 5-minute intervals and interpolate missing values
+                clean_df = clean_df.resample('5min').mean()
                 clean_df['RRP'] = clean_df['RRP'].interpolate(method='linear')
                 
                 # Reset index to get settlementdate back as column
@@ -796,22 +800,11 @@ class EnergyDashboard(param.Parameterized):
             df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
             logger.info(f"Filtered generation data to {start_datetime.date()} - {end_datetime.date()}: {len(df)} records")
         
-        # Determine resampling needs
-        should_resample, resample_freq = self._should_resample_data()
-        
-        if should_resample:
-            # Resample data to reduce granularity for longer periods
-            result = df.groupby([
-                pd.Grouper(key='settlementdate', freq=resample_freq),
-                'fuel'
-            ])['scadavalue'].mean().reset_index()  # Use mean for resampling
-            logger.info(f"Resampled generation data to {resample_freq} intervals")
-        else:
-            # Keep 5-minute intervals
-            result = df.groupby([
-                pd.Grouper(key='settlementdate', freq='5min'),
-                'fuel'
-            ])['scadavalue'].sum().reset_index()
+        # Always use 5-minute intervals without resampling
+        result = df.groupby([
+            pd.Grouper(key='settlementdate', freq='5min'),
+            'fuel'
+        ])['scadavalue'].sum().reset_index()
         
         # Pivot to get fuel types as columns
         pivot_df = result.pivot(index='settlementdate', columns='fuel', values='scadavalue')
@@ -862,6 +855,8 @@ class EnergyDashboard(param.Parameterized):
                 rooftop_df = self.rooftop_df.copy()
                 rooftop_df['settlementdate'] = pd.to_datetime(rooftop_df['settlementdate'])
                 rooftop_df.set_index('settlementdate', inplace=True)
+                
+                # No resampling needed - rooftop solar is already in MW values
                 
                 if self.region == 'NEM':
                     # For NEM view, sum all main regions (ending in '1')
@@ -938,21 +933,11 @@ class EnergyDashboard(param.Parameterized):
         if start_datetime is not None:
             df = df[(df['settlementdate'] >= start_datetime) & (df['settlementdate'] <= end_datetime)]
         
-        # Determine resampling needs
-        should_resample, resample_freq = self._should_resample_data()
-        
-        if should_resample:
-            # Aggregate generation with resampling
-            generation = df.groupby([
-                pd.Grouper(key='settlementdate', freq=resample_freq),
-                'fuel'
-            ])['scadavalue'].mean().reset_index()  # Use mean for resampling
-        else:
-            # Aggregate generation by 5-minute intervals and fuel type
-            generation = df.groupby([
-                pd.Grouper(key='settlementdate', freq='5min'),
-                'fuel'
-            ])['scadavalue'].sum().reset_index()
+        # Always aggregate generation by 5-minute intervals and fuel type
+        generation = df.groupby([
+            pd.Grouper(key='settlementdate', freq='5min'),
+            'fuel'
+        ])['scadavalue'].sum().reset_index()
         
         # Get capacity data by fuel type for the region
         capacity_df = self.gen_info_df.copy()
@@ -1206,7 +1191,8 @@ class EnergyDashboard(param.Parameterized):
                     title=f'Generation by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                     show_grid=False,
                     bgcolor='black',
-                    xaxis=None  # Hide x-axis since price chart will show it
+                    xaxis=None,  # Hide x-axis since price chart will show it
+                    hooks=[self._get_datetime_formatter_hook()]
                 )
                 
             else:
@@ -1259,7 +1245,8 @@ class EnergyDashboard(param.Parameterized):
                 hover_tooltips=[('Price', '@RRP{$0.2f}')]
             ).opts(
                 show_grid=False,
-                bgcolor='black'
+                bgcolor='black',
+                hooks=[self._get_datetime_formatter_hook()]
             )
             
             # Stack the plots vertically using Layout (just generation + price)
@@ -1270,7 +1257,7 @@ class EnergyDashboard(param.Parameterized):
             )
             
             self.last_update = datetime.now()
-            logger.info(f"Plot updated for {self.region}, {self.hours} hours")
+            logger.info(f"Plot updated for {self.region}, {self.time_range}")
             
             return combined_layout
             
@@ -1550,7 +1537,7 @@ class EnergyDashboard(param.Parameterized):
                     title=f'Transmission Flows with Limits - {self.region} ({time_range_display})',
                     show_grid=False,
                     legend_position='right',
-                    hooks=[apply_datetime_formatter]
+                    hooks=[self._get_datetime_formatter_hook()]
                 )
             else:
                 combined_plot = hv.Text(0.5, 0.5, f'No transmission data available for {self.region}').opts(
@@ -1765,23 +1752,6 @@ class EnergyDashboard(param.Parameterized):
             end_datetime = datetime.combine(self.end_date, datetime.max.time())
             return start_datetime, end_datetime
     
-    def _should_resample_data(self):
-        """Determine if data should be resampled based on time range"""
-        if self.time_range == 'Last 24 Hours':
-            return False, None  # Keep 5-minute resolution
-        elif self.time_range == 'Last 7 Days':
-            return True, '30min'  # Resample to 30-minute
-        elif self.time_range in ['Last 30 Days', 'All Data']:
-            return True, '1h'  # Resample to hourly
-        else:
-            # For custom ranges, decide based on duration
-            duration = (self.end_date - self.start_date).days
-            if duration <= 1:
-                return False, None
-            elif duration <= 7:
-                return True, '30min'
-            else:
-                return True, '1h'
     
     def _get_time_range_display(self):
         """Get formatted time range string for chart titles"""
@@ -1802,6 +1772,31 @@ class EnergyDashboard(param.Parameterized):
                     return f"{self.start_date.strftime('%Y-%m-%d')} to {self.end_date.strftime('%Y-%m-%d')}"
             return "Custom Range"
     
+    def _get_datetime_formatter_hook(self):
+        """Get appropriate datetime formatter based on time range"""
+        def formatter_hook(plot, element):
+            if self.time_range == 'Last 24 Hours':
+                # For 24 hours, show hours
+                plot.handles['xaxis'].formatter = DatetimeTickFormatter(
+                    hours="%H:%M",
+                    days="%H:%M"
+                )
+            elif self.time_range == 'Last 7 Days':
+                # For 7 days, show day names or dates
+                plot.handles['xaxis'].formatter = DatetimeTickFormatter(
+                    hours="%a %H:%M",  # Mon 14:00
+                    days="%a %d",      # Mon 15
+                    months="%b %d"
+                )
+            else:
+                # For 30 days or longer, show dates
+                plot.handles['xaxis'].formatter = DatetimeTickFormatter(
+                    hours="%m/%d",
+                    days="%m/%d",
+                    months="%b %d",
+                    years="%Y"
+                )
+        return formatter_hook
     
     def test_vol_price(self):
         """Test method to verify vol_price functionality"""
@@ -1847,12 +1842,20 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
-            # Time range selector
-            time_range_selector = pn.Param(
-                self,
-                parameters=['time_range'],
-                widgets={'time_range': pn.widgets.RadioButtonGroup},
+            # Time range selector with explicit styling
+            time_range_widget = pn.widgets.RadioButtonGroup(
                 name="Time Range",
+                value=self.time_range,
+                options=['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Data'],
+                button_type='primary',
+                button_style='outline',  # Only selected button will be filled
+                width=280
+            )
+            time_range_widget.link(self, value='time_range')
+            
+            time_range_selector = pn.Column(
+                "**Time Range:**",
+                time_range_widget,
                 width=280,
                 margin=(10, 0)
             )

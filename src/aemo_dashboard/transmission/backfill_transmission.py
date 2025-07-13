@@ -31,7 +31,7 @@ class TransmissionHistoricalBackfill:
     
     def __init__(self):
         """Initialize the backfill tool"""
-        self.base_url = "http://nemweb.com.au/Reports/ARCHIVE/DispatchIS/"
+        self.base_url = "https://www.nemweb.com.au/REPORTS/ARCHIVE/DispatchIS_Reports/"
         self.transmission_output_file = Path(config.transmission_output_file)
         
         # Ensure the directory exists
@@ -125,7 +125,8 @@ class TransmissionHistoricalBackfill:
     def _find_file_in_directory(self, url, date_str, source_type):
         """Helper method to find DISPATCHIS file in a directory"""
         try:
-            response = requests.get(url, timeout=30)
+            headers = {'User-Agent': 'AEMO Dashboard Data Collector'}
+            response = requests.get(url, headers=headers, timeout=30)
             response.raise_for_status()
             
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -159,13 +160,14 @@ class TransmissionHistoricalBackfill:
     def _construct_archive_daily_url(self, date):
         """Construct URL for ARCHIVE daily ZIP file using AEMO format"""
         date_str = date.strftime('%Y%m%d')
-        # AEMO ARCHIVE format: DISPATCHIS_YYYYMMDD.zip
-        archive_filename = f"DISPATCHIS_{date_str}.zip"
+        # AEMO ARCHIVE format: PUBLIC_DISPATCHIS_YYYYMMDD.zip
+        archive_filename = f"PUBLIC_DISPATCHIS_{date_str}.zip"
         archive_url = self.base_url + archive_filename
         
         try:
             # Test if the file exists by making a HEAD request
-            response = requests.head(archive_url, timeout=30)
+            headers = {'User-Agent': 'AEMO Dashboard Data Collector'}
+            response = requests.head(archive_url, headers=headers, timeout=30)
             if response.status_code == 200:
                 logger.info(f"Found ARCHIVE file for {date_str}: {archive_filename}")
                 return archive_url
@@ -180,24 +182,48 @@ class TransmissionHistoricalBackfill:
         """Download and parse historical DISPATCHIS ZIP file"""
         try:
             logger.info(f"Downloading {file_url}")
-            response = requests.get(file_url, timeout=120)
+            headers = {'User-Agent': 'AEMO Dashboard Data Collector'}
+            response = requests.get(file_url, headers=headers, timeout=120)
             response.raise_for_status()
             
-            # Extract ZIP file
-            with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
-                # Get the first (and usually only) CSV file in the ZIP
-                csv_files = [name for name in zip_file.namelist() if name.endswith('.CSV')]
+            # Extract ZIP file (nested structure: daily ZIP contains 5-minute ZIPs)
+            with zipfile.ZipFile(BytesIO(response.content)) as daily_zip:
+                # Get all 5-minute ZIP files in the daily ZIP
+                nested_zip_files = [name for name in daily_zip.namelist() if name.endswith('.zip')]
                 
-                if not csv_files:
-                    logger.error("No CSV files found in ZIP archive")
+                if not nested_zip_files:
+                    logger.error(f"No nested ZIP files found in daily archive. Files found: {daily_zip.namelist()}")
                     return None
-                    
-                csv_filename = csv_files[0]
-                logger.info(f"Extracting and parsing: {csv_filename}")
                 
-                # Read CSV content from ZIP
-                with zip_file.open(csv_filename) as csv_file:
-                    csv_content = csv_file.read().decode('utf-8')
+                # Process all 5-minute ZIP files to get complete daily data
+                all_csv_content = []
+                logger.info(f"Processing {len(nested_zip_files)} 5-minute intervals for {target_date.date()}")
+                
+                for zip_name in sorted(nested_zip_files):
+                    try:
+                        # Extract each 5-minute ZIP and get its CSV content
+                        with daily_zip.open(zip_name) as nested_zip_file:
+                            with zipfile.ZipFile(nested_zip_file) as minute_zip:
+                                # Get CSV files in the 5-minute ZIP
+                                csv_files = [name for name in minute_zip.namelist() if name.endswith('.CSV') or name.endswith('.csv')]
+                                
+                                if csv_files:
+                                    csv_filename = csv_files[0]  # Should be only one CSV per 5-minute ZIP
+                                    
+                                    # Read CSV content from nested ZIP
+                                    with minute_zip.open(csv_filename) as csv_file:
+                                        csv_content = csv_file.read().decode('utf-8')
+                                        all_csv_content.append(csv_content)
+                    except Exception as e:
+                        logger.warning(f"Error processing 5-minute ZIP {zip_name}: {e}")
+                        continue
+                
+                if not all_csv_content:
+                    logger.error("No CSV content extracted from any 5-minute ZIP files")
+                    return None
+                
+                # Combine all CSV content
+                csv_content = '\n'.join(all_csv_content)
             
             # Parse CSV content
             lines = csv_content.strip().split('\n')
