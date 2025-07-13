@@ -517,16 +517,13 @@ class StationAnalysisUI(param.Parameterized):
                         ("Time Series", pn.Column(
                             "#### Generation & Price Over Time",
                             time_series_charts,
+                            "#### Performance Statistics",
+                            summary_stats,
                             sizing_mode='stretch_width'
                         )),
                         ("Time-of-Day", pn.Column(
                             "#### Average Performance by Hour",
                             time_of_day_chart,
-                            sizing_mode='stretch_width'
-                        )),
-                        ("Summary Stats", pn.Column(
-                            "#### Performance Statistics",
-                            summary_stats,
                             sizing_mode='stretch_width'
                         )),
                         dynamic=True,
@@ -618,6 +615,9 @@ class StationAnalysisUI(param.Parameterized):
                 tools='pan,wheel_zoom,box_zoom,reset,save,hover'
             )
             
+            # Remove grid
+            p.grid.visible = False
+            
             # Primary axis (left) - Generation
             p.line(timestamps, generation, line_width=3, color='#2ca02c', legend_label='Generation (MW)')
             p.y_range = Range1d(start=min(generation) * 0.9, end=max(generation) * 1.1)
@@ -669,6 +669,9 @@ class StationAnalysisUI(param.Parameterized):
                 height=400,
                 tools='pan,wheel_zoom,box_zoom,reset,save,hover'
             )
+            
+            # Remove grid
+            p.grid.visible = False
             
             # Primary axis (left) - Generation with line and markers
             p.line(hours, generation, line_width=4, color='#2ca02c', legend_label='Average Generation (MW)')

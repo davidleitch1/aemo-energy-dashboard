@@ -971,14 +971,14 @@ class EnergyDashboard(param.Parameterized):
             'Gas other': '#ff9500',   # Pure orange - clearly different from yellow
             'Solar': '#ffd700',       # Gold/bright yellow - sunny color
             'Rooftop Solar': '#ffff80',  # Lighter yellow - distributed solar
-            'Wind': '#00bfff',        # Sky blue - wind/air
-            'Water': '#00ff7f',       # Spring green - water/hydro
+            'Wind': '#00ff7f',        # Spring green - wind/renewable
+            'Water': '#00bfff',       # Sky blue - water/hydro
             'Battery Storage': '#9370db',  # Medium purple - technology
             'Biomass': '#8b4513',     # Saddle brown - organic/wood
             'Other': '#ff69b4',       # Hot pink - catch-all category
-            'Transmission Flow': '#00ced1',      # Dark turquoise - both imports and exports
-            'Transmission Imports': '#00ced1',   # Dark turquoise - imports (inflow)  
-            'Transmission Exports': '#00ced1'    # Same teal color for exports
+            'Transmission Flow': '#ffb6c1',      # Light pink - both imports and exports
+            'Transmission Imports': '#ffb6c1',   # Light pink - imports (inflow)  
+            'Transmission Exports': '#ffb6c1'    # Same light pink color for exports
         }
         return fuel_colors
     
@@ -1066,33 +1066,67 @@ class EnergyDashboard(param.Parameterized):
                 plot_data_negative = plot_data[['settlementdate']].copy()
                 negative_colors = []
                 
-                # Add battery negative values if needed
+                # Add transmission exports negative values first (will appear at bottom)
+                if has_transmission_exports and (plot_data[transmission_exports_col] < 0).any():
+                    plot_data_negative[transmission_exports_col] = plot_data[transmission_exports_col].where(plot_data[transmission_exports_col] < 0, 0)
+                    negative_columns.append(transmission_exports_col)
+                    negative_colors.append(fuel_colors.get('Transmission Flow', '#ffb6c1'))
+                
+                # Add battery negative values second (will appear on top - higher priority)
                 if has_battery and (plot_data[battery_col] < 0).any():
                     plot_data_negative[battery_col] = plot_data[battery_col].where(plot_data[battery_col] < 0, 0)
                     negative_columns.append(battery_col)
                     negative_colors.append(fuel_colors.get('Battery Storage', '#9370db'))
                 
-                # Add transmission exports negative values if needed
-                if has_transmission_exports and (plot_data[transmission_exports_col] < 0).any():
-                    plot_data_negative[transmission_exports_col] = plot_data[transmission_exports_col].where(plot_data[transmission_exports_col] < 0, 0)
-                    negative_columns.append(transmission_exports_col)
-                    negative_colors.append(fuel_colors.get('Transmission Flow', '#00ced1'))
-                
                 # Create the negative stacked area plot if we have negative values
                 if negative_columns:
-                    negative_area_plot = plot_data_negative.hvplot.area(
-                        x='settlementdate',
-                        y=negative_columns,
-                        stacked=True,  # This ensures proper stacking
-                        width=900,
-                        height=300,
-                        color=negative_colors,
-                        alpha=0.8,
-                        hover=True,
-                        hover_tooltips=[('Fuel Type', '$name')],
-                        legend=False
-                    )
-                    area_plot = main_plot * negative_area_plot
+                    # Log the order for debugging
+                    logger.info(f"Negative columns order: {negative_columns}")
+                    logger.info(f"Negative colors order: {negative_colors}")
+                    logger.info(f"Negative data - Transmission min: {plot_data_negative.get('Transmission Exports', pd.Series()).min() if 'Transmission Exports' in plot_data_negative.columns else 'N/A'}")
+                    logger.info(f"Negative data - Battery min: {plot_data_negative.get('Battery Storage', pd.Series()).min() if 'Battery Storage' in plot_data_negative.columns else 'N/A'}")
+                    
+                    # Create individual area plots for each negative component
+                    negative_plots = []
+                    
+                    # First plot transmission exports (bottom layer)
+                    if 'Transmission Exports' in plot_data_negative.columns:
+                        transmission_plot = plot_data_negative.hvplot.area(
+                            x='settlementdate',
+                            y='Transmission Exports',
+                            stacked=False,
+                            width=900,
+                            height=300,
+                            color='#ffb6c1',  # Light pink
+                            alpha=0.8,
+                            hover=True,
+                            legend=False
+                        )
+                        negative_plots.append(transmission_plot)
+                    
+                    # Then plot battery storage (top layer)
+                    if 'Battery Storage' in plot_data_negative.columns:
+                        battery_plot = plot_data_negative.hvplot.area(
+                            x='settlementdate',
+                            y='Battery Storage',
+                            stacked=False,
+                            width=900,
+                            height=300,
+                            color='#9370db',  # Purple
+                            alpha=0.8,
+                            hover=True,
+                            legend=False
+                        )
+                        negative_plots.append(battery_plot)
+                    
+                    # Combine all plots
+                    if negative_plots:
+                        negative_combined = negative_plots[0]
+                        for plot in negative_plots[1:]:
+                            negative_combined = negative_combined * plot
+                        area_plot = main_plot * negative_combined
+                    else:
+                        area_plot = main_plot
                 else:
                     area_plot = main_plot
                 
