@@ -1313,21 +1313,27 @@ class EnergyDashboard(param.Parameterized):
                     # This interconnector takes power FROM our region (export)  
                     regional_flow = -meteredmwflow  # Negative = export from our region
                 
-                # Determine applicable limit based on ACTUAL flow direction
-                # EXPORTLIMIT applies when flow is in interconnector's named direction (positive METEREDMWFLOW)
-                # IMPORTLIMIT applies when flow is reverse direction (negative METEREDMWFLOW)
-                if meteredmwflow >= 0:
-                    # Flow in named direction: use export limit
+                # Determine applicable limit based on regional flow direction
+                # The logic: always show the limit in the same direction as the actual flow
+                # For positive regional flow (import): show positive limit (max import capacity)
+                # For negative regional flow (export): show negative limit (max export capacity)
+                
+                if regional_flow >= 0:
+                    # Importing to our region - use positive limit
                     if flow_type.startswith('to_'):
-                        applicable_limit = export_limit  # Positive limit for import to our region
+                        # This interconnector normally brings power TO our region
+                        applicable_limit = export_limit if meteredmwflow >= 0 else import_limit
                     else:
-                        applicable_limit = -export_limit  # Negative limit for export from our region
+                        # This interconnector normally takes power FROM our region, but flow is reversed
+                        applicable_limit = import_limit if meteredmwflow < 0 else export_limit
                 else:
-                    # Flow in reverse direction: use import limit 
+                    # Exporting from our region - use negative limit
                     if flow_type.startswith('to_'):
-                        applicable_limit = -import_limit  # Negative limit for export from our region
+                        # This interconnector normally brings power TO our region, but flow is reversed
+                        applicable_limit = -(import_limit if meteredmwflow < 0 else export_limit)
                     else:
-                        applicable_limit = import_limit  # Positive limit for import to our region
+                        # This interconnector normally takes power FROM our region
+                        applicable_limit = -(export_limit if meteredmwflow >= 0 else import_limit)
                 
                 return regional_flow, applicable_limit
             
@@ -1422,7 +1428,13 @@ class EnergyDashboard(param.Parameterized):
                     label=f'{interconnector} unused capacity'
                 )
                 
-                # Create the flow line with enhanced hover tooltips
+                # Create the main flow line with enhanced tooltips
+                hover_df['capacity_status'] = hover_df['percent'].apply(
+                    lambda x: 'At Capacity (≥95%)' if x >= 95 else 
+                             'High Utilization (≥80%)' if x >= 80 else 
+                             'Normal Operation'
+                )
+                
                 flow_line = hover_df.hvplot.line(
                     x='settlementdate',
                     y='flow',
@@ -1430,13 +1442,14 @@ class EnergyDashboard(param.Parameterized):
                     line_width=3,
                     alpha=1.0,
                     label=interconnector,
-                    hover_cols=['limit', 'percent', 'direction', 'interconnector'],
+                    hover_cols=['limit', 'percent', 'direction', 'interconnector', 'capacity_status'],
                     hover_tooltips=[
                         ('Interconnector', '@interconnector'),
                         ('Time', '@settlementdate{%F %H:%M}'),
                         ('Flow', '@flow{0.0f} MW'),
                         ('Limit', '@limit{0.0f} MW'),
-                        ('% of Limit', '@percent{0.1f}%'),
+                        ('Utilization', '@percent{0.1f}%'),
+                        ('Status', '@capacity_status'),
                         ('Direction', '@direction')
                     ],
                     hover_formatters={'@settlementdate': 'datetime'}
