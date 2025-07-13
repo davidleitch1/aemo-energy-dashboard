@@ -274,3 +274,685 @@ The dashboard foundation is now solid and ready for the planned extensions (roof
 - **NEMWEB Source**: `https://www.nemweb.com.au/Reports/Current/ROOFTOP_PV/ACTUAL/`
 
 The rooftop solar integration is now **fully operational** with complete historical data and continuous updates. Dashboard displays smooth rooftop solar curves across all time periods with no data gaps.
+
+---
+
+# 🏗️ **ARCHITECTURAL REFACTORING PLAN: SERVICE SEPARATION**
+
+## **Executive Summary**
+
+Split the monolithic dashboard application into two independent services:
+1. **Data Collection Service** - 24/7 background process for NEMWEB data collection
+2. **Dashboard Application** - On-demand visualization interface
+
+This separation will improve reliability, performance, and maintainability.
+
+## **Current Architecture (Monolithic)**
+
+### **Directory Structure**
+```
+aemo-energy-dashboard/
+├── src/
+│   └── aemo_dashboard/
+│       ├── __init__.py
+│       ├── __main__.py              # Entry point
+│       ├── generation/
+│       │   └── gen_dash.py          # MAIN FILE: Contains both data collection AND UI
+│       ├── rooftop/
+│       │   └── update_rooftop.py    # Rooftop data collection (30-min to 5-min conversion)
+│       ├── analysis/
+│       │   └── price_analysis_ui.py # Price analysis tab UI
+│       ├── station/
+│       │   └── station_analysis_ui.py # Station analysis tab UI
+│       └── shared/
+│           ├── config.py            # Configuration settings
+│           ├── logging_config.py    # Logging setup
+│           └── email_alerts.py      # Email notification system
+├── data/
+│   ├── gen_output.parquet          # Generation data (~13MB, growing ~0.6MB/day)
+│   ├── spot_hist.parquet           # Price data (~0.3MB)
+│   └── gen_info.pkl                # DUID mappings (static reference)
+├── logs/
+│   └── aemo_dashboard.log          # Combined logs
+└── CLAUDE.md                       # This documentation file
+```
+
+**External Data Files:**
+```
+/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/
+├── rooftop_solar.parquet           # Rooftop solar data
+└── transmission_flows.parquet      # Transmission interconnector data
+```
+
+### **Current Data Flow**
+
+1. **Single Process** runs `gen_dash.py` which:
+   - Downloads NEMWEB data every 5 minutes (generation, prices)
+   - Processes and saves to parquet files
+   - Serves Panel dashboard on http://localhost:5010
+   - Updates UI when users interact
+
+2. **Problems with Current Architecture:**
+   - Dashboard crash = data collection stops
+   - Can't update UI without risking data pipeline
+   - Heavy memory usage even when no users
+   - Difficult to debug data vs UI issues
+   - Single log file mixes data collection and UI events
+
+## **Target Architecture (Service Separation)**
+
+### **Proposed Directory Structure**
+```
+aemo-data-service/                   # NEW: Standalone data collection service
+├── src/
+│   └── aemo_data/
+│       ├── __init__.py
+│       ├── __main__.py             # Service entry point
+│       ├── collectors/
+│       │   ├── __init__.py
+│       │   ├── base_collector.py   # Abstract base class
+│       │   ├── generation.py       # 5-min generation data
+│       │   ├── price.py            # 5-min spot prices
+│       │   ├── rooftop.py          # 30-min rooftop solar
+│       │   └── transmission.py     # 5-min interconnector flows
+│       ├── processors/
+│       │   ├── __init__.py
+│       │   └── rooftop_converter.py # 30-min to 5-min conversion
+│       ├── nemweb/
+│       │   ├── __init__.py
+│       │   ├── client.py           # NEMWEB HTTP client
+│       │   └── parsers.py          # ZIP/CSV parsing utilities
+│       ├── storage/
+│       │   ├── __init__.py
+│       │   └── parquet_manager.py  # Safe concurrent parquet operations
+│       ├── service.py              # Main service orchestrator
+│       └── config.py               # Service configuration
+├── systemd/
+│   └── aemo-data.service          # Linux service definition
+├── scripts/
+│   ├── install_service.sh         # Service installation script
+│   └── check_health.py            # Health monitoring
+├── logs/
+│   └── aemo_data_service.log      # Data collection logs only
+├── requirements.txt                # Minimal dependencies
+└── README.md                       # Service documentation
+
+aemo-dashboard/                      # MODIFIED: Pure visualization layer
+├── src/
+│   └── aemo_dashboard/
+│       ├── __init__.py
+│       ├── __main__.py             # Dashboard entry point
+│       ├── data/
+│       │   ├── __init__.py
+│       │   └── loader.py           # Parquet file reader
+│       ├── ui/
+│       │   ├── __init__.py
+│       │   ├── generation_tab.py   # Generation by fuel UI
+│       │   ├── price_tab.py        # Price analysis UI
+│       │   ├── station_tab.py      # Station analysis UI
+│       │   └── layout.py           # Main dashboard layout
+│       ├── visualizations/
+│       │   ├── __init__.py
+│       │   ├── fuel_stack.py       # Stacked area charts
+│       │   ├── price_charts.py     # Price visualizations
+│       │   └── utilization.py      # Capacity utilization
+│       └── config.py               # Dashboard configuration
+├── logs/
+│   └── aemo_dashboard_ui.log      # UI logs only
+├── requirements.txt                # UI dependencies (panel, hvplot, etc)
+└── README.md                       # Dashboard documentation
+
+aemo-common/                         # NEW: Shared components
+├── src/
+│   └── aemo_common/
+│       ├── __init__.py
+│       ├── data_models.py         # Shared data structures
+│       ├── constants.py           # DUID lists, fuel types, regions
+│       ├── file_paths.py          # Centralized file path management
+│       └── time_utils.py          # NEM time handling utilities
+└── setup.py                        # Installable package
+```
+
+## **Implementation Plan**
+
+### **Phase 1: Extract Data Collection (Week 1)**
+
+**Task 1.1: Create Base Collector Architecture**
+```python
+# aemo_data/collectors/base_collector.py
+from abc import ABC, abstractmethod
+import pandas as pd
+from typing import Optional, Dict, Any
+import logging
+
+class BaseCollector(ABC):
+    """Abstract base class for all NEMWEB data collectors"""
+    
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.output_file = config['output_file']
+        self.update_interval = config.get('update_interval', 300)  # 5 minutes
+        
+    @abstractmethod
+    async def fetch_latest_data(self) -> Optional[pd.DataFrame]:
+        """Fetch latest data from NEMWEB"""
+        pass
+        
+    @abstractmethod
+    async def process_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
+        """Process raw data into final format"""
+        pass
+        
+    async def collect_and_save(self) -> bool:
+        """Main collection workflow"""
+        try:
+            # Fetch
+            raw_data = await self.fetch_latest_data()
+            if raw_data is None:
+                return False
+                
+            # Process
+            processed_data = await self.process_data(raw_data)
+            
+            # Save
+            await self.save_to_parquet(processed_data)
+            
+            self.logger.info(f"Successfully collected {len(processed_data)} records")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Collection failed: {e}")
+            return False
+    
+    async def save_to_parquet(self, df: pd.DataFrame):
+        """Thread-safe parquet writing"""
+        from aemo_common.file_utils import safe_write_parquet
+        safe_write_parquet(df, self.output_file)
+```
+
+**Task 1.2: Implement Generation Collector**
+```python
+# aemo_data/collectors/generation.py
+import aiohttp
+import pandas as pd
+from datetime import datetime, timedelta
+from .base_collector import BaseCollector
+
+class GenerationCollector(BaseCollector):
+    """Collects 5-minute generation SCADA data"""
+    
+    def __init__(self, config):
+        super().__init__(config)
+        self.base_url = "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/"
+        
+    async def fetch_latest_data(self) -> pd.DataFrame:
+        """Download latest DISPATCHSCADA file"""
+        # Find latest file
+        latest_file = await self._find_latest_scada_file()
+        if not latest_file:
+            return None
+            
+        # Download and parse
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{self.base_url}{latest_file}") as response:
+                content = await response.read()
+                
+        # Extract CSV from ZIP
+        df = self._parse_scada_zip(content)
+        return df
+        
+    async def process_data(self, raw_data: pd.DataFrame) -> pd.DataFrame:
+        """Process SCADA data"""
+        # Filter columns
+        df = raw_data[['SETTLEMENTDATE', 'DUID', 'SCADAVALUE']].copy()
+        
+        # Rename columns
+        df.columns = ['settlementdate', 'duid', 'scadavalue']
+        
+        # Convert timestamp
+        df['settlementdate'] = pd.to_datetime(df['settlementdate'])
+        
+        # Merge with existing data
+        existing = pd.read_parquet(self.output_file)
+        combined = pd.concat([existing, df]).drop_duplicates(
+            subset=['settlementdate', 'duid']
+        )
+        
+        # Keep only recent data (configurable)
+        cutoff = datetime.now() - timedelta(days=self.config.get('retention_days', 30))
+        combined = combined[combined['settlementdate'] >= cutoff]
+        
+        return combined.sort_values(['settlementdate', 'duid'])
+```
+
+**Task 1.3: Create Service Orchestrator**
+```python
+# aemo_data/service.py
+import asyncio
+import signal
+from typing import List
+from .collectors import (
+    GenerationCollector,
+    PriceCollector,
+    RooftopCollector,
+    TransmissionCollector
+)
+
+class AEMODataService:
+    """Main service that orchestrates all collectors"""
+    
+    def __init__(self, config):
+        self.config = config
+        self.collectors = self._initialize_collectors()
+        self.running = True
+        
+    def _initialize_collectors(self) -> List[BaseCollector]:
+        """Initialize all collectors with config"""
+        return [
+            GenerationCollector(self.config['generation']),
+            PriceCollector(self.config['price']),
+            RooftopCollector(self.config['rooftop']),
+            TransmissionCollector(self.config['transmission'])
+        ]
+        
+    async def run_forever(self):
+        """Main service loop"""
+        # Set up signal handlers
+        signal.signal(signal.SIGTERM, self._shutdown)
+        signal.signal(signal.SIGINT, self._shutdown)
+        
+        while self.running:
+            # Run all collectors
+            tasks = [collector.collect_and_save() for collector in self.collectors]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Log results
+            for collector, result in zip(self.collectors, results):
+                if isinstance(result, Exception):
+                    logger.error(f"{collector.__class__.__name__} failed: {result}")
+                    
+            # Wait for next interval
+            await asyncio.sleep(self.config['update_interval'])
+            
+    def _shutdown(self, signum, frame):
+        """Graceful shutdown"""
+        logger.info("Shutdown signal received")
+        self.running = False
+```
+
+### **Phase 2: Refactor Dashboard (Week 2)**
+
+**Task 2.1: Create Data Loader**
+```python
+# aemo_dashboard/data/loader.py
+import pandas as pd
+from pathlib import Path
+from typing import Dict, Optional
+from datetime import datetime, timedelta
+
+class DataLoader:
+    """Loads data from parquet files for dashboard"""
+    
+    def __init__(self, config):
+        self.config = config
+        self.cache = {}
+        self.cache_timestamp = {}
+        
+    def load_generation_data(self, 
+                           hours_back: int = 48,
+                           regions: Optional[List[str]] = None) -> pd.DataFrame:
+        """Load generation data with caching"""
+        
+        cache_key = f"gen_{hours_back}_{regions}"
+        
+        # Check cache (5 minute TTL)
+        if self._is_cache_valid(cache_key, ttl_minutes=5):
+            return self.cache[cache_key]
+            
+        # Load from parquet
+        df = pd.read_parquet(self.config['generation_file'])
+        
+        # Filter by time
+        cutoff = datetime.now() - timedelta(hours=hours_back)
+        df = df[df['settlementdate'] >= cutoff]
+        
+        # Filter by regions if specified
+        if regions:
+            # Join with DUID mapping to get regions
+            duid_map = pd.read_pickle(self.config['duid_mapping_file'])
+            df = df.merge(duid_map[['duid', 'region']], on='duid')
+            df = df[df['region'].isin(regions)]
+            
+        # Update cache
+        self.cache[cache_key] = df
+        self.cache_timestamp[cache_key] = datetime.now()
+        
+        return df
+        
+    def _is_cache_valid(self, key: str, ttl_minutes: int) -> bool:
+        """Check if cached data is still valid"""
+        if key not in self.cache:
+            return False
+        age = datetime.now() - self.cache_timestamp[key]
+        return age.total_seconds() < (ttl_minutes * 60)
+```
+
+**Task 2.2: Refactor Generation Tab**
+```python
+# aemo_dashboard/ui/generation_tab.py
+import panel as pn
+import param
+from ..data.loader import DataLoader
+from ..visualizations.fuel_stack import create_fuel_stack_chart
+
+class GenerationTab(param.Parameterized):
+    """Generation by Fuel tab - pure UI component"""
+    
+    region = param.Selector(default='NEM', objects=['NEM', 'NSW1', 'QLD1', 'SA1', 'TAS1', 'VIC1'])
+    time_window = param.Selector(default='48 hours', objects=['24 hours', '48 hours', '7 days'])
+    
+    def __init__(self, data_loader: DataLoader, **params):
+        super().__init__(**params)
+        self.data_loader = data_loader
+        
+    def create_layout(self):
+        """Create the tab layout"""
+        return pn.Row(
+            self.create_controls(),
+            self.create_chart_area()
+        )
+        
+    @param.depends('region', 'time_window')
+    def create_chart_area(self):
+        """Create visualization area"""
+        # Convert time window to hours
+        hours = {'24 hours': 24, '48 hours': 48, '7 days': 168}[self.time_window]
+        
+        # Load data
+        gen_data = self.data_loader.load_generation_data(
+            hours_back=hours,
+            regions=None if self.region == 'NEM' else [self.region]
+        )
+        
+        # Create visualizations
+        fuel_stack = create_fuel_stack_chart(gen_data, self.region)
+        
+        return pn.Column(
+            "# Generation by Fuel Type",
+            fuel_stack
+        )
+```
+
+### **Phase 3: Deployment & Operations (Week 3)**
+
+**Task 3.1: Create Systemd Service**
+```ini
+# systemd/aemo-data.service
+[Unit]
+Description=AEMO Data Collection Service
+After=network.target
+
+[Service]
+Type=simple
+User=aemo
+Group=aemo
+WorkingDirectory=/opt/aemo-data-service
+Environment="PATH=/opt/aemo-data-service/venv/bin"
+ExecStart=/opt/aemo-data-service/venv/bin/python -m aemo_data
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/var/log/aemo/data-service.log
+StandardError=append:/var/log/aemo/data-service-error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Task 3.2: Installation Script**
+```bash
+#!/bin/bash
+# scripts/install_service.sh
+
+# Create user
+sudo useradd -r -s /bin/false aemo
+
+# Create directories
+sudo mkdir -p /opt/aemo-data-service
+sudo mkdir -p /var/log/aemo
+sudo mkdir -p /var/lib/aemo/data
+
+# Set permissions
+sudo chown -R aemo:aemo /opt/aemo-data-service
+sudo chown -R aemo:aemo /var/log/aemo
+sudo chown -R aemo:aemo /var/lib/aemo
+
+# Install service
+sudo cp systemd/aemo-data.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable aemo-data.service
+sudo systemctl start aemo-data.service
+```
+
+**Task 3.3: Health Monitoring**
+```python
+# scripts/check_health.py
+#!/usr/bin/env python3
+import sys
+import pandas as pd
+from datetime import datetime, timedelta
+from pathlib import Path
+
+def check_data_freshness(file_path: Path, max_age_minutes: int = 10) -> bool:
+    """Check if data file has recent updates"""
+    if not file_path.exists():
+        return False
+        
+    # Check file modification time
+    mtime = datetime.fromtimestamp(file_path.stat().st_mtime)
+    age = datetime.now() - mtime
+    
+    if age > timedelta(minutes=max_age_minutes):
+        return False
+        
+    # Check actual data recency
+    df = pd.read_parquet(file_path)
+    if 'settlementdate' in df.columns:
+        latest = pd.to_datetime(df['settlementdate']).max()
+        data_age = datetime.now() - latest
+        return data_age < timedelta(minutes=max_age_minutes)
+        
+    return True
+
+def main():
+    """Health check script for monitoring tools"""
+    files_to_check = [
+        ('/var/lib/aemo/data/gen_output.parquet', 10),
+        ('/var/lib/aemo/data/spot_hist.parquet', 10),
+        ('/var/lib/aemo/data/rooftop_solar.parquet', 35),  # 30-min data
+    ]
+    
+    all_healthy = True
+    
+    for file_path, max_age in files_to_check:
+        path = Path(file_path)
+        if check_data_freshness(path, max_age):
+            print(f"OK: {path.name}")
+        else:
+            print(f"FAIL: {path.name} - data too old or missing")
+            all_healthy = False
+            
+    sys.exit(0 if all_healthy else 1)
+
+if __name__ == "__main__":
+    main()
+```
+
+## **Migration Guide**
+
+### **Step 1: Prepare Environment**
+```bash
+# Clone repositories
+git clone <repo-url> aemo-data-service
+git clone <repo-url> aemo-dashboard
+
+# Create virtual environments
+cd aemo-data-service && python -m venv venv
+cd aemo-dashboard && python -m venv venv
+```
+
+### **Step 2: Extract Collectors from Existing Code**
+
+**From `gen_dash.py`, extract:**
+- SCADA download logic → `generation.py`
+- Price download logic → `price.py`
+- File parsing utilities → `nemweb/parsers.py`
+
+**From `update_rooftop.py`, move:**
+- Entire module → `rooftop.py`
+- 30-min conversion → `processors/rooftop_converter.py`
+
+### **Step 3: Update Configuration**
+
+**Old configuration (single file):**
+```python
+# shared/config.py
+GEN_OUTPUT_FILE = BASE_PATH / 'gen_output.parquet'
+UPDATE_INTERVAL = 5 * 60  # 5 minutes
+```
+
+**New configuration (split):**
+```python
+# aemo_data/config.py
+DATA_CONFIG = {
+    'generation': {
+        'output_file': '/var/lib/aemo/data/gen_output.parquet',
+        'update_interval': 300,
+        'retention_days': 30
+    },
+    'price': {
+        'output_file': '/var/lib/aemo/data/spot_hist.parquet',
+        'update_interval': 300,
+        'retention_days': 365
+    }
+}
+
+# aemo_dashboard/config.py  
+DASHBOARD_CONFIG = {
+    'data_files': {
+        'generation': '/var/lib/aemo/data/gen_output.parquet',
+        'price': '/var/lib/aemo/data/spot_hist.parquet',
+    },
+    'cache_ttl': 300,  # 5 minutes
+    'default_time_window': 48  # hours
+}
+```
+
+### **Step 4: Testing Strategy**
+
+1. **Unit Tests for Collectors**
+```python
+# tests/test_generation_collector.py
+async def test_generation_collector():
+    config = {'output_file': 'test.parquet', 'update_interval': 300}
+    collector = GenerationCollector(config)
+    
+    # Mock NEMWEB response
+    with aioresponses() as mocked:
+        mocked.get(collector.base_url, body=sample_zip_content)
+        
+        result = await collector.collect_and_save()
+        assert result == True
+        assert Path('test.parquet').exists()
+```
+
+2. **Integration Tests**
+```python
+# tests/test_service_integration.py
+async def test_full_collection_cycle():
+    """Test all collectors together"""
+    service = AEMODataService(test_config)
+    
+    # Run one cycle
+    await service.run_one_cycle()
+    
+    # Verify all files updated
+    for file_path in expected_files:
+        assert Path(file_path).exists()
+        assert check_data_freshness(Path(file_path))
+```
+
+3. **Load Testing**
+```python
+# tests/test_dashboard_performance.py
+def test_dashboard_startup_time():
+    """Dashboard should start in <2 seconds"""
+    start = time.time()
+    
+    dashboard = AEMODashboard()
+    dashboard.load_data()
+    
+    elapsed = time.time() - start
+    assert elapsed < 2.0
+```
+
+## **Key Design Decisions**
+
+### **1. Async Architecture**
+- Use `asyncio` for concurrent data collection
+- Non-blocking I/O for NEMWEB downloads
+- Parallel collector execution
+
+### **2. File Locking Strategy**
+- Atomic writes using temp files + rename
+- Pandas handles read locks automatically
+- No explicit locking needed for parquet
+
+### **3. Error Handling**
+- Each collector fails independently
+- Service continues if one collector fails
+- Comprehensive logging for debugging
+
+### **4. Data Retention**
+- Configurable retention per data type
+- Automatic cleanup of old data
+- Prevents unbounded growth
+
+### **5. Configuration Management**
+- Separate configs for service vs dashboard
+- Environment variable overrides
+- Sensible defaults
+
+## **Common Pitfalls to Avoid**
+
+1. **Don't share database connections** between processes
+2. **Don't use file locks** - use atomic operations instead
+3. **Don't store state in memory** - use files for persistence
+4. **Don't ignore timezone issues** - AEMO uses AEST not AEDT
+5. **Don't poll too frequently** - respect NEMWEB rate limits
+
+## **Success Metrics**
+
+- **Data Service Uptime**: >99.9%
+- **Data Freshness**: <10 minutes old
+- **Dashboard Startup**: <2 seconds
+- **Memory Usage**: <500MB for service, <2GB for dashboard
+- **CPU Usage**: <5% average for service
+
+## **Future Enhancements**
+
+1. **Add Redis Cache** for faster dashboard queries
+2. **Implement WebSocket updates** for real-time dashboard
+3. **Add Prometheus metrics** for monitoring
+4. **Create Docker containers** for easier deployment
+5. **Add data validation** and anomaly detection
+
+---
+
+**This plan provides a complete roadmap for separating the data collection service from the dashboard UI. The implementation should proceed in phases, with thorough testing at each stage.**
