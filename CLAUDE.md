@@ -61,6 +61,58 @@ Ensure your script includes error handling to manage potential issues like netwo
 - **MMS Data Model Report**: Provides detailed information on the structure and fields of the DISPATCHINTERCONNECTORRES table. 
 - **AEMO's Dispatch Data Page**: Offers access to various dispatch-related datasets and documentation. 
 
+## **Proper NEMWEB Access Configuration**
+
+### **Critical Implementation Notes for NEMWEB Data Collection**
+
+**❗ REQUIRED: User-Agent Headers**
+
+NEMWEB servers require proper User-Agent headers to prevent 403 Forbidden errors. All HTTP requests must include:
+
+```python
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
+
+response = requests.get(url, headers=headers, timeout=30)
+```
+
+**❗ IMPORTANT: Without User-Agent headers, requests will fail with 403 errors**
+
+### **NEMWEB Data Sources and URLs**
+
+1. **Generation SCADA (5-minute)**: `http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/`
+   - Files: `PUBLIC_DISPATCHSCADA_YYYYMMDDHHMM_*.zip`
+   - Contains: Unit-level generation data for all DUIDs
+
+2. **Spot Prices (5-minute)**: `http://nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/`
+   - Files: `PUBLIC_DISPATCH_YYYYMMDDHHMM_*.zip`
+   - Contains: Regional reference prices (RRP)
+
+3. **Rooftop Solar (30-minute)**: `http://nemweb.com.au/Reports/Current/ROOFTOP_PV/ACTUAL/`
+   - Files: `PUBLIC_ROOFTOP_PV_ACTUAL_MEASUREMENT_YYYYMMDDHHMM_*.zip`
+   - Contains: Rooftop solar generation by region (requires 30→5min conversion)
+
+4. **Transmission Flows (5-minute)**: `http://nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/`
+   - Files: `PUBLIC_DISPATCHIS_YYYYMMDDHHMM_*.zip`
+   - Contains: Interconnector flow data
+
+### **Data Reliability**
+
+AEMO data accessed via NEMWEB is generally very reliable. The service operates 24/7 with:
+- **Update frequency**: Every 5 minutes for most data sources
+- **Availability**: >99% uptime
+- **Data quality**: High integrity with minimal gaps
+- **Access method**: Public HTTP endpoints (no authentication required)
+
+### **Error Handling Best Practices**
+
+1. **403 Errors**: Always caused by missing/invalid User-Agent headers
+2. **Timeout Handling**: Use 30-60 second timeouts for downloads
+3. **Retry Logic**: Implement exponential backoff for temporary failures
+4. **Data Validation**: Verify ZIP files contain expected CSV structure
+5. **Graceful Degradation**: Continue service operation if individual collectors fail
+
 # AEMO Energy Dashboard - Development Notes
 
 ## ✅ **Current Status: FULLY OPERATIONAL - ALL CORE FEATURES COMPLETE**
