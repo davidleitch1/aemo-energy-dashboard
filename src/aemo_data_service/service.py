@@ -16,6 +16,8 @@ from .shared.config import config
 from .shared.logging_config import configure_service_logging, get_logger
 from .collectors.generation_collector import GenerationCollector
 from .collectors.price_collector import PriceCollector
+from .collectors.rooftop_collector import RooftopCollector
+from .collectors.transmission_collector import TransmissionCollector
 
 # Set up logging
 configure_service_logging()
@@ -58,13 +60,11 @@ class AEMODataService:
     def _initialize_collectors(self):
         """Initialize all data collectors."""
         try:
-            # Core collectors
+            # All collectors implemented
             self.collectors['generation'] = GenerationCollector()
             self.collectors['prices'] = PriceCollector()
-            
-            # TODO: Add these when their collectors are implemented
-            # self.collectors['rooftop'] = RooftopCollector()
-            # self.collectors['transmission'] = TransmissionCollector()
+            self.collectors['rooftop'] = RooftopCollector()
+            self.collectors['transmission'] = TransmissionCollector()
             
             logger.info(f"Initialized {len(self.collectors)} collectors")
             

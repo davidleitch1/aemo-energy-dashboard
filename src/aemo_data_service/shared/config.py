@@ -1,92 +1,79 @@
 #!/usr/bin/env python3
 """
-Configuration for AEMO Data Service
-Shared configuration that can be imported by all collectors.
+Configuration adapter for AEMO Data Service
+Uses the existing dashboard configuration system.
 """
 
-import os
-from pathlib import Path
-from dotenv import load_dotenv
+# Import from the existing dashboard configuration
+from aemo_dashboard.shared.config import config as dashboard_config
 
-# Load environment variables from .env file
-load_dotenv()
-
-
+# Create a simple wrapper that provides the interface expected by collectors
 class DataServiceConfig:
     """
-    Configuration class for the AEMO Data Service.
-    Centralizes all file paths, URLs, and settings.
+    Configuration adapter for the data service.
+    Uses existing dashboard config to maintain compatibility.
     """
     
-    # Base paths
-    BASE_PATH = Path(os.getenv('BASE_PATH', 
-        '/Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard/data'))
+    def __init__(self):
+        """Initialize using existing dashboard config."""
+        self._dashboard_config = dashboard_config
     
-    # Ensure data directory exists
-    BASE_PATH.mkdir(parents=True, exist_ok=True)
+    @property
+    def gen_output_file(self):
+        return self._dashboard_config.gen_output_file
     
-    # Data files
-    gen_output_file = BASE_PATH / 'gen_output.parquet'
-    gen_info_file = BASE_PATH / 'gen_info.pkl'  # Station info from AEMO
-    spot_hist_file = BASE_PATH / 'spot_hist.parquet'
-    rooftop_file = BASE_PATH / 'rooftop_actual.parquet'
-    transmission_file = BASE_PATH / 'transmission_flows.parquet'
+    @property
+    def gen_info_file(self):
+        return self._dashboard_config.gen_info_file
     
-    # Update intervals (minutes)
-    update_interval_minutes = float(os.getenv('UPDATE_INTERVAL_MINUTES', '4.5'))
+    @property
+    def spot_hist_file(self):
+        return self._dashboard_config.spot_hist_file
     
-    # AEMO URLs
-    aemo_dispatch_url = "http://nemweb.com.au/Reports/CURRENT/Dispatch_IS/"
-    aemo_scada_url = "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/"
-    aemo_rooftop_url = "https://www.nemweb.com.au/Reports/Current/ROOFTOP_PV/ACTUAL/"
-    aemo_transmission_url = "http://nemweb.com.au/Reports/CURRENT/Dispatch_IS/"
+    @property
+    def rooftop_file(self):
+        return self._dashboard_config.rooftop_solar_file
     
-    # Logging
-    log_level = os.getenv('LOG_LEVEL', 'INFO')
-    log_file = BASE_PATH.parent / 'logs' / 'data_service.log'
+    @property
+    def transmission_file(self):
+        return self._dashboard_config.transmission_output_file
     
-    # Email alerts (optional)
-    enable_email_alerts = os.getenv('ENABLE_EMAIL_ALERTS', 'false').lower() == 'true'
-    alert_email = os.getenv('ALERT_EMAIL', '')
-    alert_password = os.getenv('ALERT_PASSWORD', '')
-    recipient_email = os.getenv('RECIPIENT_EMAIL', '')
-    smtp_server = os.getenv('SMTP_SERVER', 'smtp.mail.me.com')
-    smtp_port = int(os.getenv('SMTP_PORT', '587'))
-    alert_cooldown_hours = int(os.getenv('ALERT_COOLDOWN_HOURS', '24'))
+    @property
+    def update_interval_minutes(self):
+        return self._dashboard_config.update_interval_minutes
     
-    # Service settings
-    max_retries = int(os.getenv('MAX_RETRIES', '3'))
-    timeout_seconds = int(os.getenv('TIMEOUT_SECONDS', '60'))
+    @property
+    def aemo_dispatch_url(self):
+        return self._dashboard_config.aemo_dispatch_url
     
-    # Performance settings
-    concurrent_collectors = int(os.getenv('CONCURRENT_COLLECTORS', '4'))
-    memory_limit_gb = float(os.getenv('MEMORY_LIMIT_GB', '8.0'))
+    @property
+    def aemo_scada_url(self):
+        return "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/"
     
-    @classmethod
-    def get_summary(cls) -> str:
+    @property
+    def log_level(self):
+        return 'INFO'
+    
+    @property
+    def log_file(self):
+        return self._dashboard_config.data_dir.parent / 'logs' / 'data_service.log'
+    
+    def get_summary(self) -> str:
         """Get a summary of the current configuration."""
         summary = "AEMO Data Service Configuration:\n"
-        summary += f"  Base path: {cls.BASE_PATH}\n"
-        summary += f"  Update interval: {cls.update_interval_minutes} minutes\n"
-        summary += f"  Log file: {cls.log_file}\n"
-        summary += f"  Email alerts: {cls.enable_email_alerts}\n"
-        summary += f"  Max retries: {cls.max_retries}\n"
-        summary += f"  Concurrent collectors: {cls.concurrent_collectors}\n"
-        
-        # Data files
+        summary += f"  Update interval: {self.update_interval_minutes} minutes\n"
+        summary += f"  Log file: {self.log_file}\n"
         summary += "  Data files:\n"
-        summary += f"    Generation: {cls.gen_output_file}\n"
-        summary += f"    Prices: {cls.spot_hist_file}\n"
-        summary += f"    Rooftop: {cls.rooftop_file}\n"
-        summary += f"    Transmission: {cls.transmission_file}\n"
+        summary += f"    Generation: {self.gen_output_file}\n"
+        summary += f"    Prices: {self.spot_hist_file}\n"
+        summary += f"    Rooftop: {self.rooftop_file}\n"
+        summary += f"    Transmission: {self.transmission_file}\n"
         
         return summary
     
-    @classmethod
-    def create_directories(cls):
+    def create_directories(self):
         """Ensure all required directories exist."""
-        cls.BASE_PATH.mkdir(parents=True, exist_ok=True)
-        cls.log_file.parent.mkdir(parents=True, exist_ok=True)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
 
 
 # Create global config instance
