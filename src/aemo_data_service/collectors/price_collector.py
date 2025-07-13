@@ -94,11 +94,16 @@ class PriceCollector(BaseCollector):
         Returns the CSV content as a string and filename, or None if failed.
         """
         try:
+            # Use proper headers to avoid 403 errors
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
             # Run in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                lambda: requests.get(self.aemo_url, timeout=30)
+                lambda: requests.get(self.aemo_url, headers=headers, timeout=30)
             )
             response.raise_for_status()
             
@@ -116,12 +121,26 @@ class PriceCollector(BaseCollector):
             
             logger.info(f"Downloading: {latest_file}")
             
-            # Download the zip file
-            zip_response = await loop.run_in_executor(
-                None,
-                lambda: requests.get(file_url, timeout=60)
-            )
-            zip_response.raise_for_status()
+            # Download the zip file with retry logic
+            for attempt in range(3):
+                try:
+                    if attempt > 0:
+                        await asyncio.sleep(2 * attempt)
+                        logger.info(f"Retry attempt {attempt + 1} for price file {latest_file}")
+                    
+                    zip_response = await loop.run_in_executor(
+                        None,
+                        lambda: requests.get(file_url, headers=headers, timeout=60)
+                    )
+                    zip_response.raise_for_status()
+                    break
+                    
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 403 and attempt < 2:
+                        logger.warning(f"403 error downloading price file {latest_file}, will retry...")
+                        continue
+                    else:
+                        raise
             
             # Create a temporary file for the zip
             with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as temp_zip_file:

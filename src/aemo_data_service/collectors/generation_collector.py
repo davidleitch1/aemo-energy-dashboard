@@ -134,21 +134,42 @@ class GenerationCollector(BaseCollector):
             return None
     
     async def _download_and_parse_file(self, file_url: str) -> Optional[pd.DataFrame]:
-        """Download and parse SCADA ZIP file."""
+        """Download and parse SCADA ZIP file with retry logic."""
+        for attempt in range(3):
+            try:
+                # Use proper headers to avoid 403 errors
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                # Add small delay to avoid rate limiting
+                if attempt > 0:
+                    await asyncio.sleep(2 * attempt)
+                    logger.info(f"Retry attempt {attempt + 1} for {file_url}")
+                
+                # Download in thread pool
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: requests.get(file_url, headers=headers, timeout=60)
+                )
+                response.raise_for_status()
+                
+                # If successful, break the retry loop
+                break
+                
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 403 and attempt < 2:
+                    logger.warning(f"403 error downloading {file_url}, will retry...")
+                    continue
+                else:
+                    logger.error(f"Error downloading file {file_url}: {e}")
+                    return None
+            except Exception as e:
+                logger.error(f"Error downloading file {file_url}: {e}")
+                return None
+        
         try:
-            # Use proper headers to avoid 403 errors
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            # Download in thread pool
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: requests.get(file_url, headers=headers, timeout=60)
-            )
-            response.raise_for_status()
-            
             # Extract ZIP file
             with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
                 # Get the first CSV file in the ZIP

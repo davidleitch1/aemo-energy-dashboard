@@ -37,7 +37,37 @@ The primary source for 5-minute interconnector flow data is the DISPATCHINTERCON
 - **EXPORTLIMIT** and **IMPORTLIMIT**: Calculated limits for energy export and import.
 - **MWLOSSES**: Calculated losses in MW. 
 
-This data is updated every 5 minutes and is publicly accessible. 
+This data is updated every 5 minutes and is publicly accessible.
+
+### **Understanding Transmission Flow Direction and Limits**
+
+**Critical Implementation Note:** The transmission flow direction and limit logic requires careful handling:
+
+1. **Interconnector Naming Convention**: Interconnectors are named FROM-TO (e.g., VIC1-NSW1, NSW1-QLD1)
+   - The first region is the "FROM" region
+   - The second region is the "TO" region
+
+2. **METEREDMWFLOW Sign Convention**:
+   - **Positive flow**: Energy flows in the interconnector's named direction (FROM → TO)
+   - **Negative flow**: Energy flows in reverse direction (TO → FROM)
+   - Example: For VIC1-NSW1, positive = VIC exports to NSW, negative = NSW exports to VIC
+
+3. **Dashboard Regional View Convention**:
+   - When viewing a specific region, we show flows from that region's perspective
+   - **Positive on chart**: Energy flowing INTO the selected region (imports)
+   - **Negative on chart**: Energy flowing OUT OF the selected region (exports)
+
+4. **Limit Application Logic**:
+   - **EXPORTLIMIT**: Maximum flow in the interconnector's named direction (FROM → TO)
+   - **IMPORTLIMIT**: Maximum flow in reverse direction (TO → FROM, shown as negative)
+   
+   For correct limit visualization:
+   - When METEREDMWFLOW > 0: Use EXPORTLIMIT as the positive limit
+   - When METEREDMWFLOW < 0: Use -IMPORTLIMIT as the negative limit
+   
+   Example for VIC1-NSW1 viewed from NSW1:
+   - Positive flow (VIC→NSW import): Limit is EXPORTLIMIT
+   - Negative flow (NSW→VIC export): Limit is -IMPORTLIMIT 
 
 ### **Retrieving the Data**
 

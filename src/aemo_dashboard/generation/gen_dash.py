@@ -44,11 +44,11 @@ hv.opts.defaults(
         width=900,
         height=500,
         alpha=0.8,
-        show_grid=True,
+        show_grid=False,
         toolbar='above'
     ),
     hv.opts.Overlay(
-        show_grid=True,
+        show_grid=False,
         toolbar='above'
     )
 )
@@ -1132,7 +1132,7 @@ class EnergyDashboard(param.Parameterized):
                 
                 area_plot = area_plot.opts(
                     title=f'Generation by Fuel Type - {self.region} (Updated: {datetime.now().strftime("%H:%M:%S")}) | data:AEMO, design ITK',
-                    show_grid=True,
+                    show_grid=False,
                     bgcolor='black',
                     xaxis=None  # Hide x-axis since price chart will show it
                 )
@@ -1157,7 +1157,7 @@ class EnergyDashboard(param.Parameterized):
                     hover=True,
                     hover_tooltips=[('Fuel Type', '$name')]
                 ).opts(
-                    show_grid=True,
+                    show_grid=False,
                     bgcolor='black',
                     xaxis=None  # Hide x-axis since price chart will show it
                 )
@@ -1185,7 +1185,7 @@ class EnergyDashboard(param.Parameterized):
                 hover=True,
                 hover_tooltips=[('Price', '@RRP{$0.2f}')]
             ).opts(
-                show_grid=True,
+                show_grid=False,
                 bgcolor='black'
             )
             
@@ -1211,8 +1211,10 @@ class EnergyDashboard(param.Parameterized):
             )
     
     def create_transmission_plot(self):
-        """Create transmission flow line chart showing individual interconnector flows"""
+        """Create transmission flow line chart with limit areas showing unused capacity"""
         try:
+            import holoviews as hv
+            
             # Skip transmission chart for NEM (no specific region)
             if self.region == 'NEM':
                 return hv.Text(0.5, 0.5, 'Transmission flows not available for NEM view\nSelect a specific region').opts(
@@ -1229,11 +1231,9 @@ class EnergyDashboard(param.Parameterized):
             if self.transmission_df is None:
                 self.load_transmission_data()
             
-            # Calculate individual line flows
-            _, line_data = self.calculate_regional_transmission_flows()
-            
-            if line_data.empty:
-                return hv.Text(0.5, 0.5, f'No transmission data available for {self.region}').opts(
+            # Get the raw transmission data with limits
+            if self.transmission_df is None or self.transmission_df.empty:
+                return hv.Text(0.5, 0.5, f'No transmission data for {self.region}').opts(
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
@@ -1243,102 +1243,50 @@ class EnergyDashboard(param.Parameterized):
                     fontsize=14
                 )
             
-            # Create line chart for each interconnector with distinct colors
-            line_plots = []
-            interconnector_colors = {
-                'NSW1-QLD1': '#ff3333',      # Bright red
-                'VIC1-NSW1': '#00ff66',      # Bright green 
-                'V-SA': '#3366ff',           # Bright blue
-                'V-S-MNSP1': '#ff9900',      # Orange
-                'T-V-MNSP1': '#ffff00',      # Yellow
-                'N-Q-MNSP1': '#ff00ff'       # Magenta
+            # Define interconnector mapping for each region
+            interconnector_mapping = {
+                'NSW1': {
+                    'NSW1-QLD1': 'from_nsw',      # Positive = export to QLD
+                    'VIC1-NSW1': 'to_nsw',        # Positive = import from VIC  
+                    'N-Q-MNSP1': 'from_nsw'       # DirectLink: Positive = export to QLD
+                },
+                'QLD1': {
+                    'NSW1-QLD1': 'to_qld',        # Positive = import from NSW
+                    'N-Q-MNSP1': 'to_qld'         # DirectLink: Positive = import from NSW
+                },
+                'VIC1': {
+                    'VIC1-NSW1': 'from_vic',      # Positive = export to NSW
+                    'V-SA': 'from_vic',           # Positive = export to SA
+                    'V-S-MNSP1': 'from_vic',      # Murraylink: Positive = export to SA
+                    'T-V-MNSP1': 'to_vic'         # Basslink: Positive = import from TAS
+                },
+                'SA1': {
+                    'V-SA': 'to_sa',              # Positive = import from VIC
+                    'V-S-MNSP1': 'to_sa'          # Murraylink: Positive = import from VIC
+                },
+                'TAS1': {
+                    'T-V-MNSP1': 'from_tas'       # Basslink: Positive = export to VIC
+                }
             }
             
-            # Get interconnector columns (exclude settlementdate)
-            interconnector_cols = [col for col in line_data.columns if col != 'settlementdate']
-            
-            if interconnector_cols:
-                for interconnector in interconnector_cols:
-                    if interconnector in line_data.columns:
-                        color = interconnector_colors.get(interconnector, '#ffffff')
-                        line_plot = line_data.hvplot.line(
-                            x='settlementdate',
-                            y=interconnector,
-                            width=900,
-                            height=300,
-                            color=color,
-                            line_width=2,
-                            label=interconnector,
-                            hover=True,
-                            alpha=0.8
-                        )
-                        line_plots.append(line_plot)
-                
-                if line_plots:
-                    # Combine all line plots
-                    combined_plot = line_plots[0]
-                    for plot in line_plots[1:]:
-                        combined_plot = combined_plot * plot
-                    
-                    # Style the combined plot
-                    styled_plot = combined_plot.opts(
-                        title=f'Individual Transmission Flows - {self.region} (MW)',
-                        ylabel='Flow (MW)',
-                        xlabel='Time',
-                        show_legend=True,
-                        bgcolor='black',
-                        show_grid=True,
-                        hooks=[apply_datetime_formatter]
-                    )
-                    
-                    return styled_plot
-            
-            # Fallback empty plot
-            return hv.Text(0.5, 0.5, f'No transmission lines connected to {self.region}').opts(
-                xlim=(0, 1),
-                ylim=(0, 1),
-                bgcolor='black',
-                width=900,
-                height=300,
-                color='white',
-                fontsize=14
-            )
-            
-        except Exception as e:
-            logger.error(f"Error creating transmission plot: {e}")
-            return hv.Text(0.5, 0.5, 'Error loading transmission data').opts(
-                xlim=(0, 1),
-                ylim=(0, 1),
-                bgcolor='black',
-                width=900,
-                height=300,
-                color='white',
-                fontsize=12
-            )
-
-    def create_transmission_chart_inline(self):
-        """Create transmission flow line chart for inline use in Generation Stack tab"""
-        try:
-            # Skip transmission chart for NEM (no specific region)
-            if self.region == 'NEM':
-                return hv.Text(0.5, 0.5, 'Transmission flows not available for NEM view').opts(
+            region_interconnectors = interconnector_mapping.get(self.region, {})
+            if not region_interconnectors:
+                return hv.Text(0.5, 0.5, f'No transmission lines for {self.region}').opts(
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
                     width=900,
                     height=300,
                     color='white',
-                    fontsize=12
+                    fontsize=14
                 )
             
-            # Load transmission data if needed
-            if self.transmission_df is None:
-                self.load_transmission_data()
+            # Filter transmission data for this region's interconnectors
+            region_transmission = self.transmission_df[
+                self.transmission_df['interconnectorid'].isin(region_interconnectors.keys())
+            ].copy()
             
-            # Calculate individual line flows
-            _, line_data = self.calculate_regional_transmission_flows()
-            
-            if line_data.empty:
+            if region_transmission.empty:
                 return hv.Text(0.5, 0.5, f'No transmission data for {self.region}').opts(
                     xlim=(0, 1),
                     ylim=(0, 1),
@@ -1346,58 +1294,194 @@ class EnergyDashboard(param.Parameterized):
                     width=900,
                     height=300,
                     color='white',
-                    fontsize=12
+                    fontsize=14
                 )
             
-            # Create line chart for each interconnector with distinct colors
-            interconnector_colors = {
-                'NSW1-QLD1': '#ff3333',      # Bright red
-                'VIC1-NSW1': '#00ff66',      # Bright green 
-                'V-SA': '#3366ff',           # Bright blue
-                'V-S-MNSP1': '#ff9900',      # Orange
-                'T-V-MNSP1': '#ffff00',      # Yellow
-                'N-Q-MNSP1': '#ff00ff'       # Magenta
-            }
-            
-            # Get interconnector columns (exclude settlementdate)
-            interconnector_cols = [col for col in line_data.columns if col != 'settlementdate']
-            
-            if interconnector_cols:
-                # Create a single line plot with all interconnectors
-                line_plot = line_data.hvplot.line(
-                    x='settlementdate',
-                    y=interconnector_cols,
-                    width=900,
-                    height=300,  # Same height as price chart
-                    color=[interconnector_colors.get(col, '#ffffff') for col in interconnector_cols],
-                    line_width=2,
-                    hover=True,
-                    alpha=0.8,
-                    ylabel='Flow (MW)',
-                    xlabel='Time',
-                    grid=True,
-                    bgcolor='black',
-                    title=f'Individual Transmission Flows - {self.region} (MW)'
-                ).opts(
-                    hooks=[apply_datetime_formatter],
-                    show_legend=True
-                )
+            # Apply flow direction corrections and get limits
+            def process_flow_and_limits(row):
+                interconnector = row['interconnectorid']
+                flow_type = region_interconnectors[interconnector]
+                meteredmwflow = row['meteredmwflow']  # Original AEMO flow
+                import_limit = row['importlimit']
+                export_limit = row['exportlimit']
                 
-                return line_plot
+                # Convert to regional perspective
+                if flow_type.startswith('to_'):
+                    # This interconnector brings power TO our region (import)
+                    regional_flow = meteredmwflow  # Positive = import to our region
+                else:
+                    # This interconnector takes power FROM our region (export)  
+                    regional_flow = -meteredmwflow  # Negative = export from our region
+                
+                # Determine applicable limit based on ACTUAL flow direction
+                # EXPORTLIMIT applies when flow is in interconnector's named direction (positive METEREDMWFLOW)
+                # IMPORTLIMIT applies when flow is reverse direction (negative METEREDMWFLOW)
+                if meteredmwflow >= 0:
+                    # Flow in named direction: use export limit
+                    if flow_type.startswith('to_'):
+                        applicable_limit = export_limit  # Positive limit for import to our region
+                    else:
+                        applicable_limit = -export_limit  # Negative limit for export from our region
+                else:
+                    # Flow in reverse direction: use import limit 
+                    if flow_type.startswith('to_'):
+                        applicable_limit = -import_limit  # Negative limit for export from our region
+                    else:
+                        applicable_limit = import_limit  # Positive limit for import to our region
+                
+                return regional_flow, applicable_limit
             
-            # Fallback for no interconnectors
-            return hv.Text(0.5, 0.5, f'No transmission lines for {self.region}').opts(
-                xlim=(0, 1),
-                ylim=(0, 1),
-                bgcolor='black',
-                width=900,
-                height=300,
-                color='white',
-                fontsize=12
+            # Process flows and limits
+            region_transmission[['regional_flow', 'applicable_limit']] = region_transmission.apply(
+                lambda row: pd.Series(process_flow_and_limits(row)), axis=1
             )
             
+            # Create visualizations for each interconnector separately
+            plot_elements = []
+            
+            # Define colors for different interconnectors
+            interconnector_colors = {
+                'NSW1-QLD1': '#ff6b6b',    # Red
+                'VIC1-NSW1': '#4ecdc4',    # Cyan
+                'V-SA': '#45b7d1',         # Light Blue
+                'T-V-MNSP1': '#96ceb4',    # Light Green
+                'N-Q-MNSP1': '#ffd93d',    # Yellow
+                'V-S-MNSP1': '#dda0dd'     # Plum
+            }
+            
+            # Create plots for each interconnector
+            for interconnector in region_interconnectors.keys():
+                ic_data = region_transmission[region_transmission['interconnectorid'] == interconnector].copy()
+                
+                if ic_data.empty:
+                    continue
+                
+                # Sort by time
+                ic_data = ic_data.sort_values('settlementdate')
+                
+                # Get color for this interconnector
+                color = interconnector_colors.get(interconnector, '#ffb6c1')
+                
+                # Use the applicable limit directly (no filtering)
+                ic_data['dynamic_limit'] = ic_data['applicable_limit']
+                
+                # Log limit info for debugging
+                if not ic_data.empty:
+                    avg_flow = ic_data['regional_flow'].mean()
+                    avg_limit = ic_data['applicable_limit'].abs().mean()
+                    logger.info(f"Interconnector {interconnector}: avg flow={avg_flow:.1f}MW, avg limit={avg_limit:.1f}MW")
+                
+                # Prepare data for filled area and hover
+                area_data = []
+                hover_data = []
+                
+                for _, row in ic_data.iterrows():
+                    time = row['settlementdate']
+                    flow = row['regional_flow']
+                    limit = row['dynamic_limit']
+                    
+                    # Calculate percentage of limit used
+                    if limit != 0:
+                        percent_of_limit = abs(flow / limit) * 100
+                    else:
+                        percent_of_limit = 0
+                    
+                    # Create area from flow to limit (showing unused capacity)
+                    if flow >= 0 and limit >= 0:  # Import scenario
+                        area_data.append((time, flow, limit))
+                    elif flow < 0 and limit < 0:  # Export scenario  
+                        area_data.append((time, flow, limit))
+                    else:
+                        # No area when flow and limit have different signs
+                        area_data.append((time, flow, flow))
+                    
+                    # Store hover data
+                    hover_data.append({
+                        'settlementdate': time,
+                        'flow': flow,
+                        'limit': limit,
+                        'percent': percent_of_limit,
+                        'direction': 'Import' if flow >= 0 else 'Export',
+                        'interconnector': interconnector
+                    })
+                
+                if not area_data:
+                    continue
+                
+                area_df = pd.DataFrame(area_data, columns=['settlementdate', 'flow', 'limit'])
+                hover_df = pd.DataFrame(hover_data)
+                
+                # Create the filled area for this interconnector
+                filled_area = area_df.hvplot.area(
+                    x='settlementdate',
+                    y='flow',
+                    y2='limit',
+                    alpha=0.3,
+                    color=color,
+                    hover=False,
+                    label=f'{interconnector} unused capacity'
+                )
+                
+                # Create the flow line with enhanced hover tooltips
+                flow_line = hover_df.hvplot.line(
+                    x='settlementdate',
+                    y='flow',
+                    color=color,
+                    line_width=3,
+                    alpha=1.0,
+                    label=interconnector,
+                    hover_cols=['limit', 'percent', 'direction', 'interconnector'],
+                    hover_tooltips=[
+                        ('Interconnector', '@interconnector'),
+                        ('Time', '@settlementdate{%F %H:%M}'),
+                        ('Flow', '@flow{0.0f} MW'),
+                        ('Limit', '@limit{0.0f} MW'),
+                        ('% of Limit', '@percent{0.1f}%'),
+                        ('Direction', '@direction')
+                    ],
+                    hover_formatters={'@settlementdate': 'datetime'}
+                )
+                
+                plot_elements.extend([filled_area, flow_line])
+            
+            # Add horizontal line at y=0
+            zero_line = hv.HLine(0).opts(
+                color='white',
+                alpha=0.3,
+                line_width=1,
+                line_dash='dashed'
+            )
+            
+            # Combine all elements
+            if plot_elements:
+                combined_plot = hv.Overlay(plot_elements + [zero_line]).opts(
+                    width=900,
+                    height=400,  # Increased height to accommodate multiple lines
+                    bgcolor='black',
+                    ylabel='Flow (MW)',
+                    xlabel='Time',
+                    title=f'Transmission Flows with Limits by Interconnector - {self.region} (MW)',
+                    show_grid=False,
+                    legend_position='right',
+                    hooks=[apply_datetime_formatter]
+                )
+            else:
+                combined_plot = hv.Text(0.5, 0.5, f'No transmission data available for {self.region}').opts(
+                    xlim=(0, 1),
+                    ylim=(0, 1),
+                    bgcolor='black',
+                    width=900,
+                    height=400,
+                    color='white',
+                    fontsize=14
+                )
+            
+            return combined_plot
+            
         except Exception as e:
-            logger.error(f"Error creating inline transmission chart: {e}")
+            logger.error(f"Error creating transmission plot: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return hv.Text(0.5, 0.5, 'Error loading transmission data').opts(
                 xlim=(0, 1),
                 ylim=(0, 1),

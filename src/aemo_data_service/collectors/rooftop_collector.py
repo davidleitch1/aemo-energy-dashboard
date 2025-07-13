@@ -152,32 +152,47 @@ class RooftopCollector(BaseCollector):
             return []
     
     async def _download_rooftop_zip(self, filename: str) -> Optional[bytes]:
-        """Download a specific rooftop PV ZIP file."""
-        try:
-            # Construct URL
-            if filename.startswith('/'):
-                file_url = "http://nemweb.com.au" + filename
-            else:
-                file_url = self.base_url + filename
-            
-            # Use proper headers to avoid 403 errors
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            # Download in thread pool
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: requests.get(file_url, headers=headers, timeout=30)
-            )
-            response.raise_for_status()
-            
-            return response.content
-            
-        except Exception as e:
-            logger.error(f"Failed to download rooftop file {filename}: {e}")
-            return None
+        """Download a specific rooftop PV ZIP file with retry logic."""
+        # Construct URL
+        if filename.startswith('/'):
+            file_url = "http://nemweb.com.au" + filename
+        else:
+            file_url = self.base_url + filename
+        
+        for attempt in range(3):
+            try:
+                # Use proper headers to avoid 403 errors
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                # Add small delay to avoid rate limiting
+                if attempt > 0:
+                    await asyncio.sleep(2 * attempt)
+                    logger.info(f"Retry attempt {attempt + 1} for rooftop file {filename}")
+                
+                # Download in thread pool
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: requests.get(file_url, headers=headers, timeout=30)
+                )
+                response.raise_for_status()
+                
+                return response.content
+                
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 403 and attempt < 2:
+                    logger.warning(f"403 error downloading rooftop file {filename}, will retry...")
+                    continue
+                else:
+                    logger.error(f"Failed to download rooftop file {filename}: {e}")
+                    return None
+            except Exception as e:
+                logger.error(f"Failed to download rooftop file {filename}: {e}")
+                return None
+        
+        return None
     
     def _parse_rooftop_zip(self, zip_content: bytes) -> pd.DataFrame:
         """Parse rooftop PV ZIP content into 30-minute DataFrame."""
