@@ -211,6 +211,253 @@ python -m src.aemo_dashboard.generation.gen_dash
 playwright test dashboard_functionality.spec.js
 ```
 
+## Immediate UI Improvements
+
+### Time Range Selection Consistency
+**Problem**: Time range selectors are inconsistent across tabs and take up too much space
+**Current Issues**:
+- Generation by Fuel tab: Has "Time Range Options" label (unnecessary)
+- Station Analysis tab: Uses radio buttons for presets
+- No "1 Day" option (users frequently need 24-hour view)
+- Duplicated controls across all tabs
+
+**Proposed Solution**:
+1. Create a unified time range component using compact radio buttons:
+   ```python
+   time_options = ["1 Day", "7 Days", "30 Days", "All Data", "Custom"]
+   ```
+2. Remove redundant labels like "Time Range Options"
+3. Use consistent styling across all tabs
+4. Consider using a segmented control (like iOS/Material) for better space efficiency
+
+**Specific Changes Needed**:
+1. **Generation by Fuel tab** (`gen_dash.py`):
+   - Change "Last 24 Hours" to "1 Day" throughout
+   - Remove the "**Time Range Options:**" markdown section (lines 1921-1926)
+   - Remove "**Time Range:**" label (line 1886)
+   - Keep the RadioButtonGroup but make it more compact
+
+2. **Station Analysis tab**:
+   - Already uses RadioButtonGroup (good!)
+   - Add "1 Day" option to match other tabs
+   - Ensure consistent button styling
+
+3. **Average Price Analysis tab**:
+   - Check current implementation and align with others
+   - Add "1 Day" option if missing
+
+**Implementation Priority**: High - affects all tabs
+
+### Space Optimization Tasks
+1. **Remove redundant text labels**:
+   - "Time Range Options" on Generation by Fuel tab
+   - "Select Station/Unit" (the dropdown makes it obvious)
+   - Any other descriptive text that duplicates UI function
+
+2. **Consolidate controls**:
+   - Group related controls more tightly
+   - Use consistent spacing (8px Material grid)
+   - Reduce vertical spacing between elements
+
+3. **Button improvements**:
+   - Use button groups instead of individual buttons where possible
+   - Implement toggle behavior for mutually exclusive options
+   - Add visual feedback for active states
+
+## Known Issues
+
+### Transmission Plot X-Axis Datetime Formatting
+**Problem**: The transmission flows chart shows all time labels as "00:00" instead of proper hourly times when switching between time ranges (1 day, 7 days, 30 days).
+
+**UPDATE**: The issue was actually an x-axis range initialization problem, not a formatter issue. The datetime formatting works correctly when the user manually zooms/pans the x-axis, but the initial view shows incorrect range.
+
+**Technical Details**:
+- The transmission plot is an `hv.Overlay` containing multiple hvplot elements (area plots for unused capacity and line plots for actual flows)
+- The datetime formatter hook is applied to the Overlay using `.opts(hooks=[self._get_datetime_formatter_hook()])`
+- The formatter works correctly, but the initial x-axis range is not properly set
+- This causes the view to show a compressed range where all labels appear as "00:00"
+
+**Attempted Fixes**:
+1. **Modified global formatter hook** - Updated `_get_datetime_formatter_hook()` to handle different plot structures:
+   - Checked for `plot.handles['xaxis']`, `plot.state.xaxis`, `plot.state.xaxis[0]`
+   - Added try/except blocks to handle missing attributes
+   - **Result**: Failed - formatter still didn't apply to overlay components
+
+2. **Applied formatter to individual elements** - Added `.opts(hooks=[self._get_datetime_formatter_hook()])` to both:
+   - `filled_area` (hvplot.area for unused capacity)
+   - `flow_line` (hvplot.line for actual flows)
+   - **Result**: Failed - x-axis still showed "00:00" after switching time ranges
+
+3. **Created custom formatter hook for transmission** - Built a specialized hook within `create_transmission_plot()`:
+   - Tried accessing axis via `plot.state.below[0]` (Bokeh's axis storage)
+   - Applied DatetimeTickFormatter based on current time range
+   - **Result**: Failed - same issue persists
+
+4. **Post-render formatting** - Attempted to apply formatting after HoloViews renders the plot:
+   - Added hooks to individual plot elements (filled_area and flow_line)
+   - In `update_plot()`, tried to access Bokeh model via `self.transmission_pane.get_root()`
+   - Applied DatetimeTickFormatter to axes found in `bokeh_model.below`
+   - **Result**: Initial render shows correct formatting, but switching from 7-day to 1-day reverts to all "00:00" labels
+
+5. **Added `framewise=True` to Overlay** - Forces complete recomputation on updates:
+   - Added `framewise=True` to the overlay opts
+   - **Result**: Partially successful - formatting works but x-axis range is incorrect
+
+6. **Explicitly set x-axis range (`xlim`)** - Calculate and set the x-axis range from data:
+   - Calculate min/max from transmission data with small padding
+   - Set `xlim=(x_min, x_max)` in overlay opts
+   - **Result**: No change - the issue persists
+
+7. **Use `xformatter` parameter directly in hvplot** - Bypass the hooks system entirely:
+   - Create DatetimeTickFormatter based on time range
+   - Pass `xformatter=dt_formatter` to both area and line plots
+   - Remove hooks from overlay
+   - **Result**: Runtime error - xformatter not compatible with area/line plots in this context
+
+8. **Add `apply_ranges=False` to overlay** - Prevent automatic range determination:
+   - Keep framewise=True and explicit xlim
+   - Add apply_ranges=False to overlay opts
+   - Re-add hooks to overlay
+   - **Result**: Testing in progress
+
+**Why This Is Challenging**:
+- The transmission plot is complex with:
+  - Shaded areas showing unused capacity (flow to limit)
+  - Positive/negative flows representing import/export directions
+  - Multiple interconnectors overlaid on the same plot
+  - Custom hover tooltips with utilization percentages
+- Any fix must preserve this sophisticated visualization logic
+
+**Root Cause Analysis**:
+- The issue appears to be with HoloViews/hvplot's handling of datetime formatters in Overlay plots
+- When the plot is first created, the formatter works correctly
+- After changing time ranges and recreating the plot, the formatter hook fails to apply
+- This suggests a timing issue or state management problem in the HoloViews rendering pipeline
+
+**Research Findings from HoloViz Documentation**:
+
+After extensive research into HoloViews/hvplot documentation and GitHub issues, the following key insights were discovered:
+
+1. **Known Issue**: Datetime formatters not persisting after plot updates is a documented issue in HoloViews, particularly with Overlays and DynamicMaps (GitHub issues #1713, #1744, #2284)
+
+2. **Root Cause**: HoloViews maintains internal state that doesn't properly propagate formatters to overlay components during updates. When plots are updated (not recreated), the formatter hooks may be ignored or overridden.
+
+3. **Hook Behavior**: 
+   - `finalize_hooks` are meant to be applied after plot creation
+   - Hooks on individual elements within an Overlay may not persist
+   - The bokeh backend's handling of formatters in overlays is problematic
+
+4. **Common Workarounds Found**:
+   - Using `framewise=True` to force complete recomputation on updates
+   - Applying `xformatter` parameter directly in hvplot calls
+   - Using backend-specific options via `backend_opts`
+   - Forcing plot recreation with unique identifiers
+
+**Recommended Solutions (in order of preference)**:
+
+1. **Use `framewise=True` on the Overlay**
+   ```python
+   combined_plot = hv.Overlay(plot_elements).opts(
+       framewise=True,  # Forces axis recalculation on every update
+       # ... other options
+   )
+   ```
+   - Pros: Simple, designed for this use case
+   - Cons: Slight performance overhead
+
+2. **Apply `xformatter` directly in hvplot**
+   ```python
+   from bokeh.models.formatters import DatetimeTickFormatter
+   
+   formatter = DatetimeTickFormatter(hours="%H:%M", days="%a %d")
+   plot = df.hvplot.area(x='time', xformatter=formatter)
+   ```
+   - Pros: Bypasses hook system, more direct
+   - Cons: Need to create formatter for each element
+
+3. **Force plot recreation with unique keys**
+   ```python
+   plot_id = f"plot_{region}_{time_range}_{timestamp}"
+   plot.opts(name=plot_id)  # Forces new plot instance
+   ```
+   - Pros: Guarantees fresh state
+   - Cons: Less efficient than updates
+
+4. **Clear HoloViews renderer cache**
+   ```python
+   from holoviews import Store
+   Store.renderers['bokeh'].reset()
+   ```
+   - Pros: Resets all cached state
+   - Cons: Affects all plots, not just transmission
+
+5. **Data reload (last resort)**
+   - Force data reload to trigger complete plot recreation
+   - Pros: Guaranteed to work
+   - Cons: Inefficient, addresses symptom not cause
+
+**Why Current Approaches Failed**:
+- Hooks are applied at plot creation but don't persist through updates
+- Overlay plots have complex internal structure that doesn't propagate formatters properly
+- The post-render approach partially worked but state management issues persist
+
+**Potential Solutions to Investigate**:
+1. **Use Bokeh directly** - Build the transmission plot using Bokeh's low-level API instead of hvplot
+2. **Single plot approach** - Combine all data into a single DataFrame and use hvplot with multiple y-columns
+3. **Panel ReactiveHTML** - Use Panel's ReactiveHTML to have more control over plot updates
+4. **Force complete re-render** - Clear the pane completely before assigning new plot
+5. **Post-render formatting** - Access the Bokeh figure after HoloViews renders it and apply formatting directly
+
+### Transmission Data Availability Issues
+**Problem**: The 7-day transmission chart shows significant data gaps, particularly at the beginning of the time range.
+
+**Data Analysis** (as of July 15, 2025):
+- Total transmission data: 6,480 records spanning July 9-15
+- Data coverage by day:
+  - July 9-10: Only 0.3% coverage (6 records each day)
+  - July 11: 31.5% coverage (partial data)
+  - July 12-14: 85.7% coverage (good data)
+  - July 15: 32.1% coverage (partial day)
+
+**Impact**:
+- 7-day view shows empty/missing data for the first 2-3 days
+- This appears to be a data collection issue rather than a dashboard problem
+- The updater service may have started collecting transmission data later than other data types
+
+**Potential Solutions**:
+1. Investigate why transmission data collection started late
+2. Implement backfill functionality in the updater service
+3. Add data availability indicators in the dashboard
+4. Consider filtering out days with insufficient data
+
+### Current Implementation vs. Alternatives
+**Current**: `RadioButtonGroup` creates large button segments (like iOS segmented control)
+- **Pros**: Clear selection, touch-friendly, looks modern
+- **Cons**: Takes significant horizontal space, especially with 5 options
+
+**Better Alternative**: `RadioBoxGroup` (traditional radio buttons)
+```python
+# More compact implementation
+time_selector = pn.widgets.RadioBoxGroup(
+    name='Time Range',
+    options=['1 Day', '7 Days', '30 Days', 'All Data'],
+    inline=True  # Horizontal layout
+)
+```
+- **Pros**: Much more compact, familiar UI pattern, still clear selection
+- **Cons**: Smaller touch targets
+
+**Space Comparison**:
+- RadioButtonGroup: ~280px width for 4 options
+- RadioBoxGroup inline: ~200px width for same options
+- RadioBoxGroup vertical: Minimal width but more height
+
+**Recommendation**: Switch to `RadioBoxGroup` with `inline=True` for time ranges. This provides:
+- 30% space savings
+- Cleaner appearance
+- Consistent with typical dashboard controls
+- Still accessible on mobile with proper spacing
+
 ## Future Enhancements
 
 ### Planned Features
@@ -392,9 +639,84 @@ fuel_colors = {
 - [ ] Consistent interaction patterns across all tabs
 - [ ] User preference persistence (dark/light mode, column selections)
 
+### Panel Material UI Implementation Guide
+
+#### Key Integration Points
+
+##### 1. Bokeh/HoloViews Integration
+- Material UI automatically themes Bokeh, hvPlot, and HoloViews plots
+- Plots adapt to active theme (dark/light modes, primary colors, fonts)
+- Use `pmu.Page` or include `pmu.ThemeToggle` for seamless theming
+
+##### 2. Customization Methods
+**Component-Level Styling (`sx` parameter):**
+```python
+Button(
+    label="Custom Button",
+    sx={
+        "backgroundColor": "#1976d2",
+        "&:hover": {"backgroundColor": "#1565c0"}
+    }
+)
+```
+
+**Theme-Level Configuration (`theme_config`):**
+```python
+Card(
+    content,
+    theme_config={
+        "palette": {"primary": {"main": "#1976d2"}},
+        "typography": {"fontFamily": "Roboto"},
+        "shape": {"borderRadius": 8}
+    }
+)
+```
+
+##### 3. Dark Mode Implementation
+- Enable globally: `pn.config.theme = 'dark'`
+- Component-specific: `Button(label="Dark", dark_theme=True)`
+- Automatic integration with Panel's dark mode configuration
+
+##### 4. Branding Best Practices
+**Brand Architecture:**
+```
+aemo_dashboard/
+└── brand/
+    ├── colors.py      # Color palette definitions
+    ├── mui.py         # Material UI theme configs
+    └── assets/        # Logos, icons, custom CSS
+```
+
+**Theme Configuration Example:**
+```python
+AEMO_THEME_CONFIG = {
+    "palette": {
+        "primary": {"main": "#1976d2"},    # AEMO blue
+        "secondary": {"main": "#dc004e"},  # Alert red
+        "background": {
+            "default": "#121212",           # Dark mode background
+            "paper": "#1e1e1e"             # Card background
+        }
+    },
+    "typography": {
+        "fontFamily": "Roboto, Arial, sans-serif",
+        "h1": {"fontSize": "2.5rem", "fontWeight": 600}
+    }
+}
+```
+
+##### 5. Migration Path
+To upgrade existing Panel code to Material UI:
+1. Replace `pn.widgets.*` with Material UI equivalents where available
+2. Wrap layout sections in `pmu.Card` instead of `pn.Column`
+3. Apply consistent `theme_config` across components
+4. Use `sx` parameter for component-specific styling
+
 ### Reference Implementation
 
 For detailed implementation examples, see:
 - **HoloViz Panel Material UI Blog**: https://blog.holoviz.org/posts/panel_material_ui_announcement/
 - **Material Design 3 Guidelines**: https://m3.material.io/
-- **Panel Material Theme Documentation**: Latest Panel documentation for Material theme configuration
+- **Panel Material UI Documentation**: https://panel-material-ui.holoviz.org/
+- **Bokeh/HoloViews Integration**: https://panel-material-ui.holoviz.org/how_to/bokeh_holoviews.html
+- **Customization Guide**: https://panel-material-ui.holoviz.org/how_to/customize.html

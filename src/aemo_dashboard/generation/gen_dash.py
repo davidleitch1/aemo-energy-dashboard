@@ -35,13 +35,20 @@ logger = get_logger(__name__)
 pn.config.theme = 'dark'
 pn.extension('tabulator', template='material')
 
-# Custom CSS to ensure x-axis labels are visible
+# Custom CSS to ensure x-axis labels are visible and style header
 pn.config.raw_css.append("""
 .bk-axis-label {
     font-size: 12px !important;
 }
 .bk-tick-label {
     font-size: 11px !important;
+}
+/* Header background styling */
+.header-container {
+    background-color: #008B8B;
+    padding: 10px 0;
+    margin: -10px -10px 10px -10px;
+    border-radius: 4px 4px 0 0;
 }
 """)
 hv.extension('bokeh')
@@ -51,7 +58,7 @@ hv.extension('bokeh')
 # Configure dark theme with grid enabled
 hv.opts.defaults(
     hv.opts.Area(
-        width=900,
+        width=1200,  # Use larger fixed width
         height=500,
         alpha=0.8,
         show_grid=False,
@@ -149,8 +156,8 @@ class EnergyDashboard(param.Parameterized):
     )
     
     time_range = param.Selector(
-        default='Last 24 Hours',
-        objects=['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Data'],
+        default='1',
+        objects=['1', '7', '30', 'All'],
         doc="Select time range to display"
     )
     
@@ -189,7 +196,7 @@ class EnergyDashboard(param.Parameterized):
         self.utilization_pane = None
         self.transmission_pane = None
         self.main_content = None
-        self.update_time_display = None
+        self.header_section = None
         # Track unknown DUIDs for session reporting
         self.session_unknown_duids = set()
         # Initialize panes
@@ -338,7 +345,7 @@ class EnergyDashboard(param.Parameterized):
     def should_send_email_alert(self, unknown_duids):
         """Check if we should send an email alert (rate limiting)"""
         # Load cache of previously alerted DUIDs
-        cache_file = BASE_PATH / "unknown_duids_alerts.json"
+        cache_file = config.data_dir / "unknown_duids_alerts.json"
         alert_cache = {}
         
         try:
@@ -1053,7 +1060,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=400,
                     color='white',
                     fontsize=16
@@ -1104,7 +1111,7 @@ class EnergyDashboard(param.Parameterized):
                     x='settlementdate',
                     y=positive_fuel_types,
                     stacked=True,
-                    width=900,
+                    width=1200,
                     height=300,  # Reduced height to make room for price chart
                     ylabel='Generation (MW)',
                     xlabel='',  # Remove x-label since it will be on the price chart
@@ -1151,7 +1158,7 @@ class EnergyDashboard(param.Parameterized):
                             x='settlementdate',
                             y='Transmission Exports',
                             stacked=False,
-                            width=900,
+                            width=1200,
                             height=300,
                             color='#ffb6c1',  # Light pink
                             alpha=0.8,
@@ -1166,7 +1173,7 @@ class EnergyDashboard(param.Parameterized):
                             x='settlementdate',
                             y='Battery Storage',
                             stacked=False,
-                            width=900,
+                            width=1200,
                             height=300,
                             color='#9370db',  # Purple
                             alpha=0.8,
@@ -1203,7 +1210,7 @@ class EnergyDashboard(param.Parameterized):
                     x='settlementdate',
                     y=positive_fuel_types,
                     stacked=True,
-                    width=900,
+                    width=1200,
                     height=300,  # Reduced height to make room for price chart
                     title=f'Generation by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                     ylabel='Generation (MW)',
@@ -1232,7 +1239,7 @@ class EnergyDashboard(param.Parameterized):
             price_plot = price_df.hvplot.line(
                 x='settlementdate',
                 y='RRP',
-                width=900,
+                width=1200,
                 height=250,  # Smaller height - about half of generation chart
                 ylabel='Price ($/MWh)',
                 xlabel='Time',
@@ -1281,7 +1288,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=300,
                     color='white',
                     fontsize=14
@@ -1297,7 +1304,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=300,
                     color='white',
                     fontsize=14
@@ -1335,7 +1342,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=300,
                     color='white',
                     fontsize=14
@@ -1362,7 +1369,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=300,
                     color='white',
                     fontsize=14
@@ -1509,6 +1516,8 @@ class EnergyDashboard(param.Parameterized):
                     color=color,
                     hover=False,
                     label=f'{interconnector} unused capacity'
+                ).opts(
+                    hooks=[self._get_datetime_formatter_hook()]
                 )
                 
                 # Create the main flow line with enhanced tooltips
@@ -1536,6 +1545,8 @@ class EnergyDashboard(param.Parameterized):
                         ('Direction', '@direction')
                     ],
                     hover_formatters={'@settlementdate': 'datetime'}
+                ).opts(
+                    hooks=[self._get_datetime_formatter_hook()]
                 )
                 
                 plot_elements.extend([filled_area, flow_line])
@@ -1551,8 +1562,40 @@ class EnergyDashboard(param.Parameterized):
             # Combine all elements
             if plot_elements:
                 time_range_display = self._get_time_range_display()
+                
+                # Create a more robust datetime formatter hook
+                def transmission_formatter_hook(plot, element):
+                    # Try different ways to access the x-axis
+                    xaxis = None
+                    if hasattr(plot, 'handles') and 'xaxis' in plot.handles:
+                        xaxis = plot.handles['xaxis']
+                    elif hasattr(plot, 'state'):
+                        # For composite plots, might need to access differently
+                        try:
+                            xaxis = plot.state.below[0]  # Bokeh puts x-axis in 'below'
+                        except:
+                            pass
+                    
+                    if xaxis:
+                        if self.time_range == '1':
+                            xaxis.formatter = DatetimeTickFormatter(hours="%H:%M", days="%H:%M")
+                        elif self.time_range == '7':
+                            xaxis.formatter = DatetimeTickFormatter(hours="%a %H:%M", days="%a %d", months="%b %d")
+                        else:
+                            xaxis.formatter = DatetimeTickFormatter(hours="%m/%d", days="%m/%d", months="%b %d", years="%Y")
+                
+                # Calculate the actual x-axis range from the data
+                if region_transmission.empty:
+                    x_range = None
+                else:
+                    x_min = region_transmission['settlementdate'].min()
+                    x_max = region_transmission['settlementdate'].max()
+                    # Add small padding (1% of range)
+                    padding = (x_max - x_min) * 0.01
+                    x_range = (x_min - padding, x_max + padding)
+                
                 combined_plot = hv.Overlay(plot_elements + [zero_line]).opts(
-                    width=900,
+                    width=1200,
                     height=400,  # Increased height to accommodate multiple lines
                     bgcolor='black',
                     ylabel='Flow (MW)',
@@ -1560,14 +1603,17 @@ class EnergyDashboard(param.Parameterized):
                     title=f'Transmission Flows with Limits - {self.region} ({time_range_display})',
                     show_grid=False,
                     legend_position='right',
-                    hooks=[self._get_datetime_formatter_hook()]
+                    framewise=True,  # Force complete recomputation on updates
+                    xlim=x_range,  # Explicitly set x-axis range
+                    apply_ranges=False,  # Prevent automatic range determination
+                    hooks=[self._get_datetime_formatter_hook()]  # Re-add hooks
                 )
             else:
                 combined_plot = hv.Text(0.5, 0.5, f'No transmission data available for {self.region}').opts(
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=400,
                     color='white',
                     fontsize=14
@@ -1583,7 +1629,7 @@ class EnergyDashboard(param.Parameterized):
                 xlim=(0, 1),
                 ylim=(0, 1),
                 bgcolor='black',
-                width=900,
+                width=1200,
                 height=300,
                 color='white',
                 fontsize=12
@@ -1601,7 +1647,7 @@ class EnergyDashboard(param.Parameterized):
                     xlim=(0, 1),
                     ylim=(0, 1),
                     bgcolor='black',
-                    width=900,
+                    width=1200,
                     height=400,
                     color='white',
                     fontsize=14
@@ -1629,7 +1675,7 @@ class EnergyDashboard(param.Parameterized):
             line_plot = plot_data.hvplot.line(
                 x='settlementdate',
                 y=fuel_types,
-                width=900,
+                width=1200,
                 height=400,
                 title=f'Capacity Utilization by Fuel Type - {self.region} ({time_range_display}) | data:AEMO, design ITK',
                 ylabel='Capacity Utilization (%)',
@@ -1683,10 +1729,35 @@ class EnergyDashboard(param.Parameterized):
             
             if self.transmission_pane is not None:
                 self.transmission_pane.object = new_transmission_plot
+                
+                # Post-render formatting: Access Bokeh figure after HoloViews renders it
+                try:
+                    # Get the Bokeh model from the pane
+                    bokeh_model = self.transmission_pane.get_root()
+                    if hasattr(bokeh_model, 'below'):
+                        for axis in bokeh_model.below:
+                            if hasattr(axis, 'formatter'):
+                                # Apply formatter based on time range
+                                if self.time_range == '1':
+                                    axis.formatter = DatetimeTickFormatter(hours="%H:%M", days="%H:%M")
+                                elif self.time_range == '7':
+                                    axis.formatter = DatetimeTickFormatter(hours="%a %H:%M", days="%a %d", months="%b %d")
+                                else:
+                                    axis.formatter = DatetimeTickFormatter(hours="%m/%d", days="%m/%d", months="%b %d", years="%Y")
+                except Exception as e:
+                    logger.debug(f"Post-render formatting attempt failed: {e}")
             
-            # Update the time display
-            if self.update_time_display is not None:
-                self.update_time_display.object = f"<div style='text-align: center; color: white; font-size: 16px; margin: 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>"
+            # Update the header with new time
+            if self.header_section is not None:
+                header_html = f"""
+                <div class='header-container' style='background-color: #008B8B; padding: 15px; margin: -10px -10px 20px -10px;'>
+                    <h1 style='color: white; margin: 0; text-align: center;'>Nem Analysis</h1>
+                    <div style='text-align: center; color: white; font-size: 16px; margin-top: 5px;'>
+                        Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK
+                    </div>
+                </div>
+                """
+                self.header_section.object = header_html
             
             logger.info("Plot update completed successfully")
             
@@ -1754,13 +1825,13 @@ class EnergyDashboard(param.Parameterized):
         """Update start_date and end_date based on time_range preset"""
         end_date = datetime.now().date()
         
-        if self.time_range == 'Last 24 Hours':
+        if self.time_range == '1':
             start_date = end_date - timedelta(days=1)
-        elif self.time_range == 'Last 7 Days':
+        elif self.time_range == '7':
             start_date = end_date - timedelta(days=7)
-        elif self.time_range == 'Last 30 Days':
+        elif self.time_range == '30':
             start_date = end_date - timedelta(days=30)
-        elif self.time_range == 'All Data':
+        elif self.time_range == 'All':
             start_date = datetime(2024, 1, 1).date()  # Approximate earliest data
         else:
             # Keep current custom dates
@@ -1772,7 +1843,7 @@ class EnergyDashboard(param.Parameterized):
     
     def _get_effective_date_range(self):
         """Get the effective start and end datetime for data filtering"""
-        if self.time_range == 'All Data':
+        if self.time_range == 'All':
             # For all data, use None to indicate no date filtering
             return None, None
         else:
@@ -1784,13 +1855,13 @@ class EnergyDashboard(param.Parameterized):
     
     def _get_time_range_display(self):
         """Get formatted time range string for chart titles"""
-        if self.time_range == 'Last 24 Hours':
+        if self.time_range == '1':
             return "Last 24 Hours"
-        elif self.time_range == 'Last 7 Days':
+        elif self.time_range == '7':
             return "Last 7 Days"  
-        elif self.time_range == 'Last 30 Days':
+        elif self.time_range == '30':
             return "Last 30 Days"
-        elif self.time_range == 'All Data':
+        elif self.time_range == 'All':
             return "All Available Data"
         else:
             # Custom date range
@@ -1804,13 +1875,13 @@ class EnergyDashboard(param.Parameterized):
     def _get_datetime_formatter_hook(self):
         """Get appropriate datetime formatter based on time range"""
         def formatter_hook(plot, element):
-            if self.time_range == 'Last 24 Hours':
+            if self.time_range == '1':
                 # For 24 hours, show hours
                 plot.handles['xaxis'].formatter = DatetimeTickFormatter(
                     hours="%H:%M",
                     days="%H:%M"
                 )
-            elif self.time_range == 'Last 7 Days':
+            elif self.time_range == '7':
                 # For 7 days, show day names or dates
                 plot.handles['xaxis'].formatter = DatetimeTickFormatter(
                     hours="%a %H:%M",  # Mon 14:00
@@ -1871,21 +1942,20 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
-            # Time range selector with explicit styling
-            time_range_widget = pn.widgets.RadioButtonGroup(
-                name="Time Range",
+            # Time range selector with compact radio buttons
+            time_range_widget = pn.widgets.RadioBoxGroup(
+                name="",  # Empty name since we add label separately
                 value=self.time_range,
-                options=['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Data'],
-                button_type='primary',
-                button_style='outline',  # Only selected button will be filled
-                width=280
+                options=['1', '7', '30', 'All'],
+                inline=True,  # Horizontal layout
+                width=200
             )
             time_range_widget.link(self, value='time_range')
             
             time_range_selector = pn.Column(
-                "**Time Range:**",
+                pn.pane.HTML("<div style='color: #aaa; font-size: 11px; margin-bottom: 4px;'>Days</div>"),
                 time_range_widget,
-                width=280,
+                width=200,
                 margin=(10, 0)
             )
             
@@ -1902,49 +1972,33 @@ class EnergyDashboard(param.Parameterized):
                 margin=(10, 0)
             )
             
-            # Create left-side control panel
+            # Create left-side control panel with cleaner layout
             control_panel = pn.Column(
                 "### Generation by Fuel Controls",
                 region_selector,
-                pn.pane.Markdown("""
-                **Region Options:**
-                - **NEM:** All regions combined
-                - **NSW1:** New South Wales  
-                - **QLD1:** Queensland
-                - **SA1:** South Australia
-                - **TAS1:** Tasmania
-                - **VIC1:** Victoria
-                """),
                 "---",
                 time_range_selector,
-                pn.pane.Markdown("""
-                **Time Range Options:**
-                - **24 Hours:** 5-minute resolution
-                - **7 Days:** 30-minute averages
-                - **30 Days:** Hourly averages
-                - **All Data:** Hourly averages
-                """),
                 date_selectors,
                 pn.pane.Markdown("*Custom dates override preset selection*"),
-                width=300,
+                width=280,  # Reduced width to match Station Analysis
                 sizing_mode='fixed'
             )
             
-            # Create subtabs for charts
+            # Create subtabs for charts with constrained containers
             chart_subtabs = pn.Tabs(
                 ("Generation Stack", pn.Column(
                     "#### Generation by Fuel Type + Price",
-                    self.plot_pane,
+                    pn.Column(self.plot_pane, max_width=1250, sizing_mode='stretch_width'),
                     sizing_mode='stretch_width'
                 )),
                 ("Capacity Utilization", pn.Column(
                     "#### Capacity Utilization by Fuel",
-                    self.utilization_pane,
+                    pn.Column(self.utilization_pane, max_width=1250, sizing_mode='stretch_width'),
                     sizing_mode='stretch_width'
                 )),
                 ("Transmission Lines", pn.Column(
                     "#### Individual Transmission Line Flows",
-                    self.transmission_pane,
+                    pn.Column(self.transmission_pane, max_width=1250, sizing_mode='stretch_width'),
                     sizing_mode='stretch_width'
                 )),
                 dynamic=True,
@@ -1967,15 +2021,18 @@ class EnergyDashboard(param.Parameterized):
     def create_dashboard(self):
         """Create the complete dashboard with tabbed interface"""
         try:
-            # Dashboard title with update time
-            title = pn.pane.HTML(
-                "<h1 style='color: white; margin: 10px 0 5px 0; text-align: center;'>Nem Analysis</h1>",
-                sizing_mode='stretch_width'
-            )
+            # Dashboard title with update time in teal header
+            header_html = f"""
+            <div class='header-container' style='background-color: #008B8B; padding: 15px; margin: -10px -10px 20px -10px;'>
+                <h1 style='color: white; margin: 0; text-align: center;'>Nem Analysis</h1>
+                <div style='text-align: center; color: white; font-size: 16px; margin-top: 5px;'>
+                    Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK
+                </div>
+            </div>
+            """
             
-            # Update time display
-            self.update_time_display = pn.pane.HTML(
-                f"<div style='text-align: center; color: white; font-size: 16px; margin: 0 0 10px 0;'>Last Updated: {datetime.now().strftime('%H:%M:%S')} | data:AEMO, design ITK</div>",
+            self.header_section = pn.pane.HTML(
+                header_html,
                 sizing_mode='stretch_width'
             )
             
@@ -2013,9 +2070,7 @@ class EnergyDashboard(param.Parameterized):
             
             # Complete dashboard layout
             dashboard = pn.Column(
-                title,
-                self.update_time_display,
-                pn.pane.HTML("<div style='height: 10px;'></div>"),
+                self.header_section,
                 tabs,
                 sizing_mode='stretch_width'
             )
