@@ -606,9 +606,15 @@ class StationAnalysisUI(param.Parameterized):
             generation = chart_data['scadavalue'].values
             prices = chart_data['price'].values
             
+            # Get appropriate title based on mode
+            if self.analysis_mode == 'station' and self.selected_station_duids:
+                title = f'Station ({len(self.selected_station_duids)} units) - Generation & Price Over Time ({freq_label} Data)'
+            else:
+                title = f'{self.selected_duid} - Generation & Price Over Time ({freq_label} Data)'
+            
             # Create figure with primary y-axis for generation
             p = figure(
-                title=f'{self.selected_duid} - Generation & Price Over Time ({freq_label} Data)',
+                title=title,
                 x_axis_type='datetime',
                 width=900,
                 height=400,
@@ -620,7 +626,24 @@ class StationAnalysisUI(param.Parameterized):
             
             # Primary axis (left) - Generation
             p.line(timestamps, generation, line_width=3, color='#2ca02c', legend_label='Generation (MW)')
-            p.y_range = Range1d(start=min(generation) * 0.9, end=max(generation) * 1.1)
+            
+            # Add capacity reference line if capacity data is available
+            if hasattr(self.motor, 'station_data') and 'capacity_mw' in self.motor.station_data.columns:
+                capacity_mw = self.motor.station_data['capacity_mw'].iloc[0]
+                if capacity_mw > 0:
+                    # Add horizontal dashed line for maximum capacity
+                    p.line([timestamps[0], timestamps[-1]], [capacity_mw, capacity_mw], 
+                           line_width=2, color='#2ca02c', line_dash='dashed', line_alpha=0.7,
+                           legend_label=f'Max Capacity ({capacity_mw:.0f} MW)')
+            
+            # Set y-range to include capacity line
+            y_max = max(generation) * 1.1
+            if hasattr(self.motor, 'station_data') and 'capacity_mw' in self.motor.station_data.columns:
+                capacity_mw = self.motor.station_data['capacity_mw'].iloc[0]
+                if capacity_mw > 0:
+                    y_max = max(y_max, capacity_mw * 1.05)  # 5% above capacity line
+            
+            p.y_range = Range1d(start=min(generation) * 0.9, end=y_max)
             p.yaxis.axis_label = 'Generation (MW)'
             p.yaxis.axis_label_text_color = '#2ca02c'
             
@@ -662,9 +685,15 @@ class StationAnalysisUI(param.Parameterized):
             generation = time_of_day_data['scadavalue'].values
             prices = time_of_day_data['price'].values
             
+            # Get appropriate title based on mode
+            if self.analysis_mode == 'station' and self.selected_station_duids:
+                title = f'Station ({len(self.selected_station_duids)} units) - Average Performance by Hour of Day'
+            else:
+                title = f'{self.selected_duid} - Average Performance by Hour of Day'
+            
             # Create figure with primary y-axis for generation
             p = figure(
-                title=f'{self.selected_duid} - Average Performance by Hour of Day',
+                title=title,
                 width=700,
                 height=400,
                 tools='pan,wheel_zoom,box_zoom,reset,save,hover'
@@ -676,7 +705,24 @@ class StationAnalysisUI(param.Parameterized):
             # Primary axis (left) - Generation with line and markers
             p.line(hours, generation, line_width=4, color='#2ca02c', legend_label='Average Generation (MW)')
             p.scatter(hours, generation, size=8, color='#2ca02c')
-            p.y_range = Range1d(start=min(generation) * 0.9, end=max(generation) * 1.1)
+            
+            # Add capacity reference line if capacity data is available
+            if hasattr(self.motor, 'station_data') and 'capacity_mw' in self.motor.station_data.columns:
+                capacity_mw = self.motor.station_data['capacity_mw'].iloc[0]
+                if capacity_mw > 0:
+                    # Add horizontal dashed line for maximum capacity
+                    p.line([0, 23], [capacity_mw, capacity_mw], 
+                           line_width=2, color='#2ca02c', line_dash='dashed', line_alpha=0.7,
+                           legend_label=f'Max Capacity ({capacity_mw:.0f} MW)')
+            
+            # Set y-range to include capacity line
+            y_max = max(generation) * 1.1
+            if hasattr(self.motor, 'station_data') and 'capacity_mw' in self.motor.station_data.columns:
+                capacity_mw = self.motor.station_data['capacity_mw'].iloc[0]
+                if capacity_mw > 0:
+                    y_max = max(y_max, capacity_mw * 1.05)  # 5% above capacity line
+            
+            p.y_range = Range1d(start=min(generation) * 0.9, end=y_max)
             p.yaxis.axis_label = 'Average Generation (MW)'
             p.yaxis.axis_label_text_color = '#2ca02c'
             

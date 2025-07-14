@@ -216,13 +216,43 @@ class StationAnalysisMotor:
             if end_date:
                 station_filter &= self.integrated_data['settlementdate'] <= end_date
             
-            self.station_data = self.integrated_data[station_filter].copy()
+            filtered_data = self.integrated_data[station_filter].copy()
             
-            if len(self.station_data) == 0:
+            if len(filtered_data) == 0:
                 logger.warning(f"No data found for {filter_description}")
                 return False
             
-            logger.info(f"Filtered {len(self.station_data):,} records for {filter_description}")
+            # If multiple DUIDs (station mode), aggregate by time period
+            if len(duids) > 1:
+                logger.info(f"Aggregating data for {len(duids)} units in station mode")
+                
+                # Group by settlementdate and aggregate
+                # Sum generation and revenue, mean for price, sum for capacity
+                agg_dict = {
+                    'scadavalue': 'sum',        # Sum generation across all units
+                    'revenue_5min': 'sum',      # Sum revenue across all units 
+                    'price': 'mean',            # Price should be same for all units in region
+                    'capacity_mw': 'sum'        # Sum capacity across all units
+                }
+                
+                # Add other columns that should be preserved (take first value)
+                other_cols = ['region', 'station_name', 'owner', 'Fuel']
+                for col in other_cols:
+                    if col in filtered_data.columns:
+                        agg_dict[col] = 'first'
+                
+                # Aggregate the data
+                self.station_data = filtered_data.groupby('settlementdate').agg(agg_dict).reset_index()
+                
+                logger.info(f"Aggregated to {len(self.station_data):,} time periods for station with {len(duids)} units")
+                logger.info(f"Station total capacity: {self.station_data['capacity_mw'].iloc[0]:.1f} MW")
+                logger.info(f"Peak station generation: {self.station_data['scadavalue'].max():.1f} MW")
+                
+            else:
+                # Single DUID mode - no aggregation needed
+                self.station_data = filtered_data
+                logger.info(f"Filtered {len(self.station_data):,} records for single DUID")
+            
             return True
             
         except Exception as e:
