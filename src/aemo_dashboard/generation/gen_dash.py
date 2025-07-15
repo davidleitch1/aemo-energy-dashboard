@@ -2394,15 +2394,18 @@ def main():
     # Create the app factory (your existing code)
     app_factory = create_app()
     
+    # Determine port based on environment variable or default
+    port = int(os.getenv('DASHBOARD_PORT', '5008'))
+    
     print("Starting Interactive Energy Generation Dashboard...")
-    print("Navigate to: http://localhost:5010")
+    print(f"Navigate to: http://localhost:{port}")
     print("Press Ctrl+C to stop the server")
     
     # Serve the app with dark theme and proper session handling
     pn.serve(
         app_factory, 
-        port=5010, 
-        allow_websocket_origin=["localhost:5010", "nemgen.itkservices2.com"],
+        port=port, 
+        allow_websocket_origin=[f"localhost:{port}", "nemgen.itkservices2.com"],
         show=True,
         autoreload=False,  # Disable autoreload in production
         threaded=True     # Enable threading for better concurrent handling
