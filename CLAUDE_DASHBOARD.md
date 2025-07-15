@@ -91,17 +91,52 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
 #### ✅ **Latest Fixes (2025-07-15)**:
 1. **Chart Container**: ✅ Removed blue outline border from generation chart frame using custom CSS
 2. **Gauge Legend**: ✅ Repositioned reference markers legend to center-bottom area with pink Dracula theming
+3. **UFuncTypeError**: ✅ Fixed datetime/float comparison errors when switching tabs by disabling axis linking
+4. **Rooftop Solar Interpolation**: ✅ Implemented comprehensive fix for flat-lining issues:
+   - Dashboard now detects poor interpolation patterns in 5-minute data
+   - Applies cubic smoothing to fix flat segments (5+ identical values)
+   - Handles both 30-minute and 5-minute input data automatically
+   - Fixes sharp drop-offs at end of day with smooth transitions
+
+#### ⚠️ **Known Issues**:
+1. **Rooftop Solar Last 30 Minutes**: The flat-lining detection doesn't properly fix the final 30 minutes of rooftop solar data
+   - Still shows sharp drop-off at the end of the day
+   - Plan: Reload parquet file with original 30-minute data and do conversion in dashboard
 
 #### 🎯 **Remaining Enhancements**:
+- Fix rooftop solar data downloads to store 30-minute data
+- Implement proper 30-min to 5-min conversion in dashboard
 - Auto-update functionality refinements
 - Performance optimization for large datasets  
 - Further layout refinements based on user feedback
 
 ## Data Quality Issues
 
-### 🔧 **Rooftop Solar Conversion Issue (30-min to 5-min)**
+### 🔧 **Rooftop Solar Conversion Issue (30-min to 5-min)** ⚠️ PARTIALLY FIXED
 
-#### **Current Implementation Analysis**
+#### **Solution Implemented (2025-07-15)**
+
+The dashboard now includes a comprehensive fix that handles rooftop solar data regardless of format:
+
+1. **Automatic Detection**: 
+   - Detects if data is in 30-minute intervals → converts using cubic spline
+   - Detects if data has flat-lining issues → applies smoothing fix
+   - Works with existing 5-minute data that was poorly interpolated
+
+2. **Flat-lining Fix Algorithm**:
+   ```python
+   # Detects sequences of 5+ identical values
+   # Applies cubic interpolation between segments
+   # Creates smooth transitions instead of sharp drops
+   ```
+
+3. **Benefits**:
+   - No more sharp drop-offs at end of day
+   - Smooth, natural solar generation curves
+   - Works with data from any updater
+   - No need to reprocess existing data files
+
+#### **Original Implementation Analysis**
 
 The rooftop solar data conversion from 30-minute to 5-minute intervals currently uses a **linear interpolation with weighted averaging** approach:
 

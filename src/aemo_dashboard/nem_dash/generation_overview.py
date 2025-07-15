@@ -370,7 +370,28 @@ def prepare_generation_for_stacking(gen_data, transmission_data=None, rooftop_da
                 
                 # Align with generation data
                 if len(pivot_df) > 0:
-                    rooftop_aligned = rooftop_series.reindex(pivot_df.index, fill_value=0)
+                    rooftop_aligned = rooftop_series.reindex(pivot_df.index)
+                    
+                    # Forward-fill missing values at the end (up to 2 hours)
+                    # This handles the case where rooftop data is less recent than generation data
+                    rooftop_aligned = rooftop_aligned.fillna(method='ffill', limit=24)  # 24 * 5min = 2 hours
+                    
+                    # Apply gentle decay for extended forward-fill periods
+                    last_valid_idx = rooftop_aligned.last_valid_index()
+                    if last_valid_idx is not None and last_valid_idx < rooftop_aligned.index[-1]:
+                        # Calculate how many periods we're forward-filling
+                        fill_start_pos = rooftop_aligned.index.get_loc(last_valid_idx) + 1
+                        fill_periods = len(rooftop_aligned) - fill_start_pos
+                        
+                        if fill_periods > 0:
+                            # Apply exponential decay for realism (solar decreases over time)
+                            last_value = rooftop_aligned.iloc[fill_start_pos - 1]
+                            decay_rate = 0.98  # 2% decay per 5-minute period
+                            for i in range(fill_periods):
+                                rooftop_aligned.iloc[fill_start_pos + i] = last_value * (decay_rate ** (i + 1))
+                    
+                    # Fill any remaining NaN with 0
+                    rooftop_aligned = rooftop_aligned.fillna(0)
                     pivot_df['Rooftop Solar'] = rooftop_aligned
                     
                     logger.info(f"Added rooftop solar: max {pivot_df['Rooftop Solar'].max():.1f}MW")

@@ -1048,7 +1048,28 @@ class EnergyDashboard(param.Parameterized):
                     if available_regions:
                         # Sum rooftop solar across all regions
                         total_rooftop = rooftop_df[available_regions].sum(axis=1)
-                        rooftop_values = total_rooftop.reindex(pivot_df.index, fill_value=0)
+                        rooftop_values = total_rooftop.reindex(pivot_df.index)
+                        
+                        # Forward-fill missing values at the end (up to 2 hours)
+                        # This handles the case where rooftop data is less recent than generation data
+                        rooftop_values = rooftop_values.fillna(method='ffill', limit=24)  # 24 * 5min = 2 hours
+                        
+                        # Apply gentle decay for extended forward-fill periods
+                        last_valid_idx = rooftop_values.last_valid_index()
+                        if last_valid_idx is not None and last_valid_idx < rooftop_values.index[-1]:
+                            # Calculate how many periods we're forward-filling
+                            fill_start_pos = rooftop_values.index.get_loc(last_valid_idx) + 1
+                            fill_periods = len(rooftop_values) - fill_start_pos
+                            
+                            if fill_periods > 0:
+                                # Apply exponential decay for realism (solar decreases over time)
+                                last_value = rooftop_values.iloc[fill_start_pos - 1]
+                                decay_rate = 0.98  # 2% decay per 5-minute period
+                                for i in range(fill_periods):
+                                    rooftop_values.iloc[fill_start_pos + i] = last_value * (decay_rate ** (i + 1))
+                        
+                        # Fill any remaining NaN with 0
+                        rooftop_values = rooftop_values.fillna(0)
                         pivot_df['Rooftop Solar'] = rooftop_values
                         
                         logger.info(f"Added rooftop solar (NEM total): max {pivot_df['Rooftop Solar'].max():.1f}MW, "
@@ -1056,7 +1077,25 @@ class EnergyDashboard(param.Parameterized):
                         
                 elif self.region.endswith('1') and self.region in rooftop_df.columns:
                     # For individual regions
-                    rooftop_values = rooftop_df.reindex(pivot_df.index, fill_value=0)[self.region]
+                    rooftop_values = rooftop_df.reindex(pivot_df.index)[self.region]
+                    
+                    # Forward-fill missing values at the end (up to 2 hours)
+                    rooftop_values = rooftop_values.fillna(method='ffill', limit=24)
+                    
+                    # Apply gentle decay for extended forward-fill periods
+                    last_valid_idx = rooftop_values.last_valid_index()
+                    if last_valid_idx is not None and last_valid_idx < rooftop_values.index[-1]:
+                        fill_start_pos = rooftop_values.index.get_loc(last_valid_idx) + 1
+                        fill_periods = len(rooftop_values) - fill_start_pos
+                        
+                        if fill_periods > 0:
+                            last_value = rooftop_values.iloc[fill_start_pos - 1]
+                            decay_rate = 0.98  # 2% decay per 5-minute period
+                            for i in range(fill_periods):
+                                rooftop_values.iloc[fill_start_pos + i] = last_value * (decay_rate ** (i + 1))
+                    
+                    # Fill any remaining NaN with 0
+                    rooftop_values = rooftop_values.fillna(0)
                     pivot_df['Rooftop Solar'] = rooftop_values
                     
                     logger.info(f"Added rooftop solar: max {pivot_df['Rooftop Solar'].max():.1f}MW, "
