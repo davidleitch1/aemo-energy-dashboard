@@ -195,13 +195,97 @@ class RooftopDataUpdater:
     
     def convert_30min_to_5min(self, df_30min):
         """
-        Convert 30-minute data to 5-minute intervals using 6-period moving average
+        Convert 30-minute data to 5-minute intervals using cubic spline interpolation
         
         Algorithm:
-        - Each 30-min period creates 6 x 5-min periods
-        - Initial: all 6 periods = hh1/6
-        - Transition: weighted average between consecutive 30-min values
-        - End: extrapolate last calculated value
+        - Uses pandas cubic interpolation for smooth natural curves
+        - Better captures solar irradiance patterns than linear interpolation
+        - Handles end-points intelligently with trend-based extrapolation
+        """
+        if df_30min.empty:
+            return pd.DataFrame()
+        
+        try:
+            # Sort by time and set datetime index
+            df_30min = df_30min.sort_values('settlementdate')
+            df_30min = df_30min.set_index('settlementdate')
+            
+            # Fill any NaN values with 0 (rooftop solar can't be negative)
+            df_30min = df_30min.fillna(0)
+            
+            # Create the target 5-minute time range
+            start_time = df_30min.index.min()
+            end_time = df_30min.index.max() + timedelta(minutes=25)  # Add 25min for the last period
+            
+            # Resample to 5-minute intervals and interpolate with cubic splines
+            df_5min = df_30min.resample('5min').asfreq()  # Create 5-min grid with NaN
+            
+            # Apply cubic interpolation for smooth curves
+            # Use 'cubic' for natural solar curves, fallback to 'linear' if insufficient data
+            if len(df_30min) >= 4:  # Need at least 4 points for cubic splines
+                df_5min = df_5min.interpolate(method='cubic', limit_direction='forward')
+            else:
+                logger.warning(f"Insufficient data for cubic interpolation ({len(df_30min)} points), using linear")
+                df_5min = df_5min.interpolate(method='linear', limit_direction='forward')
+            
+            # Smart end-point handling: use trend from last few points instead of flat-lining
+            # Calculate trend from last 3 data points if available
+            if len(df_30min) >= 3:
+                # Get the last 3 30-minute points
+                last_points = df_30min.tail(3)
+                
+                # For each region, calculate trend and extrapolate
+                for col in df_30min.columns:
+                    # Calculate average rate of change
+                    values = last_points[col].values
+                    if len(values) >= 2 and values[-1] > 0:  # Only extrapolate if last value is positive
+                        # Simple linear trend from last 2 points
+                        trend_per_30min = values[-1] - values[-2]
+                        trend_per_5min = trend_per_30min / 6
+                        
+                        # Find NaN values at the end that need extrapolation
+                        last_valid_idx = df_5min[col].last_valid_index()
+                        if last_valid_idx is not None:
+                            # Get indices after the last valid value
+                            mask = df_5min.index > last_valid_idx
+                            num_periods = mask.sum()
+                            
+                            if num_periods > 0 and num_periods <= 6:  # Only extrapolate up to 30 minutes
+                                # Apply decreasing trend (solar typically decreases in evening)
+                                last_value = df_5min.loc[last_valid_idx, col]
+                                for i, idx in enumerate(df_5min.index[mask]):
+                                    # Apply trend with some decay (solar doesn't increase linearly forever)
+                                    decay_factor = 0.9 ** i  # Gentle decay
+                                    new_value = last_value + (i + 1) * trend_per_5min * decay_factor
+                                    # Ensure non-negative and reasonable bounds
+                                    df_5min.loc[idx, col] = max(0, min(new_value, last_value * 1.5))
+            
+            # Fill any remaining NaN with forward-fill (limited to 6 periods)
+            df_5min = df_5min.fillna(method='ffill', limit=6)
+            
+            # Fill any remaining NaN with 0
+            df_5min = df_5min.fillna(0)
+            
+            # Ensure non-negative values (solar generation can't be negative)
+            df_5min = df_5min.clip(lower=0)
+            
+            # Reset index to have settlementdate as column
+            df_5min = df_5min.reset_index()
+            
+            logger.info(f"Converted {len(df_30min)} 30-min records to {len(df_5min)} 5-min records using cubic interpolation")
+            
+            return df_5min
+            
+        except Exception as e:
+            logger.error(f"Error in cubic interpolation conversion: {e}")
+            logger.info("Falling back to original linear interpolation method")
+            
+            # Fallback to original method if cubic fails
+            return self._convert_30min_to_5min_linear(df_30min.reset_index())
+    
+    def _convert_30min_to_5min_linear(self, df_30min):
+        """
+        Fallback: Original linear interpolation method (kept for safety)
         """
         if df_30min.empty:
             return pd.DataFrame()
@@ -258,7 +342,7 @@ class RooftopDataUpdater:
         # Create DataFrame from records
         df_5min = pd.DataFrame(five_min_records)
         
-        logger.info(f"Converted {len(df_30min)} 30-min records to {len(df_5min)} 5-min records")
+        logger.info(f"Converted {len(df_30min)} 30-min records to {len(df_5min)} 5-min records using linear interpolation")
         
         return df_5min
     

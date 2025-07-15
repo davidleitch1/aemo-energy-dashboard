@@ -157,6 +157,70 @@ def load_transmission_data():
         return pd.DataFrame()
 
 
+def _convert_rooftop_30min_to_5min(df_30min):
+    """
+    Convert 30-minute rooftop solar data to 5-minute intervals using cubic spline interpolation
+    """
+    if df_30min.empty:
+        return pd.DataFrame()
+    
+    try:
+        # Ensure we have a datetime index
+        if not isinstance(df_30min.index, pd.DatetimeIndex):
+            if 'settlementdate' in df_30min.columns:
+                df_30min = df_30min.set_index('settlementdate')
+            elif 'SETTLEMENTDATE' in df_30min.columns:
+                df_30min = df_30min.set_index('SETTLEMENTDATE')
+        
+        # Fill any NaN values with 0
+        df_30min = df_30min.fillna(0)
+        
+        # Resample to 5-minute intervals and interpolate with cubic splines
+        df_5min = df_30min.resample('5min').asfreq()
+        
+        # Apply cubic interpolation for smooth curves
+        if len(df_30min) >= 4:
+            df_5min = df_5min.interpolate(method='cubic', limit_direction='forward')
+        else:
+            df_5min = df_5min.interpolate(method='linear', limit_direction='forward')
+        
+        # Smart end-point handling: use trend from last few points
+        if len(df_30min) >= 3:
+            last_points = df_30min.tail(3)
+            
+            for col in df_30min.columns:
+                values = last_points[col].values
+                if len(values) >= 2 and values[-1] > 0:
+                    # Calculate trend from last 2 points
+                    trend_per_30min = values[-1] - values[-2]
+                    trend_per_5min = trend_per_30min / 6
+                    
+                    # Find NaN values at the end that need extrapolation
+                    last_valid_idx = df_5min[col].last_valid_index()
+                    if last_valid_idx is not None:
+                        mask = df_5min.index > last_valid_idx
+                        num_periods = mask.sum()
+                        
+                        if num_periods > 0 and num_periods <= 6:
+                            last_value = df_5min.loc[last_valid_idx, col]
+                            for i, idx in enumerate(df_5min.index[mask]):
+                                # Apply trend with decay
+                                decay_factor = 0.9 ** i
+                                new_value = last_value + (i + 1) * trend_per_5min * decay_factor
+                                df_5min.loc[idx, col] = max(0, min(new_value, last_value * 1.5))
+        
+        # Fill any remaining NaN with forward-fill (limited to 6 periods)
+        df_5min = df_5min.fillna(method='ffill', limit=6)
+        df_5min = df_5min.fillna(0)
+        df_5min = df_5min.clip(lower=0)
+        
+        logger.info(f"Converted {len(df_30min)} 30-min rooftop records to {len(df_5min)} 5-min records")
+        return df_5min
+        
+    except Exception as e:
+        logger.error(f"Error converting rooftop solar data: {e}")
+        return df_30min
+
 def load_rooftop_solar_data():
     """
     Load rooftop solar data for the last 24 hours
@@ -172,16 +236,32 @@ def load_rooftop_solar_data():
         # Load rooftop solar data
         rooftop_data = pd.read_parquet(rooftop_file)
         
-        # Filter for last 24 hours
-        end_time = datetime.now()
-        start_time = end_time - timedelta(hours=24)
-        
-        # Ensure proper datetime index
-        if 'SETTLEMENTDATE' in rooftop_data.columns:
+        # Ensure proper datetime handling
+        if 'settlementdate' in rooftop_data.columns:
+            rooftop_data['settlementdate'] = pd.to_datetime(rooftop_data['settlementdate'])
+            rooftop_data = rooftop_data.set_index('settlementdate')
+        elif 'SETTLEMENTDATE' in rooftop_data.columns:
             rooftop_data['SETTLEMENTDATE'] = pd.to_datetime(rooftop_data['SETTLEMENTDATE'])
             rooftop_data = rooftop_data.set_index('SETTLEMENTDATE')
         elif not isinstance(rooftop_data.index, pd.DatetimeIndex):
             rooftop_data.index = pd.to_datetime(rooftop_data.index)
+        
+        # Check if data is in 30-minute intervals
+        if len(rooftop_data) > 1:
+            # Calculate typical interval between consecutive timestamps
+            time_diffs = rooftop_data.index.to_series().diff().dropna()
+            median_interval = time_diffs.median()
+            
+            # If median interval is around 30 minutes, convert to 5-minute
+            if median_interval >= timedelta(minutes=25) and median_interval <= timedelta(minutes=35):
+                logger.info("Detected 30-minute rooftop solar data, converting to 5-minute intervals")
+                rooftop_data = _convert_rooftop_30min_to_5min(rooftop_data)
+            else:
+                logger.info(f"Rooftop solar data appears to be in {median_interval.total_seconds()/60:.0f}-minute intervals")
+        
+        # Filter for last 24 hours
+        end_time = datetime.now()
+        start_time = end_time - timedelta(hours=24)
         
         # Filter for last 24 hours
         filtered_rooftop = rooftop_data[

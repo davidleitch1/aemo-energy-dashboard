@@ -667,6 +667,137 @@ class EnergyDashboard(param.Parameterized):
             logger.error(f"Error loading transmission data: {e}")
             self.transmission_df = pd.DataFrame()
 
+    def _fix_rooftop_flatlining(self, df):
+        """
+        Fix flat-lining issues in already-converted 5-minute rooftop solar data
+        by applying local smoothing to sequences of identical values
+        """
+        if df.empty:
+            return df
+        
+        try:
+            df = df.copy()
+            df = df.sort_values('settlementdate')
+            
+            for col in [c for c in df.columns if c != 'settlementdate']:
+                values = df[col].values.copy()
+                
+                # Find sequences of identical values
+                value_changes = np.diff(values, prepend=values[0])
+                change_points = np.where(value_changes != 0)[0]
+                
+                # Add start and end points
+                change_points = np.concatenate([[0], change_points, [len(values)]])
+                
+                # Process each segment
+                for i in range(len(change_points) - 1):
+                    start_idx = change_points[i]
+                    end_idx = change_points[i + 1]
+                    segment_length = end_idx - start_idx
+                    
+                    # If segment has 5+ identical values, apply smoothing
+                    if segment_length >= 5:
+                        # Get values before and after this segment for context
+                        prev_value = values[start_idx - 1] if start_idx > 0 else values[start_idx]
+                        next_value = values[end_idx] if end_idx < len(values) else values[end_idx - 1]
+                        curr_value = values[start_idx]
+                        
+                        # Apply cubic interpolation between prev and next values
+                        if prev_value != next_value and segment_length <= 12:  # Only for segments up to 1 hour
+                            # Create smooth transition
+                            x_points = np.array([0, segment_length])
+                            y_points = np.array([prev_value, next_value])
+                            
+                            # Use cubic interpolation for smooth curve
+                            from scipy.interpolate import interp1d
+                            if segment_length > 3:
+                                f = interp1d(x_points, y_points, kind='cubic')
+                            else:
+                                f = interp1d(x_points, y_points, kind='linear')
+                            
+                            new_values = f(np.arange(segment_length))
+                            
+                            # Apply the smoothed values
+                            values[start_idx:end_idx] = new_values
+                            
+                            logger.info(f"Fixed flat-lining in {col} from index {start_idx} to {end_idx}")
+                
+                # Update the dataframe
+                df[col] = values
+            
+            logger.info("Applied flat-lining fix to rooftop solar data")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error fixing rooftop flat-lining: {e}")
+            return df
+
+    def _convert_rooftop_30min_to_5min(self, df_30min):
+        """
+        Convert 30-minute rooftop solar data to 5-minute intervals using cubic spline interpolation
+        This ensures consistent interpolation regardless of which updater created the file
+        """
+        if df_30min.empty:
+            return pd.DataFrame()
+        
+        try:
+            # Sort by time and set datetime index
+            df_30min = df_30min.sort_values('settlementdate')
+            df_30min = df_30min.set_index('settlementdate')
+            
+            # Fill any NaN values with 0 (rooftop solar can't be negative)
+            df_30min = df_30min.fillna(0)
+            
+            # Resample to 5-minute intervals and interpolate with cubic splines
+            df_5min = df_30min.resample('5min').asfreq()  # Create 5-min grid with NaN
+            
+            # Apply cubic interpolation for smooth curves
+            # Use 'cubic' for natural solar curves, fallback to 'linear' if insufficient data
+            if len(df_30min) >= 4:  # Need at least 4 points for cubic splines
+                df_5min = df_5min.interpolate(method='cubic', limit_direction='forward')
+            else:
+                df_5min = df_5min.interpolate(method='linear', limit_direction='forward')
+            
+            # Smart end-point handling: use trend from last few points
+            if len(df_30min) >= 3:
+                last_points = df_30min.tail(3)
+                
+                for col in df_30min.columns:
+                    values = last_points[col].values
+                    if len(values) >= 2 and values[-1] > 0:
+                        # Calculate trend from last 2 points
+                        trend_per_30min = values[-1] - values[-2]
+                        trend_per_5min = trend_per_30min / 6
+                        
+                        # Find NaN values at the end that need extrapolation
+                        last_valid_idx = df_5min[col].last_valid_index()
+                        if last_valid_idx is not None:
+                            mask = df_5min.index > last_valid_idx
+                            num_periods = mask.sum()
+                            
+                            if num_periods > 0 and num_periods <= 6:
+                                last_value = df_5min.loc[last_valid_idx, col]
+                                for i, idx in enumerate(df_5min.index[mask]):
+                                    # Apply trend with decay
+                                    decay_factor = 0.9 ** i
+                                    new_value = last_value + (i + 1) * trend_per_5min * decay_factor
+                                    df_5min.loc[idx, col] = max(0, min(new_value, last_value * 1.5))
+            
+            # Fill any remaining NaN with forward-fill (limited to 6 periods)
+            df_5min = df_5min.fillna(method='ffill', limit=6)
+            df_5min = df_5min.fillna(0)
+            df_5min = df_5min.clip(lower=0)
+            
+            # Reset index to have settlementdate as column
+            df_5min = df_5min.reset_index()
+            
+            logger.info(f"Converted {len(df_30min)} 30-min rooftop records to {len(df_5min)} 5-min records")
+            return df_5min
+            
+        except Exception as e:
+            logger.error(f"Error converting rooftop solar data: {e}")
+            return df_30min.reset_index()
+
     def load_rooftop_solar_data(self):
         """Load and process rooftop solar data from parquet file"""
         try:
@@ -684,6 +815,37 @@ class EnergyDashboard(param.Parameterized):
             # Ensure datetime column
             if not pd.api.types.is_datetime64_any_dtype(df['settlementdate']):
                 df['settlementdate'] = pd.to_datetime(df['settlementdate'])
+            
+            # Check if data is in 30-minute intervals OR has flat-lining issues
+            if len(df) > 1:
+                # Calculate typical interval between consecutive timestamps
+                df_sorted = df.sort_values('settlementdate')
+                time_diffs = df_sorted['settlementdate'].diff().dropna()
+                median_interval = time_diffs.median()
+                
+                # Check for flat-lining pattern (repeated values indicating poor interpolation)
+                has_flatlining = False
+                for col in [c for c in df.columns if c != 'settlementdate']:
+                    # Check if we have sequences of identical values
+                    value_changes = df_sorted[col].diff().fillna(1)
+                    # Count consecutive zeros (no change)
+                    consecutive_zeros = (value_changes == 0).astype(int)
+                    consecutive_count = consecutive_zeros.groupby((consecutive_zeros != consecutive_zeros.shift()).cumsum()).sum()
+                    # If we have 5+ consecutive identical values, it's likely flat-lining
+                    if (consecutive_count >= 5).any():
+                        has_flatlining = True
+                        logger.info(f"Detected flat-lining pattern in column {col}")
+                        break
+                
+                # If median interval is around 30 minutes, convert to 5-minute
+                if median_interval >= timedelta(minutes=25) and median_interval <= timedelta(minutes=35):
+                    logger.info("Detected 30-minute rooftop solar data, converting to 5-minute intervals")
+                    df = self._convert_rooftop_30min_to_5min(df)
+                elif has_flatlining and median_interval <= timedelta(minutes=10):
+                    logger.info("Detected 5-minute data with flat-lining, applying smoothing fix")
+                    df = self._fix_rooftop_flatlining(df)
+                else:
+                    logger.info(f"Rooftop solar data appears to be in {median_interval.total_seconds()/60:.0f}-minute intervals")
             
             # Apply time range filtering based on user selection
             start_datetime, end_datetime = self._get_effective_date_range()
