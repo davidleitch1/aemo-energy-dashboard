@@ -25,6 +25,7 @@ FUEL_COLORS = {
     'Wind': '#00FF7F',            # Spring green - matches Generation tab
     'Water': '#00BFFF',           # Sky blue - matches Generation tab
     'Battery Storage': '#9370DB',  # Medium purple
+    'Battery': '#9370DB',         # Medium purple (same as Battery Storage)
     'Coal': '#8B4513',            # Saddle brown
     'Gas other': '#FF7F50',       # Coral
     'OCGT': '#FF6347',            # Tomato
@@ -308,7 +309,9 @@ def prepare_generation_for_stacking(gen_data, transmission_data=None, rooftop_da
             pivot_df.index.name = 'settlementdate'
             
             # Keep only fuel columns (remove any extra columns)
-            fuel_cols_present = [col for col in pivot_df.columns if col in fuel_columns + ['Rooftop Solar', 'Other']]
+            # Include all possible fuel columns including Transmission Flow
+            all_fuel_columns = fuel_columns + ['Rooftop Solar', 'Other', 'Transmission Flow', 'Transmission Exports']
+            fuel_cols_present = [col for col in pivot_df.columns if col in all_fuel_columns]
             pivot_df = pivot_df[fuel_cols_present]
             
         elif 'FUEL_CAT' in gen_data.columns and 'MW' in gen_data.columns:
@@ -399,13 +402,41 @@ def prepare_generation_for_stacking(gen_data, transmission_data=None, rooftop_da
             except Exception as e:
                 logger.error(f"Error adding rooftop solar: {e}")
         
-        # Ensure all values are positive for stacking
+        # Ensure all values are positive for stacking EXCEPT Battery Storage
+        # Battery Storage can be negative (charging) or positive (discharging)
         for col in pivot_df.columns:
-            if col != 'settlementdate':
+            if col not in ['settlementdate', 'Battery Storage', 'Battery']:
                 pivot_df[col] = pivot_df[col].clip(lower=0)
         
         logger.info(f"Prepared data shape: {pivot_df.shape}")
         logger.info(f"Fuel types: {list(pivot_df.columns)}")
+        
+        # Define preferred fuel order with battery near zero line
+        preferred_order = [
+            'Transmission Flow',     # At top of stack (positive values)
+            'Solar', 
+            'Rooftop Solar',
+            'Wind', 
+            'Other', 
+            'Coal', 
+            'CCGT', 
+            'Gas other', 
+            'OCGT', 
+            'Water',
+            'Battery Storage',       # Near zero line (can be negative for charging)
+            'Battery',              # Alternative name for Battery Storage
+            'Biomass'
+        ]
+        
+        # Reorder columns based on preferred order, only including columns that exist
+        available_fuels = [fuel for fuel in preferred_order if fuel in pivot_df.columns]
+        
+        # Add any remaining fuels not in the preferred order
+        remaining_fuels = [col for col in pivot_df.columns if col not in available_fuels]
+        final_order = available_fuels + remaining_fuels
+        
+        # Reorder the dataframe
+        pivot_df = pivot_df[final_order]
         
         return pivot_df
         
@@ -416,7 +447,7 @@ def prepare_generation_for_stacking(gen_data, transmission_data=None, rooftop_da
 
 def create_24hour_generation_chart(pivot_df):
     """
-    Create 24-hour stacked area chart
+    Create 24-hour stacked area chart with proper battery handling
     """
     try:
         if pivot_df.empty:
@@ -425,6 +456,10 @@ def create_24hour_generation_chart(pivot_df):
                 "<h3>No generation data available for last 24 hours</h3></div>",
                 width=800, height=400
             )
+        
+        # Rename Battery Storage to Battery for consistency
+        if 'Battery Storage' in pivot_df.columns:
+            pivot_df = pivot_df.rename(columns={'Battery Storage': 'Battery'})
         
         # Get fuel types (exclude any index columns)
         fuel_types = [col for col in pivot_df.columns if col not in ['settlementdate']]
@@ -436,30 +471,70 @@ def create_24hour_generation_chart(pivot_df):
                 width=800, height=400
             )
         
-        # Create the stacked area plot
-        plot = pivot_df.hvplot.area(
+        # Separate positive and negative values for battery
+        plot_data_positive = pivot_df.copy()
+        battery_col = 'Battery'
+        has_battery = battery_col in plot_data_positive.columns
+        
+        # Handle battery - only keep positive values in main plot
+        if has_battery:
+            plot_data_positive[battery_col] = plot_data_positive[battery_col].clip(lower=0)
+        
+        # Get fuel types for positive stacking (all fuels)
+        positive_fuel_types = fuel_types
+        
+        # Create main stacked area plot with positive values
+        main_plot = plot_data_positive.hvplot.area(
             x='settlementdate',
-            y=fuel_types,
+            y=positive_fuel_types,
             stacked=True,
             width=800,
             height=400,
-            title="NEM Generation - Last 24 Hours",
             ylabel='Generation (MW)',
             xlabel='Time',
-            color=[FUEL_COLORS.get(fuel, '#888888') for fuel in fuel_types],
+            color=[FUEL_COLORS.get(fuel, '#888888') for fuel in positive_fuel_types],
             alpha=0.8,
-            hover_cols=['settlementdate'] + fuel_types,
+            hover_cols=['settlementdate'] + positive_fuel_types,
             legend='right'
         )
         
+        # Check if we have negative battery values
+        if has_battery and (pivot_df[battery_col].values < 0).any():
+            # Create negative battery data
+            plot_data_negative = pd.DataFrame(index=pivot_df.index)
+            plot_data_negative['settlementdate'] = plot_data_negative.index
+            plot_data_negative[battery_col] = pd.Series(
+                np.where(pivot_df[battery_col].values < 0, pivot_df[battery_col].values, 0),
+                index=pivot_df.index
+            )
+            
+            # Create battery negative area plot
+            battery_negative_plot = plot_data_negative.hvplot.area(
+                x='settlementdate',
+                y=battery_col,
+                stacked=False,
+                width=800,
+                height=400,
+                color=FUEL_COLORS.get('Battery', '#9370DB'),
+                alpha=0.8,
+                hover=True,
+                legend=False  # Legend already shown in main plot
+            )
+            
+            # Combine positive and negative plots
+            area_plot = main_plot * battery_negative_plot
+        else:
+            area_plot = main_plot
+        
         # Apply styling options
-        plot = plot.opts(
+        area_plot = area_plot.opts(
+            title="NEM Generation - Last 24 Hours",
             show_grid=False,
             toolbar='above',
             fontsize={'title': 14, 'labels': 12, 'xticks': 10, 'yticks': 10}
         )
         
-        return pn.pane.HoloViews(plot, sizing_mode='fixed', width=800, height=400, 
+        return pn.pane.HoloViews(area_plot, sizing_mode='fixed', width=800, height=400, 
                                 css_classes=['chart-no-border'],
                                 linked_axes=False)  # Disable axis linking to prevent UFuncTypeError
         
