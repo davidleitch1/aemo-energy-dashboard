@@ -22,8 +22,8 @@ hv.extension('bokeh')
 FUEL_COLORS = {
     'Solar': '#FFD700',           # Gold
     'Rooftop Solar': '#FFF59D',   # Light yellow
-    'Wind': '#87CEEB',            # Sky blue
-    'Water': '#4682B4',           # Steel blue
+    'Wind': '#00FF7F',            # Spring green - matches Generation tab
+    'Water': '#00BFFF',           # Sky blue - matches Generation tab
     'Battery Storage': '#9370DB',  # Medium purple
     'Coal': '#8B4513',            # Saddle brown
     'Gas other': '#FF7F50',       # Coral

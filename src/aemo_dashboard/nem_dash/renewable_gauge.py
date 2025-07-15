@@ -89,21 +89,27 @@ def calculate_renewable_percentage(gen_data):
             # Already a Series
             latest_data = gen_data
         
+        # Fuels to exclude from total generation calculation
+        EXCLUDED_FUELS = ['Battery Storage', 'Transmission Flow']
+        
         # Calculate renewable generation
         renewable_gen = 0
         total_gen = 0
         
         for fuel in latest_data.index:
             value = latest_data[fuel]
-            logger.info(f"Fuel: {fuel}, Value: {value}, Is Renewable: {fuel in RENEWABLE_FUELS}")
-            if pd.notna(value) and value > 0:  # Only count positive generation
+            is_excluded = fuel in EXCLUDED_FUELS
+            is_renewable = fuel in RENEWABLE_FUELS
+            logger.info(f"Fuel: {fuel}, Value: {value}, Is Renewable: {is_renewable}, Is Excluded: {is_excluded}")
+            
+            if pd.notna(value) and value > 0 and fuel not in EXCLUDED_FUELS:  # Exclude battery and transmission
                 total_gen += value
                 if fuel in RENEWABLE_FUELS:
                     renewable_gen += value
         
         if total_gen > 0:
             percentage = (renewable_gen / total_gen) * 100
-            logger.info(f"Renewable: {renewable_gen:.1f}MW / Total: {total_gen:.1f}MW = {percentage:.1f}%")
+            logger.info(f"Renewable: {renewable_gen:.1f}MW / Total (excl. battery/transmission): {total_gen:.1f}MW = {percentage:.1f}%")
             return min(100.0, max(0.0, percentage))  # Clamp to 0-100
         else:
             logger.warning("No positive generation data found")
@@ -190,7 +196,8 @@ def create_renewable_gauge_plotly(current_value, all_time_record=45.2, hour_reco
                     'tick0': 0,
                     'dtick': 20,
                     'tickwidth': 1,
-                    'tickcolor': "darkblue"
+                    'tickcolor': "rgba(255, 121, 198, 0.6)",  # Pink with alpha 0.6
+                    'tickfont': {'color': "rgba(255, 121, 198, 0.6)"}  # Pink text with alpha 0.6
                 },
                 'bar': {'color': "#ff79c6", 'thickness': 0.6, 'line': {'color': "#ff79c6", 'width': 4}},
                 'bgcolor': "white",
@@ -256,17 +263,18 @@ def create_renewable_gauge_plotly(current_value, all_time_record=45.2, hour_reco
             borderwidth=2
         )
         
-        # Add legend positioned to the right side of the gauge
+        # Add legend positioned below the gauge
         fig.add_annotation(
-            x=0.85, y=0.5,  # Right side, middle height
-            text=f"👑 All-time: {all_time_record:.0f}%<br>🕐 Hour record: {hour_record:.0f}%",
+            x=0.5, y=0.05,  # Bottom center
+            text=f"👑 All-time: {all_time_record:.0f}%  🕐 Hour record: {hour_record:.0f}%",
             showarrow=False,
             xref="paper", yref="paper",
-            align="left",
-            font=dict(size=11),
-            bgcolor="rgba(255, 255, 255, 0.9)",
-            bordercolor="gray",
-            borderwidth=1
+            align="center",
+            font=dict(size=12, color="#ff79c6"),
+            bgcolor="rgba(40, 40, 40, 0.8)",
+            bordercolor="rgba(255, 121, 198, 0.5)",
+            borderwidth=1,
+            borderpad=4
         )
         
         fig.update_layout(

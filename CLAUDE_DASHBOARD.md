@@ -66,10 +66,12 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
   - ✅ **Generation Chart**: 24-hour stacked area showing NEM generation by fuel type
   - ✅ **Price Section**: Real-time 5-minute spot prices table + smoothed price chart
   - ✅ **Renewable Gauge**: Plotly gauge showing current renewable energy percentage
-    - Real-time calculation: (Wind + Solar + Water + Rooftop Solar) / Total Generation
+    - Real-time calculation: (Wind + Solar + Water + Rooftop Solar) / Total Generation*
+    - *Total Generation excludes Battery Storage and Transmission Flow
     - Reference markers: 👑 All-time record, 🕐 Hour record
-    - Pink Dracula theme (#ff79c6) for needle, text, and title
-    - Whole number display (e.g., "32%" not "31.8%")
+    - Pink Dracula theme (#ff79c6) with semi-transparent axis labels
+    - Whole number display (e.g., "36%" not "35.8%")
+    - Legend positioned below gauge to avoid overlap
   - ✅ **Auto-update**: 4.5-minute refresh cycle
   - ✅ **Data Integration**: Uses dashboard's processed data for consistency
 
@@ -98,10 +100,11 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
    - Handles both 30-minute and 5-minute input data automatically
    - Fixes sharp drop-offs at end of day with smooth transitions
 
-#### ⚠️ **Known Issues**:
-1. **Rooftop Solar Last 30 Minutes**: The flat-lining detection doesn't properly fix the final 30 minutes of rooftop solar data
-   - Still shows sharp drop-off at the end of the day
-   - Plan: Reload parquet file with original 30-minute data and do conversion in dashboard
+#### ✅ **Temporary Fixes Applied**:
+1. **Rooftop Solar Data Gaps**: When rooftop data is less recent than generation data (common at end of day)
+   - Forward-fills last known values (up to 2 hours) with exponential decay (2% per 5-min)
+   - Prevents sharp drop to zero when rooftop data ends before generation data
+   - **Note**: This is a temporary fix - proper solution is to store 30-minute data and convert in dashboard
 
 #### 🎯 **Remaining Enhancements**:
 - Fix rooftop solar data downloads to store 30-minute data
@@ -112,9 +115,9 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
 
 ## Data Quality Issues
 
-### 🔧 **Rooftop Solar Conversion Issue (30-min to 5-min)** ⚠️ PARTIALLY FIXED
+### 🔧 **Rooftop Solar Conversion Issue (30-min to 5-min)** 🔧 TEMPORARY FIX
 
-#### **Solution Implemented (2025-07-15)**
+#### **Temporary Solution Implemented (2025-07-15)**
 
 The dashboard now includes a comprehensive fix that handles rooftop solar data regardless of format:
 
@@ -130,11 +133,21 @@ The dashboard now includes a comprehensive fix that handles rooftop solar data r
    # Creates smooth transitions instead of sharp drops
    ```
 
-3. **Benefits**:
+3. **Data Gap Handling** (NEW):
+   - Detects when rooftop data ends before generation data
+   - Forward-fills missing periods with exponential decay (2% per 5-min)
+   - Prevents sharp drops to zero at end of day
+
+4. **Benefits**:
    - No more sharp drop-offs at end of day
    - Smooth, natural solar generation curves
    - Works with data from any updater
    - No need to reprocess existing data files
+   
+**Note**: This is a temporary solution. The proper fix is to:
+- Store original 30-minute data in parquet files
+- Always perform conversion to 5-minute in the dashboard
+- This ensures consistency and allows algorithm improvements
 
 #### **Original Implementation Analysis**
 
