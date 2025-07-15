@@ -9,6 +9,24 @@ from .price_components import create_price_section
 from .renewable_gauge import create_renewable_gauge_component
 from .generation_overview import create_generation_overview_component
 
+# Custom CSS to remove chart borders
+CUSTOM_CSS = """
+.chart-no-border .bk-root {
+    border: none !important;
+    outline: none !important;
+}
+
+.chart-no-border .bk {
+    border: none !important;
+    outline: none !important;
+}
+
+.chart-no-border {
+    border: none !important;
+    outline: none !important;
+}
+"""
+
 logger = get_logger(__name__)
 
 
@@ -49,7 +67,8 @@ def create_nem_dash_tab(dashboard_instance=None):
             ),
             sizing_mode='stretch_width',
             margin=(10, 10),
-            name="Nem-dash"  # Tab name
+            name="Nem-dash",  # Tab name
+            stylesheets=[CUSTOM_CSS]  # Apply custom CSS
         )
         
         logger.info("Nem-dash tab created successfully")

@@ -358,7 +358,8 @@ def create_24hour_generation_chart(pivot_df):
             fontsize={'title': 14, 'labels': 12, 'xticks': 10, 'yticks': 10}
         )
         
-        return pn.pane.HoloViews(plot, sizing_mode='fixed', width=800, height=400)
+        return pn.pane.HoloViews(plot, sizing_mode='fixed', width=800, height=400, 
+                                css_classes=['chart-no-border'])
         
     except Exception as e:
         logger.error(f"Error creating generation chart: {e}")

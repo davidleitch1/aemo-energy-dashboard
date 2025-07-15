@@ -88,13 +88,13 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
 6. **Price Components**: Adapted from aemo-spot-dashboard with ITK styling
 7. **Error Handling**: Matplotlib backend fixes for threading compatibility
 
-#### 🔧 **Known Issues to Fix Next**:
-1. **Chart Container**: Blue outline border needs removal from generation chart frame
-2. **Gauge Legend**: Reference markers legend overlaps with gauge title (position conflict)
+#### ✅ **Latest Fixes (2025-07-15)**:
+1. **Chart Container**: ✅ Removed blue outline border from generation chart frame using custom CSS
+2. **Gauge Legend**: ✅ Repositioned reference markers legend to center-bottom area with pink Dracula theming
 
 #### 🎯 **Remaining Enhancements**:
-- Remove chart border styling
-- Reposition gauge legend to avoid title overlap
+- Auto-update functionality refinements
+- Performance optimization for large datasets  
 - Further layout refinements based on user feedback
 
 ## Running the Dashboard
