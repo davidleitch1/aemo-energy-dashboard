@@ -264,7 +264,91 @@ playwright test dashboard_functionality.spec.js
    - Implement toggle behavior for mutually exclusive options
    - Add visual feedback for active states
 
+## Planned Features & Tasks
+
+### New Nem-dash Tab
+**Objective**: Create a comprehensive dashboard tab that provides an at-a-glance view of key NEM metrics with visual indicators.
+
+**Components**:
+
+1. **Generation Stack Chart** (standalone)
+   - Reuse existing generation by fuel stacked area chart
+   - Remove the associated price chart (generation only)
+   - Keep time range selector functionality
+
+2. **Custom Price Chart**
+   - Import/adapt price visualization from existing dashboard
+   - Specific requirements to be defined based on source implementation
+
+3. **Renewable Energy Gauge**
+   - **Visual Style**: E-chart gauge/speedometer style
+   - **Color Scheme**: Reversed colors (Red at 0%, Green at 100%)
+   - **Primary Metric**: Current renewable percentage (Wind + Solar + Hydro) / Total Generation
+   - **Reference Lines**:
+     - All-time record renewable percentage (from available data)
+     - Hour-of-day record (e.g., best ever percentage for 2pm)
+   - **Update**: Real-time with dashboard refresh
+
+4. **Additional Indicator Wheels** (2 more gauges)
+   - Specific metrics to be determined
+   - Follow same visual style as renewable gauge
+
+**Technical Requirements**:
+- Use Panel's indicators or integrate echarts/plotly gauge charts
+- Ensure responsive layout that works well on different screen sizes
+- Maintain consistent Material Design theme
+- Add to main tab navigation alongside existing tabs
+
+### Auto-Update Functionality
+**Requirement**: The dashboard MUST automatically update with new data as it becomes available.
+
+**Current Implementation**:
+- Dashboard has auto-update loop that runs every 4.5 minutes
+- Updates are triggered in `auto_update_loop()` method
+- Currently failing due to UFuncTypeError (see Known Issues)
+
+**Expected Behavior**:
+- Dashboard should refresh all charts/tables automatically
+- No manual refresh should be required
+- Update interval should match data collection frequency (5 minutes)
+- Updates should be seamless without visible flicker
+- Failed updates should not crash the dashboard
+
+**Implementation Notes**:
+- Consider using Panel's `Indicator` widget or custom Bokeh/HoloViews implementation
+- For echarts integration, may need to use Panel's ReactiveHTML
+- Ensure data calculations are efficient (cache renewable percentages)
+- Add configuration for gauge thresholds and colors
+
 ## Known Issues
+
+### UFuncTypeError with DateTime Comparison (FIXED)
+**Problem**: The dashboard encountered a numpy ufunc error when updating plots, specifically when comparing datetime64 and float types.
+
+**Error Message**:
+```
+Error updating plots: ufunc 'greater' did not contain a loop with signature matching types 
+(<class 'numpy.dtypes.DateTime64DType'>, <class 'numpy.dtypes._PyFloatDType'>) -> None
+```
+
+**Root Cause**: 
+- When using pandas DataFrame comparisons like `df[col] < 0` or `.where()` operations, numpy was trying to compare the datetime64 index with scalar values
+- This happened in battery storage and transmission flow calculations where negative values needed to be separated
+
+**Fix Applied**:
+1. Changed comparisons to use `.values` to compare only the data, not the index:
+   ```python
+   # Before: (plot_data[battery_col] < 0).any()
+   # After:  (plot_data[battery_col].values < 0).any()
+   ```
+
+2. Replaced `.where()` operations with `np.where()` on values:
+   ```python
+   # Before: transmission_values.where(transmission_values > 0, 0)
+   # After:  pd.Series(np.where(transmission_values.values > 0, transmission_values.values, 0), index=transmission_values.index)
+   ```
+
+**Status**: ✅ FIXED - Auto-updates now work without errors
 
 ### Transmission Plot X-Axis Datetime Formatting
 **Problem**: The transmission flows chart shows all time labels as "00:00" instead of proper hourly times when switching between time ranges (1 day, 7 days, 30 days).

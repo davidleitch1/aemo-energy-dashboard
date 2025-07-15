@@ -94,4 +94,4 @@ site/
 # Environment variables (keep .env.sample for template)
 .env
 .env.local
-.env.production
+.env.productionscreenshots/

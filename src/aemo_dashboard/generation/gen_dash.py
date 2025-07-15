@@ -836,13 +836,22 @@ class EnergyDashboard(param.Parameterized):
                     common_index = pivot_df.index.intersection(net_flows.index)
                     if len(common_index) > 0:
                         # Split transmission into imports (positive) and exports (negative)
-                        transmission_values = net_flows.reindex(pivot_df.index, fill_value=0)['net_transmission_mw']
+                        # Ensure we're getting the right column and it's numeric
+                        transmission_series = net_flows.reindex(pivot_df.index, fill_value=0)['net_transmission_mw']
+                        # Convert to float to ensure numeric type
+                        transmission_values = pd.to_numeric(transmission_series, errors='coerce').fillna(0)
                         
                         # Add transmission imports (positive values only) - goes to top of stack
-                        pivot_df['Transmission Flow'] = transmission_values.where(transmission_values > 0, 0)
+                        pivot_df['Transmission Flow'] = pd.Series(
+                            np.where(transmission_values.values > 0, transmission_values.values, 0),
+                            index=transmission_values.index
+                        )
                         
                         # Add transmission exports (negative values only) - goes below battery
-                        pivot_df['Transmission Exports'] = transmission_values.where(transmission_values < 0, 0)
+                        pivot_df['Transmission Exports'] = pd.Series(
+                            np.where(transmission_values.values < 0, transmission_values.values, 0),
+                            index=transmission_values.index
+                        )
                         
                         logger.info(f"Added transmission flows: Imports max {pivot_df['Transmission Flow'].max():.1f}MW, "
                                    f"Exports min {pivot_df['Transmission Exports'].min():.1f}MW")
@@ -1092,8 +1101,8 @@ class EnergyDashboard(param.Parameterized):
             
             # Determine if we need special negative value handling
             has_negative_values = (
-                (has_battery and (plot_data[battery_col] < 0).any()) or
-                (has_transmission_exports and (plot_data[transmission_exports_col] < 0).any())
+                (has_battery and (plot_data[battery_col].values < 0).any()) or
+                (has_transmission_exports and (plot_data[transmission_exports_col].values < 0).any())
             )
             
             if has_negative_values:
@@ -1104,7 +1113,10 @@ class EnergyDashboard(param.Parameterized):
                 # Handle battery storage negative values
                 if has_battery:
                     battery_data = plot_data[battery_col].copy()
-                    plot_data_positive[battery_col] = battery_data.where(battery_data >= 0, 0)  # Only positive values
+                    plot_data_positive[battery_col] = pd.Series(
+                        np.where(battery_data.values >= 0, battery_data.values, 0),
+                        index=battery_data.index
+                    )  # Only positive values
                 
                 # Create the main stacked area plot (positive values only, no transmission exports)
                 main_plot = plot_data_positive.hvplot.area(
@@ -1130,14 +1142,20 @@ class EnergyDashboard(param.Parameterized):
                 negative_colors = []
                 
                 # Add transmission exports negative values first (will appear at bottom)
-                if has_transmission_exports and (plot_data[transmission_exports_col] < 0).any():
-                    plot_data_negative[transmission_exports_col] = plot_data[transmission_exports_col].where(plot_data[transmission_exports_col] < 0, 0)
+                if has_transmission_exports and (plot_data[transmission_exports_col].values < 0).any():
+                    plot_data_negative[transmission_exports_col] = pd.Series(
+                        np.where(plot_data[transmission_exports_col].values < 0, plot_data[transmission_exports_col].values, 0),
+                        index=plot_data.index
+                    )
                     negative_columns.append(transmission_exports_col)
                     negative_colors.append(fuel_colors.get('Transmission Flow', '#ffb6c1'))
                 
                 # Add battery negative values second (will appear on top - higher priority)
-                if has_battery and (plot_data[battery_col] < 0).any():
-                    plot_data_negative[battery_col] = plot_data[battery_col].where(plot_data[battery_col] < 0, 0)
+                if has_battery and (plot_data[battery_col].values < 0).any():
+                    plot_data_negative[battery_col] = pd.Series(
+                        np.where(plot_data[battery_col].values < 0, plot_data[battery_col].values, 0),
+                        index=plot_data.index
+                    )
                     negative_columns.append(battery_col)
                     negative_colors.append(fuel_colors.get('Battery Storage', '#9370db'))
                 
@@ -1590,8 +1608,9 @@ class EnergyDashboard(param.Parameterized):
                 else:
                     x_min = region_transmission['settlementdate'].min()
                     x_max = region_transmission['settlementdate'].max()
-                    # Add small padding (1% of range)
-                    padding = (x_max - x_min) * 0.01
+                    # Add small padding (1% of range) - convert to pandas Timedelta
+                    time_diff = x_max - x_min
+                    padding = pd.Timedelta(seconds=time_diff.total_seconds() * 0.01)
                     x_range = (x_min - padding, x_max + padding)
                 
                 combined_plot = hv.Overlay(plot_elements + [zero_line]).opts(
