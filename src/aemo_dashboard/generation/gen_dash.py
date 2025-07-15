@@ -26,6 +26,7 @@ from ..shared.logging_config import setup_logging, get_logger
 from ..shared.email_alerts import EmailAlertManager
 from ..analysis.price_analysis_ui import create_price_analysis_tab
 from ..station.station_analysis_ui import create_station_analysis_tab
+from ..nem_dash.nem_dash_tab import create_nem_dash_tab_with_updates
 
 # Set up logging
 setup_logging()
@@ -33,7 +34,7 @@ logger = get_logger(__name__)
 
 # Configure Panel and HoloViews BEFORE extension loading
 pn.config.theme = 'dark'
-pn.extension('tabulator', template='material')
+pn.extension('tabulator', 'plotly', template='material')
 
 # Custom CSS to ensure x-axis labels are visible and style header
 pn.config.raw_css.append("""
@@ -2056,6 +2057,15 @@ class EnergyDashboard(param.Parameterized):
             )
             
             # Create tabs for different views
+            # Nem-dash tab (main overview - first tab)
+            try:
+                logger.info("Creating Nem-dash tab...")
+                nem_dash_tab = create_nem_dash_tab_with_updates(dashboard_instance=self, auto_update=True)
+                logger.info("Nem-dash tab created successfully")
+            except Exception as e:
+                logger.error(f"Error creating Nem-dash tab: {e}")
+                nem_dash_tab = pn.pane.Markdown(f"**Error loading Nem-dash:** {e}")
+            
             # Generation tab with embedded region selector and subtabs
             generation_tab = self._create_generation_tab()
             
@@ -2077,8 +2087,9 @@ class EnergyDashboard(param.Parameterized):
                 logger.error(f"Error creating station analysis tab: {e}")
                 station_analysis_tab = pn.pane.Markdown(f"**Error loading Station Analysis:** {e}")
             
-            # Create tabbed interface
+            # Create tabbed interface with Nem-dash as first tab
             tabs = pn.Tabs(
+                ("Nem-dash", nem_dash_tab),
                 ("Generation by Fuel", generation_tab),
                 ("Average Price Analysis", price_analysis_tab),
                 ("Station Analysis", station_analysis_tab),

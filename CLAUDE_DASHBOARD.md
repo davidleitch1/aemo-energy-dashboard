@@ -44,6 +44,59 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
   - Performance metrics (revenue, capacity factor, etc.)
 - **Smart Features**: Automatic DUID grouping for multi-unit stations
 
+#### Nem-dash Tab (NEW - Primary Overview)
+- **Purpose**: Main dashboard view combining key metrics and visualizations
+- **Status**: ✅ **IMPLEMENTED** (positioned as first tab)
+- **Layout**:
+  ```
+  ┌─────────────────────────┐  ┌──────────────────────┐
+  │  Generation Chart       │  │   Price Section      │
+  │  (800x400px)           │  │  - Price Table       │
+  │  24-hour stacked area   │  │  - Price Chart       │
+  │  by fuel type          │  │  (450px width)       │
+  └─────────────────────────┘  └──────────────────────┘
+  ┌─────────────────────────┐
+  │  Renewable Energy Gauge │
+  │  (400x350px)           │
+  │  Real-time % with      │
+  │  reference markers     │
+  └─────────────────────────┘
+  ```
+- **Features**:
+  - ✅ **Generation Chart**: 24-hour stacked area showing NEM generation by fuel type
+  - ✅ **Price Section**: Real-time 5-minute spot prices table + smoothed price chart
+  - ✅ **Renewable Gauge**: Plotly gauge showing current renewable energy percentage
+    - Real-time calculation: (Wind + Solar + Water + Rooftop Solar) / Total Generation
+    - Reference markers: 👑 All-time record, 🕐 Hour record
+    - Pink Dracula theme (#ff79c6) for needle, text, and title
+    - Whole number display (e.g., "32%" not "31.8%")
+  - ✅ **Auto-update**: 4.5-minute refresh cycle
+  - ✅ **Data Integration**: Uses dashboard's processed data for consistency
+
+### **Recent Implementation Progress (2025-07-15)**
+
+#### ✅ **Completed Features**:
+1. **Tab Integration**: Nem-dash tab added as first tab in main dashboard
+2. **Data Access**: Fixed to use dashboard's `process_data_for_region()` method
+3. **Layout Implementation**: New 2-row layout with generation chart + price section on top, gauge below
+4. **Gauge Functionality**: 
+   - Real renewable percentage calculation (showing ~32%)
+   - Pink Dracula theming for all text elements
+   - Reference markers with crown/clock emojis
+   - Whole number formatting
+5. **Generation Chart**: 24-hour view using dashboard's processed data
+6. **Price Components**: Adapted from aemo-spot-dashboard with ITK styling
+7. **Error Handling**: Matplotlib backend fixes for threading compatibility
+
+#### 🔧 **Known Issues to Fix Next**:
+1. **Chart Container**: Blue outline border needs removal from generation chart frame
+2. **Gauge Legend**: Reference markers legend overlaps with gauge title (position conflict)
+
+#### 🎯 **Remaining Enhancements**:
+- Remove chart border styling
+- Reposition gauge legend to avoid title overlap
+- Further layout refinements based on user feedback
+
 ## Running the Dashboard
 
 ### Start Dashboard
@@ -266,38 +319,146 @@ playwright test dashboard_functionality.spec.js
 
 ## Planned Features & Tasks
 
-### New Nem-dash Tab
-**Objective**: Create a comprehensive dashboard tab that provides an at-a-glance view of key NEM metrics with visual indicators.
+### New Nem-dash Tab (PRIMARY TAB)
+**Objective**: Create the primary dashboard tab that users see when opening the application. Provides an at-a-glance view of key NEM metrics with immediate access to current prices, renewable energy status, and generation overview.
 
-**Components**:
+**Tab Priority**: **FIRST TAB** - This will be the default tab that loads when users access the dashboard.
 
-1. **Generation Stack Chart** (standalone)
-   - Reuse existing generation by fuel stacked area chart
-   - Remove the associated price chart (generation only)
-   - Keep time range selector functionality
+**Layout Design**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           Nem-dash Tab                         │
+├─────────────────────────────┬───────────────────────────────────┤
+│  PRICE SECTION (Top-Left)   │  RENEWABLE GAUGE (Top-Right)     │
+│  ┌─────────────────────────┐ │  ┌─────────────────────────────┐ │
+│  │ Price Table (Recent 5)  │ │  │                             │ │
+│  │ • Current spot prices   │ │  │    🌱 Renewable Energy     │ │
+│  │ • 1hr & 24hr averages   │ │  │         Gauge               │ │
+│  │ • All NEM regions       │ │  │                             │ │
+│  └─────────────────────────┘ │  │  • Current: XX.X%           │ │
+│  ┌─────────────────────────┐ │  │  • 👑 All-time: XX.X%      │ │
+│  │ Price Chart (Smoothed)  │ │  │  • 🕐 Hour record: XX.X%   │ │
+│  │ • Last 10 hours trend   │ │  │                             │ │
+│  │ • EWM smoothed lines    │ │  └─────────────────────────────┘ │
+│  │ • All regions           │ │  Width: ~400px, Height: ~350px   │
+│  └─────────────────────────┘ │                                 │
+│  Width: ~450px              │                                 │
+├─────────────────────────────┴───────────────────────────────────┤
+│              GENERATION OVERVIEW (Bottom - Full Width)         │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │              NEM 24-Hour Stacked Generation                 │ │
+│  │                                                             │ │
+│  │  • Stacked area chart by fuel type                         │ │
+│  │  • Fixed 24-hour time range (last 24 hours)                │ │
+│  │  • All fuel types including transmission & rooftop solar   │ │
+│  │  • Height: ~400px for detailed view                        │ │
+│  │  • Auto-updates every 4.5 minutes                          │ │
+│  │                                                             │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+│  Width: Full dashboard width (~1200px)                         │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-2. **Custom Price Chart**
-   - Import/adapt price visualization from existing dashboard
-   - Specific requirements to be defined based on source implementation
+**Component Specifications**:
 
-3. **Renewable Energy Gauge**
-   - **Visual Style**: E-chart gauge/speedometer style
-   - **Color Scheme**: Reversed colors (Red at 0%, Green at 100%)
-   - **Primary Metric**: Current renewable percentage (Wind + Solar + Hydro) / Total Generation
-   - **Reference Lines**:
-     - All-time record renewable percentage (from available data)
-     - Hour-of-day record (e.g., best ever percentage for 2pm)
-   - **Update**: Real-time with dashboard refresh
+#### 1. **Price Section (Top-Left)**
+**Source**: Adapted from `/Users/davidleitch/.../aemo-spot-dashboard/display_spot.py`
+- **Price Table Component**:
+  - Display last 5 price intervals (5-minute data)
+  - Show all NEM regions (NSW1, QLD1, SA1, VIC1, TAS1)
+  - Include calculated averages: Last hour, Last 24 hours
+  - Use ITK dark theme styling with teal accents
+  - Bold formatting for most recent entries
+  - Compact format: ~450px width, ~200px height
 
-4. **Additional Indicator Wheels** (2 more gauges)
-   - Specific metrics to be determined
-   - Follow same visual style as renewable gauge
+- **Price Chart Component**:
+  - Smoothed price trends using EWM (alpha=0.22)
+  - Last 10 hours of data (120 points max)
+  - Multi-region line chart with current values in legend
+  - Dark "Dracula" theme consistent with existing dashboard
+  - Size: ~450px width, ~250px height
+  - Update frequency: Every 4.5 minutes
 
-**Technical Requirements**:
-- Use Panel's indicators or integrate echarts/plotly gauge charts
-- Ensure responsive layout that works well on different screen sizes
-- Maintain consistent Material Design theme
-- Add to main tab navigation alongside existing tabs
+#### 2. **Renewable Energy Gauge (Top-Right)**
+**Technology**: Plotly gauge with custom reference markers
+- **Primary Metric**: (Wind + Solar + Hydro + Rooftop Solar) / Total Generation × 100
+- **Visual Design**:
+  - Gauge range: 0-100%
+  - Color gradient: Red (0%) → Orange (20%) → Yellow (40%) → Light Green (60%) → Green (80-100%)
+  - Semi-circular gauge layout
+  - Size: ~400px width, ~350px height
+
+- **Reference Markers** (on gauge rim):
+  - **👑 All-time Record**: Gold marker with crown icon, pointing to highest ever renewable %
+  - **🕐 Hour Record**: Silver marker with clock icon, pointing to best % for current hour-of-day
+  - **Visual Implementation**: Small icons positioned on gauge exterior with arrows pointing to scale
+  - **Legend**: Top-left corner showing current values for both records
+
+- **Data Calculation**:
+  - Real-time calculation from current generation data
+  - Historical records stored and updated with each new data point
+  - Graceful handling of missing data (show as "N/A")
+
+#### 3. **NEM Generation Overview (Bottom - Full Width)**
+**Source**: Existing generation stacked area chart from main dashboard
+- **Time Range**: Fixed 24-hour view (last 24 hours)
+- **Data Resolution**: 5-minute intervals (288 points)
+- **Fuel Types**: All standard fuel types plus transmission flows and rooftop solar
+- **Chart Features**:
+  - Stacked area chart showing generation mix over time
+  - Consistent color scheme with other dashboard components
+  - X-axis: Time labels (hourly markers)
+  - Y-axis: Generation in MW
+  - Hover tooltips with detailed breakdown
+  - Full dashboard width (~1200px), height ~400px for good visibility
+
+- **Special Handling**:
+  - Include rooftop solar as separate band
+  - Show transmission imports/exports appropriately
+  - Handle negative values (battery charging, exports) correctly
+
+**Technical Implementation**:
+
+#### Tab Structure
+```python
+nem_dash_tab = pn.Column(
+    # Top row: Price section + Renewable gauge
+    pn.Row(
+        price_section,      # Column containing table + chart
+        renewable_gauge,    # Plotly gauge with references
+        sizing_mode='stretch_width'
+    ),
+    # Bottom row: Full-width generation chart
+    generation_overview,
+    sizing_mode='stretch_width',
+    margin=(10, 10)
+)
+```
+
+#### Data Integration
+- **Price Data**: Read from shared `spot_hist.parquet` file
+- **Generation Data**: Use existing dashboard data pipeline
+- **Update Coordination**: All components refresh on 4.5-minute cycle
+- **Error Handling**: Graceful degradation if any component fails to load
+
+#### Performance Considerations
+- **Data Caching**: Reuse loaded data across components where possible
+- **Selective Updates**: Only recalculate renewable % when generation data changes
+- **Lazy Rendering**: Defer expensive calculations until tab is viewed
+- **Memory Management**: Limit historical data retention for records
+
+**Navigation Priority**:
+- **Tab Order**: Nem-dash, Generation by Fuel, Average Price Analysis, Station Analysis
+- **Default Selection**: Nem-dash tab selected on dashboard startup
+- **URL Routing**: Root URL (`/`) should load Nem-dash tab directly
+
+**Success Criteria**:
+1. Users immediately see current electricity market status
+2. Price trends and renewable energy share visible at a glance
+3. Quick access to detailed generation breakdown
+4. All components update automatically without user intervention
+5. Professional appearance suitable for public presentation
+6. Responsive design works on different screen sizes (minimum 1200px width)
 
 ### Auto-Update Functionality
 **Requirement**: The dashboard MUST automatically update with new data as it becomes available.
