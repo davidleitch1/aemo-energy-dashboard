@@ -359,7 +359,8 @@ def create_24hour_generation_chart(pivot_df):
         )
         
         return pn.pane.HoloViews(plot, sizing_mode='fixed', width=800, height=400, 
-                                css_classes=['chart-no-border'])
+                                css_classes=['chart-no-border'],
+                                linked_axes=False)  # Disable axis linking to prevent UFuncTypeError
         
     except Exception as e:
         logger.error(f"Error creating generation chart: {e}")

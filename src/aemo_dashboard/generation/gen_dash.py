@@ -211,26 +211,29 @@ class EnergyDashboard(param.Parameterized):
             util_plot = self.create_utilization_plot()
             transmission_plot = self.create_transmission_plot()
             
-            # Create panes with explicit sizing
+            # Create panes with explicit sizing and disable axis linking
             self.plot_pane = pn.pane.HoloViews(
                 gen_plot,
                 sizing_mode='stretch_width',
                 height=600,  # Back to normal height
-                margin=(5, 5)
+                margin=(5, 5),
+                linked_axes=False  # Prevent UFuncTypeError when switching tabs
             )
             
             self.utilization_pane = pn.pane.HoloViews(
                 util_plot,
                 sizing_mode='stretch_width',
                 height=500,
-                margin=(5, 5)
+                margin=(5, 5),
+                linked_axes=False  # Prevent UFuncTypeError when switching tabs
             )
             
             self.transmission_pane = pn.pane.HoloViews(
                 transmission_plot,
                 sizing_mode='stretch_width',
                 height=400,
-                margin=(5, 5)
+                margin=(5, 5),
+                linked_axes=False  # Prevent UFuncTypeError when switching tabs
             )
             
             # Set initial visibility
@@ -1276,9 +1279,9 @@ class EnergyDashboard(param.Parameterized):
             )
             
             # Stack the plots vertically using Layout (just generation + price)
-            # The plots will share the same x-axis range automatically
+            # Disable shared_axes to prevent UFuncTypeError when switching tabs
             combined_layout = (area_plot + price_plot).cols(1).opts(
-                shared_axes=True,  # This ensures x-axes are linked
+                shared_axes=False,  # Disable to prevent UFuncTypeError
                 merge_tools=True   # Merge toolbars into a single toolbar
             )
             
