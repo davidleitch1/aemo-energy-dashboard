@@ -256,16 +256,16 @@ def create_renewable_gauge_plotly(current_value, all_time_record=45.2, hour_reco
             borderwidth=2
         )
         
-        # Add legend positioned between gauge text and gauge (center-bottom area)
+        # Add legend positioned to the right side of the gauge
         fig.add_annotation(
-            x=0.5, y=0.18,  # Center horizontally, bottom area below the number
-            text=f"👑 All-time: {all_time_record:.1f}%<br>🕐 Hour record: {hour_record:.1f}%",
+            x=0.85, y=0.5,  # Right side, middle height
+            text=f"👑 All-time: {all_time_record:.0f}%<br>🕐 Hour record: {hour_record:.0f}%",
             showarrow=False,
             xref="paper", yref="paper",
-            align="center",
-            font=dict(size=11, color="#ff79c6"),
-            bgcolor="rgba(0, 0, 0, 0.8)",  # Dark background for dark theme
-            bordercolor="#ff79c6",
+            align="left",
+            font=dict(size=11),
+            bgcolor="rgba(255, 255, 255, 0.9)",
+            bordercolor="gray",
             borderwidth=1
         )
         

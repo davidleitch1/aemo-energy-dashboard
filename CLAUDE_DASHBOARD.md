@@ -97,6 +97,128 @@ The AEMO Energy Dashboard is a web-based visualization platform for Australian e
 - Performance optimization for large datasets  
 - Further layout refinements based on user feedback
 
+## Data Quality Issues
+
+### 🔧 **Rooftop Solar Conversion Issue (30-min to 5-min)**
+
+#### **Current Implementation Analysis**
+
+The rooftop solar data conversion from 30-minute to 5-minute intervals currently uses a **linear interpolation with weighted averaging** approach:
+
+```python
+# Current Algorithm: Weighted Linear Interpolation
+for j in range(6):  # Create 6 five-minute intervals per 30-minute period
+    if next_value_exists:
+        value = ((6 - j) * current_value + j * next_value) / 6
+    else:
+        value = current_value  # Repeat last value for all 6 intervals
+```
+
+**Interpolation Pattern:**
+- **j=0** (0 min): `100% current + 0% next`
+- **j=1** (5 min): `83% current + 17% next`  
+- **j=2** (10 min): `67% current + 33% next`
+- **j=3** (15 min): `50% current + 50% next`
+- **j=4** (20 min): `33% current + 67% next`
+- **j=5** (25 min): `17% current + 83% next`
+
+#### **Problems with Current Method**
+
+1. **End-Point Flat-Lining Issue**: 
+   - After the last available 30-minute data point, the algorithm simply repeats the same value for all 6 five-minute intervals
+   - This creates artificial flat-line periods that don't reflect natural solar generation patterns
+   - Real solar output has smooth transitions, not sudden plateaus
+
+2. **Oversimplified Linear Interpolation**:
+   - Solar irradiance follows **natural curves** (not straight lines) due to:
+     - Cloud movements and shadows
+     - Atmospheric conditions
+     - Sun angle changes
+   - Linear interpolation can create unrealistic sharp transitions between data points
+
+3. **Missing Forward-Looking Intelligence**:
+   - No consideration of time-of-day patterns
+   - No seasonal or weather-based adjustments
+   - No trend analysis for better end-point estimation
+
+4. **Data Discontinuities**:
+   - When transitioning between different 30-minute periods, linear interpolation can create visible discontinuities in charts
+   - These artifacts are particularly noticeable during rapid weather changes
+
+#### **Research-Based Improvement Recommendations**
+
+Based on analysis of time series interpolation methods for solar generation data, several superior approaches are available:
+
+##### **1. Cubic Spline Interpolation**
+```python
+# Recommended: Use pandas cubic interpolation
+df_5min = df_30min.resample('5min').interpolate(method='cubic')
+```
+**Advantages:**
+- Better captures natural solar irradiance curves
+- Smoother transitions between data points
+- Maintains mathematical properties (continuity, differentiability)
+
+##### **2. LOESS (Locally Weighted Regression) Smoothing**
+```python
+# For noisy data with seasonal patterns
+from statsmodels.tsa.seasonal import STL
+stl = STL(solar_data, seasonal=7)  # Weekly seasonality
+result = stl.fit()
+```
+**Advantages:**
+- Excellent for handling outliers in solar data
+- Captures seasonal patterns and trends
+- Robust against measurement noise
+
+##### **3. Forward-Looking End-Point Handling**
+Instead of flat-lining at the end, implement intelligent forecasting:
+
+```python
+# Option A: Use trend analysis
+last_trend = calculate_recent_trend(last_few_periods)
+forecast_value = last_value + (trend * time_ahead)
+
+# Option B: Use seasonal patterns
+hour_of_day = current_time.hour
+seasonal_multiplier = get_seasonal_pattern(hour_of_day, day_of_year)
+forecast_value = last_value * seasonal_multiplier
+
+# Option C: Use moving average with decay
+forecast_value = exponential_weighted_average(recent_values, decay_factor=0.1)
+```
+
+##### **4. Hybrid Approach (Recommended)**
+1. **Use cubic spline** for interpolation between known data points
+2. **Apply LOESS smoothing** to reduce noise and handle outliers
+3. **Implement intelligent end-point forecasting** using:
+   - Recent trend analysis
+   - Time-of-day solar patterns
+   - Exponential decay for missing periods
+
+#### **Implementation Priority**
+
+**High Priority:**
+- Fix end-point flat-lining issue (affects real-time dashboard accuracy)
+- Implement cubic spline interpolation for smoother curves
+
+**Medium Priority:**
+- Add LOESS smoothing for noise reduction
+- Implement seasonal pattern-based forecasting
+
+**Low Priority:**
+- Advanced machine learning forecasting models
+- Integration with weather forecast data
+
+#### **Impact on Dashboard**
+
+This improvement would significantly enhance:
+- **Nem-dash renewable energy gauge accuracy** (currently affected by poor end-point handling)
+- **Generation by Fuel tab smoothness** (visible interpolation artifacts in rooftop solar band)
+- **Real-time data quality** (better handling of the most recent data periods)
+
+The current method works adequately for historical analysis but creates noticeable quality issues in real-time visualization, particularly in the last 30 minutes of data where flat-lining occurs.
+
 ## Running the Dashboard
 
 ### Start Dashboard
