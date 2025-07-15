@@ -10,7 +10,27 @@ The new dashboard is designed to replace the existing dashboard running at `/Use
 2. **Cloudflare Tunnel**: Already configured to accept connections from `nemgen.itkservices2.com`
 3. **Environment Variable**: Use `DASHBOARD_PORT` to control the port
 
-### Deployment Steps
+### Environment Differences
+
+**Important**: The old dashboard uses system Python, while the new dashboard uses a virtual environment. This isolation prevents conflicts but requires proper setup.
+
+### Automated Deployment
+
+Use the deployment script for easiest transition:
+
+```bash
+cd /Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard
+./deploy_production.sh
+```
+
+This script will:
+- Stop the old dashboard
+- Set up the Python virtual environment
+- Install all dependencies
+- Configure the environment
+- Start the new dashboard
+
+### Manual Deployment Steps
 
 1. **Stop the old dashboard**:
    ```bash
@@ -20,24 +40,35 @@ The new dashboard is designed to replace the existing dashboard running at `/Use
    kill -9 <PID>
    ```
 
-2. **Configure the new dashboard**:
+2. **Set up the new dashboard environment**:
    ```bash
    cd /Users/davidleitch/Library/Mobile Documents/com~apple~CloudDocs/snakeplay/AEMO_spot/aemo-energy-dashboard
    
-   # Copy environment template
-   cp .env.example .env
+   # Create virtual environment if needed
+   python3 -m venv .venv
    
-   # Edit .env to ensure:
-   # DASHBOARD_PORT=5008  (for production)
-   # Or leave blank to default to 5008
-   ```
-
-3. **Start the new dashboard**:
-   ```bash
    # Activate virtual environment
    source .venv/bin/activate
    
-   # Run the dashboard
+   # Install dependencies
+   pip install -e .
+   ```
+
+3. **Configure the new dashboard**:
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Edit .env to add credentials and ensure:
+   # DASHBOARD_PORT=5008  (for production)
+   ```
+
+4. **Start the new dashboard**:
+   ```bash
+   # Using the wrapper script (works like old dashboard)
+   python3 run_dashboard.py
+   
+   # Or using virtual environment directly
    .venv/bin/python -m src.aemo_dashboard.generation.gen_dash
    ```
 
